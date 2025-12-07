@@ -100,3 +100,7 @@ shadowJar {
 sourceSets {
     main.java.srcDirs += 'src/main/kotlin'
 }
+
+application {
+    mainClass.set("id.sekawan.point.MainKt")
+}

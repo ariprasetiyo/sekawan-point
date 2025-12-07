@@ -18,11 +18,16 @@ VM option :
 ```
 Main class :
 ```
-io.vertx.core.Launcher
+id.sekawan.point.MainKt
 ```
 Program arguments :
 ```
 run id.sekawan.point.MainVerticle -conf /Users/john.doe/Documents/sekawan/conf/config.json
+```
+
+## gradle build
+```
+./gradlew clean build
 ```
 
 ## run manual
