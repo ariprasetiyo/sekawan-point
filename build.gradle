@@ -47,7 +47,7 @@ dependencies {
     implementation group: 'com.google.zxing', name: 'core', version: '3.3.0'
     implementation group: 'com.google.zxing', name: 'javase', version: '3.3.0'
 
-    implementation group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '4.8'
+    implementation group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '7.4'
     implementation 'ch.qos.logback:logback-classic:1.5.6'
 
 //    implementation(platform("io.vertx:vertx-stack-depchain:$vertxVersion"))

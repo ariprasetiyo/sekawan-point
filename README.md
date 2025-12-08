@@ -34,9 +34,9 @@ run id.sekawan.point.MainVerticle -conf /Users/john.doe/Documents/sekawan/conf/c
 ```
 java -javaagent:otel/opentelemetry-javaagent.jar \
 -Dotel.service.name=id.sekawan.point \
--Dotel.exporter.otlp.endpoint=none \
--Dotel.instrumentation.common.default-enabled=true \
+-Dotel.exporter.otlp.endpoint={isi_url_endpoint_collector_misal_jaeger_atau_signoz} \
+-Dotel.traces.exporter=jaeger
 -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=4012,suspend=n \
--Dlogback.configurationFile=Users/chrisferdian/Development/backend/project/personal-project/sekawan-point/conf-local/mylog.xml \
+-Dlogback.configurationFile=conf-local/mylog.xml \
 -jar build/libs/sekawan-point-1.0-SNAPSHOT-fat.jar conf-local/config.json
 ```
