@@ -3,8 +3,7 @@
 ## How to run in local
 
 ### Prerequisite
-1. Intellij Idea 
-please use 2023++
+1. Intellij Idea use 2023++
 
 2. Java 17
 You can use https://sdkman.io/ to easily switch between java version
