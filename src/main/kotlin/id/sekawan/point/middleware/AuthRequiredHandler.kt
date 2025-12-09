@@ -1,4 +1,4 @@
-package id.sekawan.point.handler
+package id.sekawan.point.middleware
 
 import com.google.gson.Gson
 import id.sekawan.point.type.ErrorLoginType
@@ -65,7 +65,7 @@ class AuthRequiredHandler(
             put("error", errorLoginType.errorCode)
             put("errorMessage", errorLoginType.errorMessage)
         }
-        freeMarkerEngine.render(data, "templates/forbidden.ftl").onSuccess { res ->
+        freeMarkerEngine.render(data, "forbidden.ftl").onSuccess { res ->
             ctx.response()
                 .putHeader("Content-Type", "text/html; charset=UTF-8")
                 .end(res)

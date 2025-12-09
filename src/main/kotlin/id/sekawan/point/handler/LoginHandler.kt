@@ -94,7 +94,7 @@ class LoginHandler(
                             .end()
                     } else {
                         ctx.put("error", "Invalid username or password")
-                        freeMakerEngine.render(ctx.data(), "templates/login.ftl")
+                        freeMakerEngine.render(ctx.data(), "login.ftl")
                             .onSuccess { res ->
                                 ctx.response().end(res)
                             }.onFailure { res ->

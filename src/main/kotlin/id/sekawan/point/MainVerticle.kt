@@ -3,13 +3,15 @@ package id.sekawan.point
 import com.github.davidmoten.rx.jdbc.Database
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import freemarker.cache.FileTemplateLoader
 import id.sekawan.point.database.FirstDataStoreImpl
 import id.sekawan.point.database.FirstTransactionDataStore
 import id.sekawan.point.handler.*
+import id.sekawan.point.middleware.AuthRequiredHandler
+import id.sekawan.point.middleware.AuthRoutePrefixHandler
 import id.sekawan.point.util.*
 import id.sekawan.point.util.mylib.GsonHelper
 import id.sekawan.point.util.mylog.LoggerFactory
-import io.opentelemetry.api.trace.Span
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Promise
 import io.vertx.core.http.CookieSameSite
@@ -31,6 +33,7 @@ import io.vertx.ext.web.templ.freemarker.FreeMarkerTemplateEngine
 import io.vertx.rx.java.RxHelper
 import org.joda.time.DateTime
 import rx.schedulers.Schedulers
+import java.io.File
 
 class MainVerticle : AbstractVerticle() {
 
@@ -108,23 +111,9 @@ class MainVerticle : AbstractVerticle() {
         healthCheckLiveness.register("sekawan-point-health-check") { future -> future.complete(Status.OK()) }
         healthCheckReadiness.register("sekawan-point-database") { future -> isDatabaseOk(future, satuDB) }
         val freeMakerEngine = FreeMarkerTemplateEngine.create(vertx)
-
-        // next could be change to SessionStore store = RedisSessionStore.create(vertx, redis);
-        val sessionStore = CookieSessionStore.create(vertx, "abc")
-        val sessionHandler = SessionHandler.create(sessionStore)
-            .setSessionTimeout(5 * 60 * 1000)   // 30 menit idle timeout
-            //in seconds. if not set will session remove when browser closed
-//            .setCookieMaxAge(30 * 60)
-            .setNagHttps(false)
-            .setCookieSecureFlag(true)
-            .setCookieSameSite(CookieSameSite.LAX)
-//            .setCookieHttpOnlyFlag(true)
-
-        // Secret key for HMAC SHA256 (gunakan key yang kuat di production)
-        val jwtSecret = config().getString(CONFIG_SECRET_JWT)
-        val jwtConfig = JWTAuthOptions()
-            .addPubSecKey(PubSecKeyOptions().setAlgorithm("HS256").setBuffer(jwtSecret))
-        jwtAuth = JWTAuth.create(vertx, jwtConfig)
+        unwrapFreemakerConfiguration(freeMakerEngine)
+        val sessionHandler = sessionHandler()
+        jwtAuth = jwtAuth()
 
         route().handler(
             CorsHandler.create()
@@ -154,25 +143,7 @@ class MainVerticle : AbstractVerticle() {
         }
 
         val authRequiredHandler = AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, arrayListOf("admin", "user"))
-        val defaultAuthPrefixes = listOf(
-            "/api/v1/", "/v1/admin/"
-        )
-
-        val internalAuthPrefixes = listOf(
-            "/internal/v1/"
-        )
-
-        // Perubahan ini dilakukan agar atribut `http.route` di OpenTelemetry (OTEL)
-        // menampilkan nilai endpoint yang sesuai (misalnya: "/api/merchant/qr/product/create"),
-        // bukan pola wildcard seperti "/api/merchant/*".
-        route().handler { ctx ->
-            val path = ctx.request().path().removeSuffix("/")
-            when {
-                defaultAuthPrefixes.any { path.startsWith(it) } -> authRequiredHandler.handle(ctx)
-                internalAuthPrefixes.any { path.startsWith(it) } -> authRequiredHandler.handle(ctx)
-                else -> ctx.next()
-            }
-        }
+        route().handler(AuthRoutePrefixHandler(gson, authRequiredHandler))
 
         get("/login").handler(LoginWebHandler(ArrayList(),vertxScheduler,
             ioScheduler, freeMakerEngine))
@@ -209,7 +180,7 @@ class MainVerticle : AbstractVerticle() {
 
     private fun logIncomingRequestWithTraceId(context: RoutingContext) {
         try {
-//            val traceId = Span.current().spanContext.traceId
+            //val traceId = Span.current().spanContext.traceId
             val method = context.request().method()
             val url = context.request().absoluteURI()
             val body = context.body().asString()
@@ -218,6 +189,47 @@ class MainVerticle : AbstractVerticle() {
             logger.error("Failed to log incoming request", ex.message, ex)
             ex.printStackTrace()
         }
+    }
+
+    private fun unwrapFreemakerConfiguration(freeMakerEngine : FreeMarkerTemplateEngine){
+        // get the underlying FreeMarker Configuration
+        val cfg = freeMakerEngine.unwrap()
+        // Only proceed if unwrap() returns a valid Configuration
+        if (cfg != null) {
+            cfg.templateLoader = FileTemplateLoader(File("resources/templates"))
+            cfg.defaultEncoding = "UTF-8"
+            // optional: disable caching for hot reload
+            cfg.templateUpdateDelayMilliseconds = 0
+            cfg.cacheStorage = freemarker.cache.NullCacheStorage()
+
+            // Optional: allow auto-refresh for includes/imports
+            cfg.autoImports.clear()
+            cfg.autoIncludes.clear()
+        } else {
+            throw IllegalStateException("Cannot unwrap FreeMarker configuration")
+        }
+    }
+
+    private fun sessionHandler() : SessionHandler {
+        // next could be change to SessionStore store = RedisSessionStore.create(vertx, redis);
+        val sessionStore = CookieSessionStore.create(vertx, "abc")
+        val sessionSetup = SessionHandler.create(sessionStore)
+            .setSessionTimeout(5 * 60 * 1000)   // 30 menit idle timeout
+            //in seconds. if not set will session remove when browser closed
+            //.setCookieMaxAge(30 * 60)
+            .setNagHttps(false)
+            .setCookieSecureFlag(true)
+            .setCookieSameSite(CookieSameSite.LAX)
+            //.setCookieHttpOnlyFlag(true)
+        return sessionSetup
+    }
+
+    private fun jwtAuth(): JWTAuth {
+        // Secret key for HMAC SHA256 (gunakan key yang kuat di production)
+        val jwtSecret = config().getString(CONFIG_SECRET_JWT)
+        val jwtConfig = JWTAuthOptions()
+            .addPubSecKey(PubSecKeyOptions().setAlgorithm("HS256").setBuffer(jwtSecret))
+        return JWTAuth.create(vertx, jwtConfig)
     }
 
 }

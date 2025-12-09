@@ -15,7 +15,7 @@ class ForbiddenWebHandler(
 
     override fun handle(ctx: RoutingContext) {
         val data = JsonObject()
-        freeMarkerEngine.render(data, "templates/forbidden.ftl").onSuccess { res ->
+        freeMarkerEngine.render(data, "forbidden.ftl").onSuccess { res ->
             ctx.response().end(res)
         }.onFailure { res ->
             ctx.fail(res)

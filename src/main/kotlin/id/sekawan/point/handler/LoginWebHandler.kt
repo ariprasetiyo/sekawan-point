@@ -18,7 +18,7 @@ class LoginWebHandler(
 
     override fun handle(ctx: RoutingContext) {
         val data = JsonObject()
-        freeMarkerEngine.render(data, "templates/login.ftl").onSuccess { res ->
+        freeMarkerEngine.render(data, "login.ftl").onSuccess { res ->
             ctx.response().end(res)
         }.onFailure { res ->
             ctx.fail(res)
