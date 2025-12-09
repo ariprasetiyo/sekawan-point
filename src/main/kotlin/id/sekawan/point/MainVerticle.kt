@@ -153,41 +153,38 @@ class MainVerticle : AbstractVerticle() {
             context.next()
         }
 
-        get("/login").handler(LoginWebHandler(ArrayList(), freeMakerEngine))
-        get("/forbidden").handler(ForbiddenWebHandler(ArrayList(), freeMakerEngine))
-        post("/login").handler(
-            LoginHandler(
-                satuDatastore,
-                gson,
-                vertxScheduler,
-                ioScheduler,
-                freeMakerEngine,
-                jwtAuth,
-                ArrayList()
-            )
+        val authRequiredHandler = AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, arrayListOf("admin", "user"))
+        val defaultAuthPrefixes = listOf(
+            "/api/v1/", "/v1/admin/"
         )
+
+        val internalAuthPrefixes = listOf(
+            "/internal/v1/"
+        )
+
+        // Perubahan ini dilakukan agar atribut `http.route` di OpenTelemetry (OTEL)
+        // menampilkan nilai endpoint yang sesuai (misalnya: "/api/merchant/qr/product/create"),
+        // bukan pola wildcard seperti "/api/merchant/*".
+        route().handler { ctx ->
+            val path = ctx.request().path().removeSuffix("/")
+            when {
+                defaultAuthPrefixes.any { path.startsWith(it) } -> authRequiredHandler.handle(ctx)
+                internalAuthPrefixes.any { path.startsWith(it) } -> authRequiredHandler.handle(ctx)
+                else -> ctx.next()
+            }
+        }
+
+        get("/login").handler(LoginWebHandler(ArrayList(),vertxScheduler,
+            ioScheduler, freeMakerEngine))
+        get("/forbidden").handler(ForbiddenWebHandler(ArrayList(), freeMakerEngine))
+        post("/login").handler( LoginHandler( satuDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, jwtAuth, ArrayList()))
+        get("/logout").handler(LogoutHandler(ArrayList()))
 
         get("/internal/v1/health/ready").handler(healthCheckReadiness)
         get("/internal/v1/health/live").handler(healthCheckLiveness)
 
-        get("/v1/admin/dashboard").handler(AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, arrayListOf("admin", "user"))).handler(
-            DashboardHandler(
-                satuDatastore,
-                gson,
-                vertxScheduler,
-                ioScheduler,
-                freeMakerEngine,
-                ArrayList()
-            )
-        )
-        get("/logout").handler(LogoutHandler(ArrayList()))
-        post("/api/v1/subscribe").handler(
-            SatuTestHandler(
-                satuDatastore,
-                gson,
-                vertxScheduler,
-                ioScheduler,
-                ArrayList()
+        get("/v1/admin/dashboard").handler(DashboardHandler(satuDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
+        post("/api/v1/subscribe").handler(SatuTestHandler(satuDatastore, gson, vertxScheduler, ioScheduler, ArrayList()
             )
         )
     }
@@ -212,11 +209,11 @@ class MainVerticle : AbstractVerticle() {
 
     private fun logIncomingRequestWithTraceId(context: RoutingContext) {
         try {
-            val traceId = Span.current().spanContext.traceId
+//            val traceId = Span.current().spanContext.traceId
             val method = context.request().method()
             val url = context.request().absoluteURI()
             val body = context.body().asString()
-            logger.info("Incoming request", "traceId=$traceId method=$method | url=$url | body=$body")
+            logger.info("Incoming request", "method=$method | url=$url | body=$body")
         } catch (ex: Exception) {
             logger.error("Failed to log incoming request", ex.message, ex)
             ex.printStackTrace()

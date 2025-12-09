@@ -30,12 +30,23 @@ run id.sekawan.point.MainVerticle -conf /Users/john.doe/Documents/sekawan/conf/c
 ./gradlew clean build
 ```
 
-## run manual
+## run manual with exporter external ( jaeger / signoz )
 ```
 java -javaagent:otel/opentelemetry-javaagent.jar \
--Dotel.service.name=id.sekawan.point \
--Dotel.exporter.otlp.endpoint={isi_url_endpoint_collector_misal_jaeger_atau_signoz} \
--Dotel.traces.exporter=jaeger
+-Dotel.service.name=sekawan-point-app \
+-Dotel.exporter.otlp.endpoint=http://192.168.100.100:4317 \
+-Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=4012,suspend=n \
+-Dlogback.configurationFile=conf-local/mylog.xml \
+-jar build/libs/sekawan-point-1.0-SNAPSHOT-fat.jar conf-local/config.json
+```
+
+## run manual with exporter logging
+``` 
+java -javaagent:otel/opentelemetry-javaagent.jar \
+-Dotel.service.name=my-app \
+-Dotel.traces.exporter=logging \
+-Dotel.metrics.exporter=none \
+-Dotel.logs.exporter=none \   
 -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=4012,suspend=n \
 -Dlogback.configurationFile=conf-local/mylog.xml \
 -jar build/libs/sekawan-point-1.0-SNAPSHOT-fat.jar conf-local/config.json

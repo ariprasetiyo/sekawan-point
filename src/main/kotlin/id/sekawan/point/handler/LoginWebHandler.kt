@@ -5,9 +5,12 @@ import id.sekawan.point.util.mylog.LoggerFactory
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.templ.freemarker.FreeMarkerTemplateEngine
+import rx.Scheduler
 
 class LoginWebHandler(
     adminList: List<String>,
+    private val vertxScheduler: Scheduler,
+    private val ioScheduler: Scheduler,
     private val freeMarkerEngine: FreeMarkerTemplateEngine
 ) :
     AdminHandler<RoutingContext>(adminList) {

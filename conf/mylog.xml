@@ -2,9 +2,7 @@
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>
-                %d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
-            </pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger - traceId=%X{trace_id} spanId=%X{span_id} - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -27,11 +25,11 @@
         </encoder>
     </appender>
 
-    <root level="INFO">
+    <root level="DEBUG">
         <appender-ref ref="STDOUT" />
     </root>
 
-    <logger name="id.sekawan.point" level="INFO">
+    <logger name="id.sekawan.point" level="DEBUG">
         <appender-ref ref="JSON-STDOUT" />
     </logger>
 </configuration>
