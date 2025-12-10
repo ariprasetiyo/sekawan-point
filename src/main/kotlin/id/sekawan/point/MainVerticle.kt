@@ -148,8 +148,9 @@ class MainVerticle : AbstractVerticle() {
         get("/login").handler(LoginWebHandler(ArrayList(),vertxScheduler,
             ioScheduler, freeMakerEngine))
         get("/forbidden").handler(ForbiddenWebHandler(ArrayList(), freeMakerEngine))
-        post("/login").handler( LoginHandler( satuDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, jwtAuth, ArrayList()))
+        post("/login").handler(LoginHandler( satuDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, jwtAuth, ArrayList()))
         get("/logout").handler(LogoutHandler(ArrayList()))
+        get("/hotReload").handler(HotReloadHtmlHandler(ArrayList(), freeMakerEngine))
 
         get("/internal/v1/health/ready").handler(healthCheckReadiness)
         get("/internal/v1/health/live").handler(healthCheckLiveness)
@@ -199,12 +200,9 @@ class MainVerticle : AbstractVerticle() {
             cfg.templateLoader = FileTemplateLoader(File("resources/templates"))
             cfg.defaultEncoding = "UTF-8"
             // optional: disable caching for hot reload
-            cfg.templateUpdateDelayMilliseconds = 0
-            cfg.cacheStorage = freemarker.cache.NullCacheStorage()
-
-            // Optional: allow auto-refresh for includes/imports
-            cfg.autoImports.clear()
-            cfg.autoIncludes.clear()
+            // cfg.templateUpdateDelayMilliseconds = 0
+            // cfg.cacheStorage = freemarker.cache.NullCacheStorage()
+            // println("FreeMarker hot reload ENABLED at conf-local/templates/")
         } else {
             throw IllegalStateException("Cannot unwrap FreeMarker configuration")
         }
