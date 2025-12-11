@@ -27,6 +27,7 @@ import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.ext.web.handler.CorsHandler
 import io.vertx.ext.web.handler.SessionHandler
+import io.vertx.ext.web.handler.StaticHandler
 import io.vertx.ext.web.healthchecks.HealthCheckHandler
 import io.vertx.ext.web.sstore.cookie.CookieSessionStore
 import io.vertx.ext.web.templ.freemarker.FreeMarkerTemplateEngine
@@ -110,7 +111,7 @@ class MainVerticle : AbstractVerticle() {
         val healthCheckLiveness = HealthCheckHandler.create(vertx)
         healthCheckLiveness.register("sekawan-point-health-check") { future -> future.complete(Status.OK()) }
         healthCheckReadiness.register("sekawan-point-database") { future -> isDatabaseOk(future, satuDB) }
-        val freeMakerEngine = FreeMarkerTemplateEngine.create(vertx)
+        val freeMakerEngine = FreeMarkerTemplateEngine.create(vertx, ".html")
         unwrapFreemakerConfiguration(freeMakerEngine)
         val sessionHandler = sessionHandler()
         jwtAuth = jwtAuth()
@@ -145,17 +146,22 @@ class MainVerticle : AbstractVerticle() {
         val authRequiredHandler = AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, arrayListOf("admin", "user"))
         route().handler(AuthRoutePrefixHandler(gson, authRequiredHandler))
 
-        get("/login").handler(LoginWebHandler(ArrayList(),vertxScheduler,
-            ioScheduler, freeMakerEngine))
-        get("/forbidden").handler(ForbiddenWebHandler(ArrayList(), freeMakerEngine))
+//        route("/static/css/*").handler(StaticHandler.create("resources/templates"))
+        route("/backoffice/v1/*").handler(StaticHandler.create("resources/templates"))
+
+        get("/login").handler(RouteWebHandler(ArrayList(), freeMakerEngine, "login.html"))
         post("/login").handler(LoginHandler( satuDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, jwtAuth, ArrayList()))
+        get("/backoffice/v1/dashboard").handler(RouteWebHandler(ArrayList(), freeMakerEngine, "index.html"))
+        post("/backoffice/v1/dashboard").handler(DashboardHandler(satuDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
+
+        get("/forbidden").handler(ForbiddenWebHandler(ArrayList(), freeMakerEngine))
         get("/logout").handler(LogoutHandler(ArrayList()))
-        get("/hotReload").handler(HotReloadHtmlHandler(ArrayList(), freeMakerEngine))
+        get("/clear-cache").handler(ClearCachelHandler(ArrayList(), freeMakerEngine, gson,  vertxScheduler, ioScheduler))
 
         get("/internal/v1/health/ready").handler(healthCheckReadiness)
         get("/internal/v1/health/live").handler(healthCheckLiveness)
 
-        get("/v1/admin/dashboard").handler(DashboardHandler(satuDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
+
         post("/api/v1/subscribe").handler(SatuTestHandler(satuDatastore, gson, vertxScheduler, ioScheduler, ArrayList()
             )
         )

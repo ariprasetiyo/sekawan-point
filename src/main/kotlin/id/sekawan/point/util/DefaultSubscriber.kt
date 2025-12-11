@@ -35,13 +35,15 @@ open class DefaultSubscriber<T>(val response: String, val routingContext: Routin
     }
 
     private fun processBeforeSendError(e: Throwable) {
-        logger.error("requestError", createErrorMessage(), e)
+        logger.error("requestError", createErrorMessage(e.message), e)
     }
 
-    private fun createErrorMessage(): String {
+    private fun createErrorMessage(message : String?): String {
         return """"Subscriber failed : $response
             Request IN : ${routingContext?.request()?.absoluteURI()}
-            Body IN : ${routingContext?.body()?.asString()} """.trimMargin()
+            Body IN : ${routingContext?.body()?.asString()}
+            Message : $message
+             """.trimMargin()
     }
 
     private fun getErrorCode(e: Throwable): Int {

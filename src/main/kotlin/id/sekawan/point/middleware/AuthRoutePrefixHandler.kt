@@ -14,12 +14,13 @@ class AuthRoutePrefixHandler(
 
     override fun handle(ctx: RoutingContext) {
 
+        //http://localhost:8080/backoffice/v1/dashboard?username=admin
         val defaultAuthPrefixes = listOf(
-            "/api/v1/", "/v1/admin/"
+            "/api/v1/", "/v1/admin/", "/backoffice/"
         )
 
         val internalAuthPrefixes = listOf(
-            "/internal/v1/"
+            "/internal/*"
         )
 
         // Perubahan ini dilakukan agar atribut `http.route` di OpenTelemetry (OTEL)

@@ -89,12 +89,12 @@ class LoginHandler(
                     logger.info("response: ${gson.toJson(t)}")
                     if (t.status == ResponseStatus.GENERAL_SUCCESS.code) {
                         ctx.response()
-                            .putHeader("Location", "/v1/admin/dashboard?username=ari")
+                            .putHeader("Location", "/backoffice/v1/dashboard?username=$username")
                             .setStatusCode(302)
                             .end()
                     } else {
                         ctx.put("error", "Invalid username or password")
-                        freeMakerEngine.render(ctx.data(), "login.ftl")
+                        freeMakerEngine.render(ctx.data(), "login.html")
                             .onSuccess { res ->
                                 ctx.response().end(res)
                             }.onFailure { res ->

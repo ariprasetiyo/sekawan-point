@@ -65,7 +65,7 @@ class AuthRequiredHandler(
             put("error", errorLoginType.errorCode)
             put("errorMessage", errorLoginType.errorMessage)
         }
-        freeMarkerEngine.render(data, "forbidden.ftl").onSuccess { res ->
+        freeMarkerEngine.render(data, "forbidden.html").onSuccess { res ->
             ctx.response()
                 .putHeader("Content-Type", "text/html; charset=UTF-8")
                 .end(res)
