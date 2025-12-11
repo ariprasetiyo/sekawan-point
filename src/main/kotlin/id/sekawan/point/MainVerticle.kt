@@ -40,6 +40,7 @@ class MainVerticle : AbstractVerticle() {
 
     private val logger = LoggerFactory().createLogger(this.javaClass.name)
     private lateinit var jwtAuth: JWTAuth
+    private val pathResource = "resources/templates/backoffice/v1"
 
     override fun start(startPromise: Promise<Void>) {
 
@@ -146,13 +147,17 @@ class MainVerticle : AbstractVerticle() {
         val authRequiredHandler = AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, arrayListOf("admin", "user"))
         route().handler(AuthRoutePrefixHandler(gson, authRequiredHandler))
 
-//        route("/static/css/*").handler(StaticHandler.create("resources/templates"))
-        route("/backoffice/v1/*").handler(StaticHandler.create("resources/templates"))
+        route("/css/*").handler(StaticHandler.create("resources/templates/css"))
+        route("/img/*").handler(StaticHandler.create("resources/templates/img"))
+        route("/js/*").handler(StaticHandler.create("resources/templates/js"))
+        route("/scss/*").handler(StaticHandler.create("resources/templates/scss"))
+        route("/vendor/*").handler(StaticHandler.create("resources/templates/vendor"))
+        route("/backoffice/v1/*").handler(StaticHandler.create(pathResource))
 
         get("/login").handler(RouteWebHandler(ArrayList(), freeMakerEngine, "login.html"))
         post("/login").handler(LoginHandler( satuDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, jwtAuth, ArrayList()))
-        get("/backoffice/v1/dashboard").handler(RouteWebHandler(ArrayList(), freeMakerEngine, "index.html"))
-        post("/backoffice/v1/dashboard").handler(DashboardHandler(satuDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
+        get("/backoffice/v1").handler(RouteWebHandler(ArrayList(), freeMakerEngine, "index.html"))
+        post("/backoffice/v1").handler(DashboardHandler(satuDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
 
         get("/forbidden").handler(ForbiddenWebHandler(ArrayList(), freeMakerEngine))
         get("/logout").handler(LogoutHandler(ArrayList()))
@@ -203,7 +208,7 @@ class MainVerticle : AbstractVerticle() {
         val cfg = freeMakerEngine.unwrap()
         // Only proceed if unwrap() returns a valid Configuration
         if (cfg != null) {
-            cfg.templateLoader = FileTemplateLoader(File("resources/templates"))
+            cfg.templateLoader = FileTemplateLoader(File(pathResource))
             cfg.defaultEncoding = "UTF-8"
             // optional: disable caching for hot reload
             // cfg.templateUpdateDelayMilliseconds = 0

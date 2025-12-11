@@ -89,7 +89,7 @@ class LoginHandler(
                     logger.info("response: ${gson.toJson(t)}")
                     if (t.status == ResponseStatus.GENERAL_SUCCESS.code) {
                         ctx.response()
-                            .putHeader("Location", "/backoffice/v1/dashboard?username=$username")
+                            .putHeader("Location", "/backoffice/v1?username=$username")
                             .setStatusCode(302)
                             .end()
                     } else {

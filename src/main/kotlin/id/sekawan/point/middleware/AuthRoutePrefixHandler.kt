@@ -16,7 +16,7 @@ class AuthRoutePrefixHandler(
 
         //http://localhost:8080/backoffice/v1/dashboard?username=admin
         val defaultAuthPrefixes = listOf(
-            "/api/v1/", "/v1/admin/", "/backoffice/"
+            "/api/v1/", "/v1/admin/", "/backoffice/" , "/js",  "/vendor","/css"
         )
 
         val internalAuthPrefixes = listOf(
