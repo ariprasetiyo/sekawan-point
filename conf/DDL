@@ -1,0 +1,27 @@
+CREATE OR REPLACE FUNCTION updated_at_automatically()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at := now();
+    RETURN NEW;
+END;
+$$ language plpgsql;
+
+create table ms_users
+(
+    user_id varchar(255) primary key,
+    username varchar,
+    password_hash varchar,
+    email varchar,
+    email_hash varchar,
+    phone_number varchar,
+    phone_number_hash varchar,
+    is_active  bool,
+    created_at timestamp with time zone not null,
+    updated_at timestamp with time zone not null,
+    deleted_at  timestamp with time zone default null
+)
+create index concurrently ms_users_username_idx on ms_users using btree(username)
+
+CREATE TRIGGER updated_at_ms_users
+BEFORE UPDATE ON ms_users
+FOR EACH ROW EXECUTE PROCEDURE updated_at_automatically();

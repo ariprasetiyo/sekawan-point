@@ -116,7 +116,8 @@ class MainVerticle : AbstractVerticle() {
 
         val freeMakerEngine = FreeMarkerTemplateEngine.create(vertx, ".html")
         unwrapFreemakerConfiguration(freeMakerEngine)
-        val renderHandler = RenderHandler(freeMakerEngine)
+        val renderHandler = RenderHandler(config(), freeMakerEngine)
+        val staticHandler = StaticHandler(config())
 
         val sessionHandler = sessionHandler()
         jwtAuth = jwtAuth()
@@ -151,11 +152,11 @@ class MainVerticle : AbstractVerticle() {
         val authRequiredHandler = AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, arrayListOf("admin", "user"))
         route().handler(AuthRoutePrefixHandler(gson, authRequiredHandler))
 
-        route("/css/*").handler(StaticHandler("resources/templates/css").exec())
-        route("/img/*").handler(StaticHandler("resources/templates/img").exec())
-        route("/js/*").handler(StaticHandler("resources/templates/js").exec())
-        route("/scss/*").handler(StaticHandler("resources/templates/scss").exec())
-        route("/vendor/*").handler(StaticHandler("resources/templates/vendor").exec())
+        route("/css/*").handler(staticHandler.exec("resources/templates/css"))
+        route("/img/*").handler(staticHandler.exec("resources/templates/img"))
+        route("/js/*").handler(staticHandler.exec("resources/templates/js"))
+        route("/scss/*").handler(staticHandler.exec("resources/templates/scss"))
+        route("/vendor/*").handler(staticHandler.exec("resources/templates/vendor"))
         route("/backoffice/v1/*").handler(StaticHandler.create(pathResource))
 
         get("/login").handler(LoginWebHandler(renderHandler, "login.html"))
@@ -218,12 +219,15 @@ class MainVerticle : AbstractVerticle() {
             cfg.defaultEncoding = "UTF-8"
 
             //cache in middleware
-            cfg.templateUpdateDelayMilliseconds = Long.MAX_VALUE    // check changes every 5 sec
-            cfg.cacheStorage = freemarker.cache.MruCacheStorage(0, 250)  // default LRU cache
+            if(config().getBoolean(CONFIG_IS_ACTIVE_FREEMAKER_CACHE)){
+                cfg.templateUpdateDelayMilliseconds = Long.MAX_VALUE    // check changes every 5 sec
+                cfg.cacheStorage = freemarker.cache.MruCacheStorage(0, 250)  // default LRU cache
+                logger.info("freeMaker cache is active")
 
-            // optional: disable caching for hot reload
-            // cfg.templateUpdateDelayMilliseconds = 0
-            // cfg.cacheStorage = freemarker.cache.NullCacheStorage()
+                // optional: disable caching for hot reload
+                // cfg.templateUpdateDelayMilliseconds = 0
+                // cfg.cacheStorage = freemarker.cache.NullCacheStorage()
+            }
         } else {
             throw IllegalStateException("Cannot unwrap FreeMarker configuration")
         }
