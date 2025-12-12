@@ -156,9 +156,9 @@ class MainVerticle : AbstractVerticle() {
         route("/js/*").handler(StaticHandler("resources/templates/js").exec())
         route("/scss/*").handler(StaticHandler("resources/templates/scss").exec())
         route("/vendor/*").handler(StaticHandler("resources/templates/vendor").exec())
-//        route("/backoffice/v1/*").handler(StaticHandler.create(pathResource))
+        route("/backoffice/v1/*").handler(StaticHandler.create(pathResource))
 
-        get("/login").handler(RouteWebHandler(renderHandler, "login.html"))
+        get("/login").handler(LoginWebHandler(renderHandler, "login.html"))
         post("/login").handler(LoginHandler(satuDatastore, gson, vertxScheduler, ioScheduler, renderHandler, jwtAuth, ArrayList()))
         get("/backoffice/v1").handler(RouteWebHandler(renderHandler, "dashboard.html"))
         post("/backoffice/v1").handler(DashboardHandler(satuDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
