@@ -1,25 +1,24 @@
 package id.sekawan.point.handler
 
-import id.sekawan.point.util.AdminHandler
+import id.sekawan.point.util.RenderHandler
+import id.sekawan.point.util.SESSION_USERNAME
 import id.sekawan.point.util.mylog.LoggerFactory
+import io.vertx.core.Handler
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
-import io.vertx.ext.web.templ.freemarker.FreeMarkerTemplateEngine
 
 class RouteWebHandler(
-    adminList: List<String>,
-    private val freeMarkerEngine: FreeMarkerTemplateEngine,
-    private val pathHTML : String
-) :
-    AdminHandler<RoutingContext>(adminList) {
+    private val renderHandler: RenderHandler,
+    private val pathHTML: String
+) : Handler<RoutingContext> {
+
     private val logger = LoggerFactory().createLogger(this::class.simpleName)
 
     override fun handle(ctx: RoutingContext) {
+        val username = ctx.session().get<String>(SESSION_USERNAME)
         val data = JsonObject()
-        freeMarkerEngine.render(data, pathHTML).onSuccess { res ->
-            ctx.response().end(res)
-        }.onFailure { res ->
-            ctx.fail(res)
-        }
+        data.put("username", username)
+        renderHandler.exec(ctx, pathHTML, data)
     }
+
 }

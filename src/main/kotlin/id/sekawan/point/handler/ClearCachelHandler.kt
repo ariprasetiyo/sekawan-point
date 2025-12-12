@@ -13,7 +13,7 @@ import rx.Scheduler
 
 class ClearCachelHandler(
     adminList: List<String>,
-    val freeMakerEngine: FreeMarkerTemplateEngine,
+    private val freeMakerEngine: FreeMarkerTemplateEngine,
     val gson: Gson,
     private val vertxScheduler: Scheduler,
     private val ioScheduler: Scheduler,

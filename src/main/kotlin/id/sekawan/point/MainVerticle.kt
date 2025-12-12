@@ -108,12 +108,16 @@ class MainVerticle : AbstractVerticle() {
         val ioScheduler = Schedulers.io()
         val satuDatastore = FirstDataStoreImpl(satuDB, gson)
         val satuTransactionDataStore = FirstTransactionDataStore(satuDatastore, gson)
+
         val healthCheckReadiness = HealthCheckHandler.create(vertx)
         val healthCheckLiveness = HealthCheckHandler.create(vertx)
         healthCheckLiveness.register("sekawan-point-health-check") { future -> future.complete(Status.OK()) }
         healthCheckReadiness.register("sekawan-point-database") { future -> isDatabaseOk(future, satuDB) }
+
         val freeMakerEngine = FreeMarkerTemplateEngine.create(vertx, ".html")
         unwrapFreemakerConfiguration(freeMakerEngine)
+        val renderHandler = RenderHandler(freeMakerEngine)
+
         val sessionHandler = sessionHandler()
         jwtAuth = jwtAuth()
 
@@ -147,27 +151,29 @@ class MainVerticle : AbstractVerticle() {
         val authRequiredHandler = AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, arrayListOf("admin", "user"))
         route().handler(AuthRoutePrefixHandler(gson, authRequiredHandler))
 
-        route("/css/*").handler(StaticHandler.create("resources/templates/css"))
-        route("/img/*").handler(StaticHandler.create("resources/templates/img"))
-        route("/js/*").handler(StaticHandler.create("resources/templates/js"))
-        route("/scss/*").handler(StaticHandler.create("resources/templates/scss"))
-        route("/vendor/*").handler(StaticHandler.create("resources/templates/vendor"))
-        route("/backoffice/v1/*").handler(StaticHandler.create(pathResource))
+        route("/css/*").handler(StaticHandler("resources/templates/css").exec())
+        route("/img/*").handler(StaticHandler("resources/templates/img").exec())
+        route("/js/*").handler(StaticHandler("resources/templates/js").exec())
+        route("/scss/*").handler(StaticHandler("resources/templates/scss").exec())
+        route("/vendor/*").handler(StaticHandler("resources/templates/vendor").exec())
+//        route("/backoffice/v1/*").handler(StaticHandler.create(pathResource))
 
-        get("/login").handler(RouteWebHandler(ArrayList(), freeMakerEngine, "login.html"))
-        post("/login").handler(LoginHandler( satuDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, jwtAuth, ArrayList()))
-        get("/backoffice/v1").handler(RouteWebHandler(ArrayList(), freeMakerEngine, "index.html"))
+        get("/login").handler(RouteWebHandler(renderHandler, "login.html"))
+        post("/login").handler(LoginHandler(satuDatastore, gson, vertxScheduler, ioScheduler, renderHandler, jwtAuth, ArrayList()))
+        get("/backoffice/v1").handler(RouteWebHandler(renderHandler, "dashboard.html"))
         post("/backoffice/v1").handler(DashboardHandler(satuDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
 
-        get("/forbidden").handler(ForbiddenWebHandler(ArrayList(), freeMakerEngine))
-        get("/logout").handler(LogoutHandler(ArrayList()))
-        get("/clear-cache").handler(ClearCachelHandler(ArrayList(), freeMakerEngine, gson,  vertxScheduler, ioScheduler))
+        get("/forbidden").handler(ForbiddenWebHandler(ArrayList(), renderHandler))
+        get("/logout").handler(LogoutHandler(ArrayList(), gson, vertxScheduler, ioScheduler, renderHandler))
+        get("/clear-cache").handler(ClearCachelHandler(ArrayList(), freeMakerEngine, gson, vertxScheduler, ioScheduler))
 
         get("/internal/v1/health/ready").handler(healthCheckReadiness)
         get("/internal/v1/health/live").handler(healthCheckLiveness)
 
 
-        post("/api/v1/subscribe").handler(SatuTestHandler(satuDatastore, gson, vertxScheduler, ioScheduler, ArrayList()
+        post("/api/v1/subscribe").handler(
+            SatuTestHandler(
+                satuDatastore, gson, vertxScheduler, ioScheduler, ArrayList()
             )
         )
     }
@@ -203,23 +209,27 @@ class MainVerticle : AbstractVerticle() {
         }
     }
 
-    private fun unwrapFreemakerConfiguration(freeMakerEngine : FreeMarkerTemplateEngine){
+    private fun unwrapFreemakerConfiguration(freeMakerEngine: FreeMarkerTemplateEngine) {
         // get the underlying FreeMarker Configuration
         val cfg = freeMakerEngine.unwrap()
         // Only proceed if unwrap() returns a valid Configuration
         if (cfg != null) {
             cfg.templateLoader = FileTemplateLoader(File(pathResource))
             cfg.defaultEncoding = "UTF-8"
+
+            //cache in middleware
+            cfg.templateUpdateDelayMilliseconds = Long.MAX_VALUE    // check changes every 5 sec
+            cfg.cacheStorage = freemarker.cache.MruCacheStorage(0, 250)  // default LRU cache
+
             // optional: disable caching for hot reload
             // cfg.templateUpdateDelayMilliseconds = 0
             // cfg.cacheStorage = freemarker.cache.NullCacheStorage()
-            // println("FreeMarker hot reload ENABLED at conf-local/templates/")
         } else {
             throw IllegalStateException("Cannot unwrap FreeMarker configuration")
         }
     }
 
-    private fun sessionHandler() : SessionHandler {
+    private fun sessionHandler(): SessionHandler {
         // next could be change to SessionStore store = RedisSessionStore.create(vertx, redis);
         val sessionStore = CookieSessionStore.create(vertx, "abc")
         val sessionSetup = SessionHandler.create(sessionStore)
@@ -229,7 +239,7 @@ class MainVerticle : AbstractVerticle() {
             .setNagHttps(false)
             .setCookieSecureFlag(true)
             .setCookieSameSite(CookieSameSite.LAX)
-            //.setCookieHttpOnlyFlag(true)
+        //.setCookieHttpOnlyFlag(true)
         return sessionSetup
     }
 

@@ -1,22 +1,54 @@
 package id.sekawan.point.handler
 
-import id.sekawan.point.util.AdminHandler
+import com.google.gson.Gson
+import id.sekawan.point.util.*
 import id.sekawan.point.util.mylog.LoggerFactory
+import io.netty.handler.codec.http.HttpResponseStatus
 import io.vertx.ext.web.RoutingContext
+import org.apache.commons.lang3.StringUtils
+import rx.Observable
+import rx.Scheduler
 
-class LogoutHandler(adminList: List<String>
+class LogoutHandler(
+    adminList: List<String>,
+    private val gson: Gson,
+    private val vertxScheduler: Scheduler,
+    private val ioScheduler: Scheduler,
+    private val renderHandler: RenderHandler
 ) : AdminHandler<RoutingContext>(adminList) {
 
     private val logger = LoggerFactory().createLogger(this::class.simpleName)
 
     override fun handle(ctx: RoutingContext) {
 
-        ctx.session().destroy()
+        val username = ctx.session().get<String>(SESSION_USERNAME)
+        isValidRequest(username)
+            .map {
+                ctx.session().destroy()
+                return@map true
+            }
+            .subscribeOn(ioScheduler)
+            .observeOn(vertxScheduler)
+            .subscribe(object : DefaultSubscriber<Boolean>(this::class.java.simpleName, ctx) {
+                override fun onNext(t: Boolean) {
+                    renderHandler.exec(ctx, "login.html")
+                }
 
-        ctx.json(
-            mapOf(
-                "status" to "logged_out"
-            )
-        )
+                override fun onError(e: Throwable) {
+                    super.onError(e)
+                    if (e !is HttpException) {
+                        ctx.response()
+                            .setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code())
+                            .end()
+                    }
+                }
+            })
+    }
+
+    private fun isValidRequest(username: String?): Observable<Boolean> {
+        return if (StringUtils.isNotEmpty(username)
+        ) {
+            Observable.just(true)
+        } else throwErrorBadRequest()
     }
 }

@@ -26,7 +26,7 @@ class LoginHandler(
     private val gson: Gson,
     private val vertxScheduler: Scheduler,
     private val ioScheduler: Scheduler,
-    private val freeMakerEngine: FreeMarkerTemplateEngine,
+    private val renderHandler: RenderHandler,
     private val jwtAuth: JWTAuth,
     adminList: List<String>
 ) : AdminHandler<RoutingContext>(adminList) {
@@ -94,12 +94,7 @@ class LoginHandler(
                             .end()
                     } else {
                         ctx.put("error", "Invalid username or password")
-                        freeMakerEngine.render(ctx.data(), "login.html")
-                            .onSuccess { res ->
-                                ctx.response().end(res)
-                            }.onFailure { res ->
-                                ctx.fail(res)
-                            }
+                        renderHandler.exec(ctx, "login.html")
                     }
                 }
 
@@ -125,7 +120,7 @@ class LoginHandler(
         return response
     }
 
-    private fun jwtClaims(username : String, expiredInSecond : Long, type : String ) :  JsonObject{
+    private fun jwtClaims(username: String, expiredInSecond: Long, type: String): JsonObject {
         return JsonObject()
             .put(JWT_SUB, username)
             .put(JWT_EXP, Instant.now().plusSeconds(expiredInSecond).epochSecond)
