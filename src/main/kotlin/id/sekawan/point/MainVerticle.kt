@@ -7,6 +7,9 @@ import freemarker.cache.FileTemplateLoader
 import id.sekawan.point.database.FirstDataStoreImpl
 import id.sekawan.point.database.FirstTransactionDataStore
 import id.sekawan.point.handler.*
+import id.sekawan.point.handler.test.VertxRxJava
+import id.sekawan.point.handler.test.VirtualThreadEventBus
+import id.sekawan.point.handler.test.VirtualThreadExecuteBlocking
 import id.sekawan.point.middleware.AuthRequiredHandler
 import id.sekawan.point.middleware.AuthRoutePrefixHandler
 import id.sekawan.point.util.*
@@ -14,6 +17,7 @@ import id.sekawan.point.util.mylib.GsonHelper
 import id.sekawan.point.util.mylog.LoggerFactory
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Promise
+import io.vertx.core.WorkerExecutor
 import io.vertx.core.http.CookieSameSite
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.http.HttpServerOptions
@@ -35,12 +39,15 @@ import io.vertx.rx.java.RxHelper
 import org.joda.time.DateTime
 import rx.schedulers.Schedulers
 import java.io.File
+import java.util.concurrent.Executors
+
 
 class MainVerticle : AbstractVerticle() {
 
     private val logger = LoggerFactory().createLogger(this.javaClass.name)
     private lateinit var jwtAuth: JWTAuth
     private val pathResource = "resources/templates/backoffice/v1"
+    private lateinit var executor: WorkerExecutor
 
     override fun start(startPromise: Promise<Void>) {
 
@@ -57,6 +64,10 @@ class MainVerticle : AbstractVerticle() {
             }
     }
 
+    override fun stop() {
+        executor.close()
+    }
+
     private fun createSatuDatabase(config: JsonObject): Database {
         return createDatabase(
             config.getString(CONFIG_SATU_DB_URL),
@@ -71,6 +82,9 @@ class MainVerticle : AbstractVerticle() {
 
     private fun createHttpServerOptions(configObject: JsonObject): HttpServerOptions {
         val serverOptions = HttpServerOptions()
+            .setTcpKeepAlive(true)
+            .setIdleTimeout(30)
+            .setAcceptBacklog(1024)
 //        serverOptions.port = configObject.getInteger(CONFIG_BIND_PORT)!!
         serverOptions.isSsl = false
         return serverOptions
@@ -119,6 +133,9 @@ class MainVerticle : AbstractVerticle() {
         val renderHandler = RenderHandler(config(), freeMakerEngine)
         val staticHandler = StaticHandler(config())
 
+        val vt = Executors.newVirtualThreadPerTaskExecutor()
+        executor = vertx.createSharedWorkerExecutor("my-worker-pool")
+
         val sessionHandler = sessionHandler()
         jwtAuth = jwtAuth()
 
@@ -159,6 +176,10 @@ class MainVerticle : AbstractVerticle() {
         route("/vendor/*").handler(staticHandler.exec("resources/templates/vendor"))
         route("/backoffice/v1/*").handler(StaticHandler.create(pathResource))
 
+        get("/test/vertx/virtualThread/eventBus").handler(VirtualThreadEventBus(vertx, vt))
+        get("/test/vertx/virtualThread/executeBlocking").handler(VirtualThreadExecuteBlocking(executor, vt))
+        get("/test/vertx/rxJava").handler(VertxRxJava( vertxScheduler, ioScheduler))
+
         get("/login").handler(LoginWebHandler(renderHandler, "login.html"))
         post("/login").handler(LoginHandler(satuDatastore, gson, vertxScheduler, ioScheduler, renderHandler, jwtAuth, ArrayList()))
         get("/backoffice/v1").handler(RouteWebHandler(renderHandler, "dashboard.html"))
@@ -177,6 +198,16 @@ class MainVerticle : AbstractVerticle() {
                 satuDatastore, gson, vertxScheduler, ioScheduler, ArrayList()
             )
         )
+    }
+
+    private fun sasa(){
+        val executor: WorkerExecutor = vertx.createSharedWorkerExecutor("my-worker-pool")
+        executor.executeBlocking {
+
+        }.onComplete { res ->
+            System.out.println("The result is: " + res.result())
+        }
+
     }
 
     private fun isDatabaseOk(future: Promise<Status>, satuDB: Database) {

@@ -11,7 +11,11 @@ import java.io.File
 private val logger = LoggerFactory().createLogger("main")
 fun main(args: Array<String>) = runBlocking {
 
-    val vertx = Vertx.vertx(VertxOptions())
+    val options = VertxOptions()
+//        .setWorkerPoolSize(32)
+//        .setPreferNativeTransport(true)
+//        .setEventLoopPoolSize(4)
+    val vertx = Vertx.vertx(options)
     val configPath = args.firstOrNull() ?: "conf-local/config.json"
     val configJson = File(configPath).readText()
     val config = JsonObject(configJson)

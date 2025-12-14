@@ -2,7 +2,7 @@ version '1.0-SNAPSHOT'
 group 'id.sekawan'
 
 buildscript {
-    ext.kotlin_version = '1.9.0'
+    ext.kotlin_version = '2.0.20'
     ext.vertx_version = '5.0.4'
 
     repositories {
@@ -77,13 +77,16 @@ dependencies {
     testImplementation group: 'junit', name: 'junit', version: '4.12'
     testImplementation "io.mockk:mockk:1.4"
     testImplementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+
+    testImplementation group: 'junit', name: 'junit', version: '4.12'
+    testImplementation "io.mockk:mockk:1.4"
 }
 
 compileKotlin {
-    kotlinOptions.jvmTarget = "17"
+    kotlinOptions.jvmTarget = "21"
 }
 compileTestKotlin {
-    kotlinOptions.jvmTarget = "17"
+    kotlinOptions.jvmTarget = "21"
 }
 
 shadowJar {
