@@ -184,6 +184,7 @@ class MainVerticle : AbstractVerticle() {
         post("/login").handler(LoginHandler(satuDatastore, gson, vertxScheduler, ioScheduler, renderHandler, jwtAuth, ArrayList()))
         get("/backoffice/v1").handler(RouteWebHandler(renderHandler, "dashboard.html"))
         post("/backoffice/v1").handler(DashboardHandler(satuDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
+        get("/backoffice/v1/v-main").handler(RouteWebHandler(renderHandler, "v-main.html"))
 
         get("/forbidden").handler(ForbiddenWebHandler(ArrayList(), renderHandler))
         get("/logout").handler(LogoutHandler(ArrayList(), gson, vertxScheduler, ioScheduler, renderHandler))

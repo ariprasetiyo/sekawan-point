@@ -4,11 +4,13 @@ const { createRouter, createWebHashHistory } = VueRouter;
 // Components (HTML + JS)
 import Home from "./v-home.js";
 import Dashboard from "./v-dashboard.js";
+import RegistrationUsers from "./v-registration-users.js";
 
 const routes = [
   //main home
   { path: "/", component: Home },
-  { path: "/nav-dashboard-sample", component: Dashboard }
+  { path: "/nav-dashboard", component: Dashboard },
+  { path: "/nav-registration", component: RegistrationUsers }
 ];
 
 const router = createRouter({
@@ -23,4 +25,4 @@ const App = {
 
 createApp(App)
   .use(router)
-  .mount("#app-main-sample");
+  .mount("#app-main");
