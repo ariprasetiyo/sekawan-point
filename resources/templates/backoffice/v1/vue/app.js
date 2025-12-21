@@ -2,13 +2,14 @@ const { createApp } = Vue;
 const { createRouter, createWebHashHistory } = VueRouter;
 
 // Components (HTML + JS)
-import Home from "./v-home.js";
+import MainJs from "./v-main.js";
 import Dashboard from "./v-dashboard.js";
 import RegistrationUsers from "./v-registration-users.js";
 
 const routes = [
   //main home
-  { path: "/", component: Home },
+  { path: "/", component: MainJs },
+  { path: "/nav-main", component: MainJs },
   { path: "/nav-dashboard", component: Dashboard },
   { path: "/nav-registration", component: RegistrationUsers }
 ];

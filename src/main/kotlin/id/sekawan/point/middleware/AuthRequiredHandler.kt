@@ -62,7 +62,7 @@ class AuthRequiredHandler(
 
     private fun renderForbidden(ctx: RoutingContext, errorLoginType : ErrorLoginType){
         val data = JsonObject().apply {
-            put("error", errorLoginType.errorCode)
+            put("errorCode", errorLoginType.errorCode)
             put("errorMessage", errorLoginType.errorMessage)
         }
         freeMarkerEngine.render(data, "forbidden.html").onSuccess { res ->

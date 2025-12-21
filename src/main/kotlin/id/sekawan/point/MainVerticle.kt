@@ -182,7 +182,7 @@ class MainVerticle : AbstractVerticle() {
 
         get("/login").handler(LoginWebHandler(renderHandler, "login.html"))
         post("/login").handler(LoginHandler(satuDatastore, gson, vertxScheduler, ioScheduler, renderHandler, jwtAuth, ArrayList()))
-        get("/backoffice/v1").handler(RouteWebHandler(renderHandler, "dashboard.html"))
+        get("/backoffice/v1").handler(RouteWebHandler(renderHandler, "v-main.html"))
         post("/backoffice/v1").handler(DashboardHandler(satuDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
         get("/backoffice/v1/v-main").handler(RouteWebHandler(renderHandler, "v-main.html"))
 
@@ -269,9 +269,9 @@ class MainVerticle : AbstractVerticle() {
         // next could be change to SessionStore store = RedisSessionStore.create(vertx, redis);
         val sessionStore = CookieSessionStore.create(vertx, "abc")
         val sessionSetup = SessionHandler.create(sessionStore)
-            .setSessionTimeout(5 * 60 * 1000)   // 30 menit idle timeout
+            .setSessionTimeout(10 * 60 * 1000)   // 30 menit idle timeout
             //in seconds. if not set will session remove when browser closed
-            //.setCookieMaxAge(30 * 60)
+            .setCookieMaxAge(30 * 60)
             .setNagHttps(false)
             .setCookieSecureFlag(true)
             .setCookieSameSite(CookieSameSite.LAX)
