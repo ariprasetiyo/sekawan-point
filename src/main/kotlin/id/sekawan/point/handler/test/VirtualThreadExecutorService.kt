@@ -3,11 +3,10 @@ package id.sekawan.point.handler.test
 import id.sekawan.point.util.mylog.LoggerFactory
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
-import io.vertx.core.WorkerExecutor
 import io.vertx.ext.web.RoutingContext
 import java.util.concurrent.ExecutorService
 
-class VirtualThreadExecuteBlocking(private val executor: WorkerExecutor, private val vt: ExecutorService) :
+class VirtualThreadExecutorService(private val vertx: Vertx, private val vt: ExecutorService) :
     Handler<RoutingContext> {
 
     private val logger = LoggerFactory().createLogger(this::class.simpleName)
@@ -15,7 +14,7 @@ class VirtualThreadExecuteBlocking(private val executor: WorkerExecutor, private
     override fun handle(ctx: RoutingContext) {
 
         logger.info("VT THREAD1: ${Thread.currentThread()}")
-        executor.executeBlocking<String>({
+        vertx.executeBlocking<String>({
             logger.info("VT THREAD2: ${Thread.currentThread()}")
             return@executeBlocking vt.submit<String> {
                 var a = 0

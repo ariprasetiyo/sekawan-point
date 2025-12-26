@@ -4,8 +4,8 @@ import com.google.gson.Gson
 import id.sekawan.point.util.mylog.LoggerFactory
 import rx.Observable
 
-class FirstTransactionDataStore(
-    private val firstDataStore: FirstDataStore,
+class MasterTransactionDataStore(
+    private val firstDataStore: MasterDataStore,
     val gson: Gson) {
 
     private val logger = LoggerFactory().createLogger(this.javaClass.simpleName)

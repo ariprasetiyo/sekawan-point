@@ -4,6 +4,7 @@ public enum ResponseStatus {
     GENERAL_SUCCESS(100, "success"),
     GENERAL_FAILED(200, "failed"),
     GENERAL_NOT_FOUND(201, "not_found"),
+    GENERAL_BAD_REQUEST(400, "bad request"),
     SUBSCRIPTION_HEAD_OFFICE_ID_NOT_FOUND(300, "head_office_id_not_found"),
     SUBSCRIPTION_NAME_ALREADY_EXISTS(301, "name_already_exists"),
     SUBSCRIPTION_HAS_ACTIVE_SUBSCRIBER(302, "has_active_subscriber"),

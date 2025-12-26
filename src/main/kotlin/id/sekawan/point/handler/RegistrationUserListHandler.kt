@@ -11,15 +11,13 @@ import io.netty.handler.codec.http.HttpResponseStatus
 import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.core.Observable
 import io.vertx.ext.web.RoutingContext
-import io.vertx.ext.web.templ.freemarker.FreeMarkerTemplateEngine
 import java.util.*
 
-class DashboardHandler(
+class RegistrationUserListHandler(
     private val satuDatastore: MasterDataStoreImpl,
     private val gson: Gson,
     private val vertxScheduler: Scheduler,
     private val ioScheduler: Scheduler,
-    private val freeMakerEngine : FreeMarkerTemplateEngine,
     adminList: List<String>
 ) : AdminHandler<RoutingContext>(adminList) {
 

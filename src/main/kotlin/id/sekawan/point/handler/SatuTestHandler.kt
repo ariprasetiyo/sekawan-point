@@ -1,7 +1,7 @@
 package id.sekawan.point.handler
 
 import com.google.gson.Gson
-import id.sekawan.point.database.FirstDataStoreImpl
+import id.sekawan.point.database.MasterDataStoreImpl
 import id.sekawan.point.util.HttpException
 import id.sekawan.point.util.AdminHandler
 import id.sekawan.point.util.DefaultSubscriber
@@ -13,11 +13,11 @@ import id.sekawan.point.util.throwErrorBadRequest
 import io.netty.handler.codec.http.HttpResponseStatus
 import io.vertx.ext.web.RoutingContext
 import org.apache.commons.lang3.StringUtils
-import rx.Observable
-import rx.Scheduler
+import io.reactivex.rxjava3.core.Scheduler
+import io.reactivex.rxjava3.core.Observable
 
 class SatuTestHandler(
-    private val satuDatastore: FirstDataStoreImpl,
+    private val satuDatastore: MasterDataStoreImpl,
     private val gson: Gson,
     private val vertxScheduler: Scheduler,
     private val ioScheduler: Scheduler,
@@ -61,7 +61,8 @@ class SatuTestHandler(
         val subscriptionId = request.body.subscriptionId
         val merchantId = request.body.merchantId
 
-        return satuDatastore.getSatu(subscriptionId)
+        return  Observable.just(buildResponse(request, ResponseStatus.GENERAL_NOT_FOUND))
+        /*return satuDatastore.getSatu(subscriptionId)
             .flatMap { subscription ->
                     logger.info("not found", "subscription id not found ${gson.toJson(request)}")
                     return@flatMap Observable.just(buildResponse(request, ResponseStatus.GENERAL_NOT_FOUND))
@@ -69,7 +70,7 @@ class SatuTestHandler(
             .onErrorReturn { e ->
                 logger.error("Error during merchant subscription", e.message, e)
                 return@onErrorReturn buildResponse(request, ResponseStatus.GENERAL_FAILED)
-            }
+            }*/
     }
 
     private fun buildResponse(request: SubscribeUnsubscribeRequest, status: ResponseStatus): DefaultResponse {

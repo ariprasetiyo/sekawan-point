@@ -8,13 +8,13 @@ import id.sekawan.point.util.mymodel.DefaultResponse
 import id.sekawan.point.util.mymodel.ResponseStatus
 import id.sekawan.point.util.mymodel.SubscribeUnsubscribeRequest
 import io.netty.handler.codec.http.HttpResponseStatus
-import io.reactivex.rxjava3.core.Scheduler
-import io.reactivex.rxjava3.core.Observable
 import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.templ.freemarker.FreeMarkerTemplateEngine
+import io.reactivex.rxjava3.core.Scheduler
+import io.reactivex.rxjava3.core.Observable
 import java.util.*
 
-class DashboardHandler(
+class RegistrationRoleListHandler(
     private val satuDatastore: MasterDataStoreImpl,
     private val gson: Gson,
     private val vertxScheduler: Scheduler,

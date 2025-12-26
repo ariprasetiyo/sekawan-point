@@ -1,8 +1,9 @@
 package id.sekawan.point.handler
 
 import com.google.gson.Gson
-import id.sekawan.point.database.FirstDataStoreImpl
+import id.sekawan.point.database.MasterDataStoreImpl
 import id.sekawan.point.type.JWTTokenType
+import id.sekawan.point.type.RoleType
 import id.sekawan.point.util.*
 import id.sekawan.point.util.mylog.LoggerFactory
 import id.sekawan.point.util.mymodel.DefaultResponse
@@ -10,19 +11,18 @@ import id.sekawan.point.util.mymodel.ResponseStatus
 import id.sekawan.point.util.mymodel.TokenDTO
 import id.sekawan.point.util.mymodel.UserSessionDTO
 import io.netty.handler.codec.http.HttpResponseStatus
+import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.core.Scheduler
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.auth.JWTOptions
 import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.web.RoutingContext
-import io.vertx.ext.web.templ.freemarker.FreeMarkerTemplateEngine
-import rx.Observable
-import rx.Scheduler
 import java.time.Instant
 import java.util.*
 import kotlin.collections.ArrayList
 
 class LoginHandler(
-    private val satuDatastore: FirstDataStoreImpl,
+    private val satuDatastore: MasterDataStoreImpl,
     private val gson: Gson,
     private val vertxScheduler: Scheduler,
     private val ioScheduler: Scheduler,
@@ -39,16 +39,16 @@ class LoginHandler(
         val password = ctx.request().getFormAttribute("password") ?: ""
 
         var isValidLogin = false
-        val roles = ArrayList<String>()
+        val roles = ArrayList<RoleType>()
         if (username == "admin" && password == "admin") {
-            roles.add("admin")
-            roles.add("user")
+            roles.add(RoleType.ADMIN)
+            roles.add(RoleType.BASIC_USER)
             isValidLogin = true
         } else if (username == "user" && password == "user") {
-            roles.add("user")
+            roles.add(RoleType.BASIC_USER)
             isValidLogin = true
         } else if (username == "user1" && password == "user1") {
-            roles.add("user1")
+            roles.add(RoleType.BLOCK_USER)
             isValidLogin = true
         }
 

@@ -6,10 +6,11 @@ import id.sekawan.point.util.mylog.LoggerFactory
 import id.sekawan.point.util.mymodel.DefaultResponse
 import id.sekawan.point.util.mymodel.ResponseStatus
 import io.opentelemetry.api.trace.Span
+import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.core.Scheduler
 import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.templ.freemarker.FreeMarkerTemplateEngine
-import rx.Observable
-import rx.Scheduler
+
 
 class ClearCachelHandler(
     adminList: List<String>,

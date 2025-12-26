@@ -2,6 +2,7 @@ package id.sekawan.point.middleware
 
 import com.google.gson.Gson
 import id.sekawan.point.type.ErrorLoginType
+import id.sekawan.point.type.RoleType
 import id.sekawan.point.util.JWT_SUB
 import id.sekawan.point.util.SESSION_LOGIN
 import id.sekawan.point.util.SESSION_USERNAME
@@ -18,7 +19,7 @@ class AuthRequiredHandler(
     private val jwtAuth: JWTAuth,
     val gson: Gson,
     private val freeMarkerEngine: FreeMarkerTemplateEngine,
-    private val authorizationRoles: ArrayList<String>,
+    private val authorizationRoles: ArrayList<RoleType>,
 ) : Handler<RoutingContext> {
 
     private val logger = LoggerFactory().createLogger(this.javaClass.name)

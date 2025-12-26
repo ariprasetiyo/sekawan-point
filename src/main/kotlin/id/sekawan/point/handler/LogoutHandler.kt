@@ -4,10 +4,10 @@ import com.google.gson.Gson
 import id.sekawan.point.util.*
 import id.sekawan.point.util.mylog.LoggerFactory
 import io.netty.handler.codec.http.HttpResponseStatus
+import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.core.Scheduler
 import io.vertx.ext.web.RoutingContext
 import org.apache.commons.lang3.StringUtils
-import rx.Observable
-import rx.Scheduler
 
 class LogoutHandler(
     adminList: List<String>,

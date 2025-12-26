@@ -15,6 +15,7 @@ create table ms_users
     email_hash varchar,
     phone_number varchar,
     phone_number_hash varchar,
+    role_id varchar,
     is_active  bool,
     created_at timestamp with time zone not null,
     updated_at timestamp with time zone not null,
@@ -25,3 +26,84 @@ create index concurrently ms_users_username_idx on ms_users using btree(username
 CREATE TRIGGER updated_at_ms_users
 BEFORE UPDATE ON ms_users
 FOR EACH ROW EXECUTE PROCEDURE updated_at_automatically();
+
+----
+
+create table ms_roles
+(
+    id varchar(255) primary key,
+    name varchar,
+    description varchar,
+    authorizations jsonb not null,
+    is_active  bool,
+    created_at timestamp with time zone not null,
+    updated_at timestamp with time zone not null,
+    deleted_at  timestamp with time zone default null
+);
+
+CREATE TRIGGER updated_at_ms_roles
+BEFORE UPDATE ON ms_roles
+FOR EACH ROW EXECUTE PROCEDURE updated_at_automatically();
+
+create table ms_roles_url_authorization
+(
+    id varchar(255) primary key,
+    role_id varchar(255) not null,
+    url text not null,
+    created_at timestamp with time zone not null,
+    updated_at timestamp with time zone not null,
+    deleted_at  timestamp with time zone default null
+)
+
+CREATE TRIGGER updated_at_ms_roles_url_authorization
+BEFORE UPDATE ON ms_roles_url_authorization
+FOR EACH ROW EXECUTE PROCEDURE updated_at_automatically();
+
+create table ms_roles_menu
+(
+    role_id varchar(255),
+    menu_id varchar,
+    created_at timestamp with time zone not null,
+    updated_at timestamp with time zone not null
+);
+
+create index concurrently ms_mrm_role_id_idx on ms_roles_menu using btree(role_id)
+create index concurrently ms_mrm_menu_id_idx on ms_roles_menu using btree(menu_id)
+
+
+CREATE TRIGGER updated_at_ms_roles_menu
+BEFORE UPDATE ON ms_roles_menu
+FOR EACH ROW EXECUTE PROCEDURE updated_at_automatically();
+
+create table ms_menu
+(
+    id varchar(255) primary key,
+    name varchar,
+    description varchar,
+    is_active  bool,
+    created_at timestamp with time zone not null,
+    updated_at timestamp with time zone not null,
+    deleted_at  timestamp with time zone default null
+);
+
+CREATE TRIGGER updated_at_ms_menu
+BEFORE UPDATE ON ms_menu
+FOR EACH ROW EXECUTE PROCEDURE updated_at_automatically();
+
+INSERT into ms_roles (id, name, description, authorizations, is_active, created_at, updated_at) values ('super_admin', 'super admin', 'can access all', '{}', true, now(), now() )
+
+INSERT into ms_roles_url_authorization (id, role_id, url,  created_at, updated_at)
+values
+(gen_random_uuid(), 'super_admin','/api/v1/registration', now(), now() ),
+(gen_random_uuid(), 'super_admin','/backoffice', now(), now() ),
+(gen_random_uuid(), 'super_admin','/internal', now(), now() ),
+(gen_random_uuid(), 'super_admin','/api/*', now(), now() ),
+(gen_random_uuid(), 'super_admin','/v1/admin/', now(), now() ),
+(gen_random_uuid(), 'super_admin','/vendor', now(), now() ),
+(gen_random_uuid(), 'super_admin','/css', now(), now() )
+
+INSERT INTO ms_menu ( id, name, is_active, created_at, updated_at)
+values
+( gen_random_uuid(), 'dashboard', true, now(), now() ),
+( gen_random_uuid(), 'registration user', true, now(), now() ),
+( gen_random_uuid(), 'registration role', true, now(), now() )

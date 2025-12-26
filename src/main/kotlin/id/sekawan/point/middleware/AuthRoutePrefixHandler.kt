@@ -7,7 +7,8 @@ import io.vertx.ext.web.RoutingContext
 
 class AuthRoutePrefixHandler(
     val gson: Gson,
-    private val authRequiredHandler: AuthRequiredHandler
+    private val authRequiredHandler: AuthRequiredHandler,
+    private val authAdminHandler : AuthRequiredHandler
 ) : Handler<RoutingContext> {
 
     private val logger = LoggerFactory().createLogger(this.javaClass.name)
@@ -17,6 +18,10 @@ class AuthRoutePrefixHandler(
         //http://localhost:8080/backoffice/v1/dashboard?username=admin
         val defaultAuthPrefixes = listOf(
             "/api/v1/", "/v1/admin/", "/backoffice/" , "/js",  "/vendor","/css"
+        )
+
+        val authAdmin = listOf(
+            "/api/v1/registration/role","/api/v1/registration/user"
         )
 
         val internalAuthPrefixes = listOf(
@@ -30,6 +35,7 @@ class AuthRoutePrefixHandler(
         when {
             defaultAuthPrefixes.any { path.startsWith(it) } -> authRequiredHandler.handle(ctx)
             internalAuthPrefixes.any { path.startsWith(it) } -> authRequiredHandler.handle(ctx)
+            authAdmin.any { path.startsWith(it) } -> authAdminHandler.handle(ctx)
             else -> ctx.next()
         }
     }
