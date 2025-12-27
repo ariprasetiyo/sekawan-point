@@ -1,6 +1,7 @@
 package id.sekawan.point.handler
 
 import com.google.gson.Gson
+import id.sekawan.point.database.MasterDataRxStore
 import id.sekawan.point.database.MasterDataStoreImpl
 import id.sekawan.point.util.AdminHandler
 import id.sekawan.point.util.DefaultSubscriber
@@ -16,7 +17,7 @@ import io.vertx.ext.web.RoutingContext
 import org.apache.commons.lang3.StringUtils
 
 class RegistrationUserHandler(
-    private val masterDataStore: MasterDataStoreImpl,
+    private val masterDataStoreRx: MasterDataRxStore,
     private val gson: Gson,
     private val vertxScheduler: Scheduler,
     private val ioScheduler: Scheduler,
@@ -49,15 +50,14 @@ class RegistrationUserHandler(
                         isActive = true
                     )
 
-                   /* return@concatMap masterDataStore.insertRegistrationUser(user)
+                    return@concatMap masterDataStoreRx.insertRegistrationUser(user)
                         .map { result ->
                             if (result > 0) {
                                 return@map buildResponse(request, ResponseStatus.GENERAL_SUCCESS)
                             } else {
                                 return@map buildResponse(request, ResponseStatus.GENERAL_FAILED)
                             }
-                        }*/
-                    return@concatMap Observable.just(buildResponse(request, ResponseStatus.GENERAL_SUCCESS))
+                        }.toObservable()
                 } else return@concatMap Observable.just(buildResponse(request, ResponseStatus.GENERAL_BAD_REQUEST))
             }
             .map { gson.toJson(it) }

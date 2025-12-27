@@ -2,19 +2,16 @@ package id.sekawan.point.handler.test
 
 import com.google.gson.Gson
 import id.sekawan.point.util.CONFIG_TEST_MAX_LOP
-import id.sekawan.point.util.DefaultSubscriber
 import id.sekawan.point.util.HttpException
 import id.sekawan.point.util.mylog.LoggerFactory
 import id.sekawan.point.util.mymodel.User
 import io.netty.handler.codec.http.HttpResponseStatus
-import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.core.Single
 import io.vertx.core.Handler
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
 import io.vertx.rxjava3.sqlclient.SqlClient
-import java.util.ArrayList
 
 class RepositoryRxJava3SingleTesting(
     private val vertxScheduler: Scheduler,

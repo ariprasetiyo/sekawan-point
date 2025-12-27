@@ -4,6 +4,8 @@ import com.github.davidmoten.rx.jdbc.Database
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import freemarker.cache.FileTemplateLoader
+import id.sekawan.point.database.MasterDataRxStore
+import id.sekawan.point.database.MasterDataRxStoreImpl
 import id.sekawan.point.database.MasterDataStoreImpl
 import id.sekawan.point.database.MasterTransactionDataStore
 import id.sekawan.point.handler.*
@@ -137,11 +139,12 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
 
     private fun createHttpServerOptions(configObject: JsonObject): HttpServerOptions {
         val serverOptions = HttpServerOptions()
+            .setReuseAddress(true)
             .setTcpKeepAlive(true)
             //kill request process if too long. better
-            .setIdleTimeout(1200)
+            .setIdleTimeout(60 * 60)
             .setIdleTimeoutUnit(TimeUnit.SECONDS)
-            .setAcceptBacklog(1024)
+            .setAcceptBacklog(8192)
             .setTcpKeepAlive(true)
 //        serverOptions.port = configObject.getInteger(CONFIG_BIND_PORT)!!
         serverOptions.isSsl = false
@@ -177,9 +180,17 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
     private fun createRouter() = Router.router(vertx).apply {
         val gson = GsonHelper.createGson()
         val vertxScheduler = RxHelper.scheduler(vertx)
+
+        val vt = Executors.newVirtualThreadPerTaskExecutor()
+        executor = vertx.createSharedWorkerExecutor("my-worker-pool")
+
+//        val executor = Executors.newFixedThreadPool(16)
+//        val ioScheduler = Schedulers.from(vt)
         val ioScheduler = Schedulers.io()
         val masterDatastore = MasterDataStoreImpl(poolJdbc, gson)
         val satuTransactionDataStore = MasterTransactionDataStore(masterDatastore, gson)
+
+        val masterDatastoreRx = MasterDataRxStoreImpl(poolPgRxJava3, gson)
         val myHash = MyHash(config().getString(CONFIG_HASH_SALT))
 
         val healthCheckReadiness = HealthCheckHandler.create(vertx)
@@ -191,9 +202,6 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
         unwrapFreemakerConfiguration(freeMakerEngine)
         val renderHandler = RenderHandler(config(), freeMakerEngine)
         val staticHandler = StaticHandler(config())
-
-        val vt = Executors.newVirtualThreadPerTaskExecutor()
-        executor = vertx.createSharedWorkerExecutor("my-worker-pool")
 
         val sessionHandler = sessionHandler()
         jwtAuth = jwtAuth()
@@ -245,114 +253,25 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
         route("/backoffice/v1/*").handler(StaticHandler.create(pathResource))
 
         get("/test/vertx/virtualThread/eventBus/organic").handler(VirtualThreadEventBus(vertx, vt, config()))
-        get("/test/vertx/virtualThread/executorService/organic").handler(
-            VirtualThreadExecutorService(
-                vertx,
-                vt,
-                config()
-            )
-        )
-        get("/test/vertx/virtualThread/executeBlocking/organic").handler(
-            VirtualThreadExecuteBlocking(
-                executor,
-                vt,
-                config()
-            )
-        )
-        get("/test/vertx/virtualThread/executorService/repository").handler(
-            VirtualThreadExecutorServiceRepository(
-                vertx,
-                vt,
-                poolPg,
-                config()
-            )
-        )
-        get("/test/vertx/virtualThread/organic/repository").handler(
-            VirtualThreadExecuteRepository(
-                executor,
-                vt,
-                poolPg,
-                gson,
-                config()
-            )
-        )
+        get("/test/vertx/virtualThread/executorService/organic").handler(VirtualThreadExecutorService(vertx, vt, config()))
+        get("/test/vertx/virtualThread/executeBlocking/organic").handler(VirtualThreadExecuteBlocking(executor, vt, config()))
+        get("/test/vertx/virtualThread/executorService/repository").handler(VirtualThreadExecutorServiceRepository(vertx, vt, poolPg, config()))
+        get("/test/vertx/virtualThread/organic/repository").handler(VirtualThreadExecuteRepository(executor, vt, poolPg, gson, config()))
         get("/test/vertx/rxJava3/organic").handler(VertxRxJava3Testing(vertxScheduler, ioScheduler, config()))
-        get("/test/vertx/rxJava3/repository").handler(
-            RepositoryRxJava3Testing(
-                vertxScheduler,
-                ioScheduler,
-                poolPgRxJava3,
-                gson,
-                config()
-            )
-        )
+        get("/test/vertx/rxJava3/repository/observable").handler(RepositoryRxJava3Testing(vertxScheduler, ioScheduler, poolPgRxJava3, gson, config()))
+        get("/test/vertx/rxJava3/repository/single").handler(RepositoryRxJava3SingleTesting(vertxScheduler, ioScheduler, poolPgRxJava3, gson, config()))
 
         get("/login").handler(LoginWebHandler(renderHandler, "login.html"))
-        post("/login").handler(
-            LoginHandler(
-                masterDatastore,
-                gson,
-                vertxScheduler,
-                ioScheduler,
-                renderHandler,
-                jwtAuth,
-                ArrayList()
-            )
-        )
+        post("/login").handler(LoginHandler(masterDatastore, gson, vertxScheduler, ioScheduler, renderHandler, jwtAuth, ArrayList()))
         get("/backoffice/v1").handler(RouteWebHandler(renderHandler, "v-main.html"))
-        post("/backoffice/v1").handler(
-            DashboardHandler(
-                masterDatastore,
-                gson,
-                vertxScheduler,
-                ioScheduler,
-                freeMakerEngine,
-                ArrayList()
-            )
-        )
+        post("/backoffice/v1").handler(DashboardHandler(masterDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
         get("/backoffice/v1/v-main").handler(RouteWebHandler(renderHandler, "v-main.html"))
 
         route("/api/v1/registration/*").handler(authSuperAdminHandler)
-        post("/api/v1/registration/user/save").handler(
-            RegistrationUserHandler(
-                masterDatastore,
-                gson,
-                vertxScheduler,
-                ioScheduler,
-                myHash,
-                ArrayList()
-            )
-        )
-        post("/api/v1/registration/user/list").handler(
-            DashboardHandler(
-                masterDatastore,
-                gson,
-                vertxScheduler,
-                ioScheduler,
-                freeMakerEngine,
-                ArrayList()
-            )
-        )
-        post("/api/v1/registration/role/save").handler(
-            DashboardHandler(
-                masterDatastore,
-                gson,
-                vertxScheduler,
-                ioScheduler,
-                freeMakerEngine,
-                ArrayList()
-            )
-        )
-        post("/api/v1/registration/role/list").handler(
-            DashboardHandler(
-                masterDatastore,
-                gson,
-                vertxScheduler,
-                ioScheduler,
-                freeMakerEngine,
-                ArrayList()
-            )
-        )
+        post("/api/v1/registration/user/save").handler(RegistrationUserHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, myHash, ArrayList()))
+        post("/api/v1/registration/user/list").handler(DashboardHandler(masterDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
+        post("/api/v1/registration/role/save").handler(DashboardHandler(masterDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
+        post("/api/v1/registration/role/list").handler(DashboardHandler(masterDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
 
         get("/forbidden").handler(ForbiddenWebHandler(ArrayList(), renderHandler))
         get("/logout").handler(LogoutHandler(ArrayList(), gson, vertxScheduler, ioScheduler, renderHandler))
@@ -360,7 +279,6 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
 
         get("/internal/v1/health/ready").handler(healthCheckReadiness)
         get("/internal/v1/health/live").handler(healthCheckLiveness)
-
 
         post("/api/v1/subscribe").handler(
             SatuTestHandler(

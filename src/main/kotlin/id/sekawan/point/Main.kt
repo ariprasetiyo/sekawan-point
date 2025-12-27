@@ -15,7 +15,7 @@ fun main(args: Array<String>) = runBlocking {
         .setPreferNativeTransport(true)
         .setEventLoopPoolSize(2 * Runtime.getRuntime().availableProcessors())
         .setWorkerPoolSize(64)
-        .setBlockedThreadCheckInterval(60_000)
+//        .setBlockedThreadCheckInterval(60_000)
 
     val vertx = Vertx.vertx(options)
     val vertxRxJava3 = io.vertx.rxjava3.core.Vertx.vertx(options)
