@@ -55,7 +55,7 @@ dependencies {
     implementation "io.vertx:vertx-web:$vertx_version"
     implementation("io.vertx:vertx-web-templ-freemarker:$vertx_version")
 //    implementation 'io.vertx:vertx-rx-java3:5.0.6'
-    implementation "io.vertx:vertx-rx-java3:5.0.6"
+    implementation "io.vertx:vertx-rx-java3:$vertx_version"
     implementation "io.vertx:vertx-auth-jwt:$vertx_version"
     implementation "io.vertx:vertx-health-check:$vertx_version"
     implementation "io.vertx:vertx-lang-kotlin-coroutines:$vertx_version"
@@ -64,7 +64,7 @@ dependencies {
     implementation("io.vertx:vertx-web-sstore-cookie:$vertx_version")   // cookie session store
 
     implementation("io.vertx:vertx-sql-client:$vertx_version")
-    implementation('io.vertx:vertx-pg-client:5.0.6')
+    implementation("io.vertx:vertx-pg-client:$vertx_version")
 
 
     implementation group: 'commons-codec', name: 'commons-codec', version: '1.4'

@@ -1,13 +1,19 @@
 package id.sekawan.point.handler.test
 
+import id.sekawan.point.util.CONFIG_TEST_MAX_LOP
 import id.sekawan.point.util.mylog.LoggerFactory
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
 import io.vertx.core.WorkerExecutor
+import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
 import java.util.concurrent.ExecutorService
 
-class VirtualThreadExecuteBlocking(private val executor: WorkerExecutor, private val vt: ExecutorService) :
+class VirtualThreadExecuteBlocking(
+    private val executor: WorkerExecutor,
+    private val vt: ExecutorService,
+    private val config: JsonObject
+) :
     Handler<RoutingContext> {
 
     private val logger = LoggerFactory().createLogger(this::class.simpleName)
@@ -18,8 +24,8 @@ class VirtualThreadExecuteBlocking(private val executor: WorkerExecutor, private
         executor.executeBlocking<String>({
             logger.info("VT THREAD2: ${Thread.currentThread()}")
             return@executeBlocking vt.submit<String> {
-                var a = 0
-                for (i in 1..2000000000) {
+                var a: Long = 0
+                for (i in 1..config.getLong(CONFIG_TEST_MAX_LOP)) {
                     a += i;
                 }
                 logger.info("VT THREAD3: ${Thread.currentThread()}")
@@ -27,7 +33,7 @@ class VirtualThreadExecuteBlocking(private val executor: WorkerExecutor, private
             }.get()
         }, false)
             .onComplete { s, throwable ->
-                logger.info(s)
+                logger.info("VT THREAD4: ${Thread.currentThread()}")
                 ctx.end(s)
             }
     }

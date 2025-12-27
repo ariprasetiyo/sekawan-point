@@ -7,10 +7,7 @@ import freemarker.cache.FileTemplateLoader
 import id.sekawan.point.database.MasterDataStoreImpl
 import id.sekawan.point.database.MasterTransactionDataStore
 import id.sekawan.point.handler.*
-import id.sekawan.point.handler.test.RepositoryRxJava3Testing
-import id.sekawan.point.handler.test.VertxRxJava3Testing
-import id.sekawan.point.handler.test.VirtualThreadEventBus
-import id.sekawan.point.handler.test.VirtualThreadExecuteBlocking
+import id.sekawan.point.handler.test.*
 import id.sekawan.point.middleware.AuthRequiredHandler
 import id.sekawan.point.middleware.AuthRoutePrefixHandler
 import id.sekawan.point.type.RoleType
@@ -18,9 +15,10 @@ import id.sekawan.point.util.*
 import id.sekawan.point.util.mylib.GsonHelper
 import id.sekawan.point.util.mylib.MyHash
 import id.sekawan.point.util.mylog.LoggerFactory
-import io.reactivex.rxjava3.annotations.Nullable
 import io.reactivex.rxjava3.schedulers.Schedulers
-import io.vertx.core.*
+import io.vertx.core.AbstractVerticle
+import io.vertx.core.Promise
+import io.vertx.core.WorkerExecutor
 import io.vertx.core.http.CookieSameSite
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.http.HttpServerOptions
@@ -41,17 +39,15 @@ import io.vertx.ext.web.templ.freemarker.FreeMarkerTemplateEngine
 import io.vertx.pgclient.PgBuilder
 import io.vertx.pgclient.PgConnectOptions
 import io.vertx.rxjava3.RxHelper
-import io.vertx.rxjava3.core.Vertx
-import io.vertx.sqlclient.*
+import io.vertx.sqlclient.PoolOptions
+import io.vertx.sqlclient.SqlClient
 import org.joda.time.DateTime
 import java.io.File
-import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import kotlin.collections.ArrayList
 
 
-class MainVerticle : AbstractVerticle() {
+class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVerticle() {
 
     private val logger = LoggerFactory().createLogger(this.javaClass.name)
     private lateinit var jwtAuth: JWTAuth
@@ -96,38 +92,45 @@ class MainVerticle : AbstractVerticle() {
 
     private fun initDatabasePgRxJava3(config: JsonObject): io.vertx.rxjava3.sqlclient.SqlClient {
         val connectOptions = PgConnectOptions()
+            .setPort(config.getInteger(CONFIG_SATU_DB_PORT))
+            .setHost(config.getString(CONFIG_SATU_DB_HOST))
+            .setDatabase(config.getString(CONFIG_SATU_DB_NAME))
             .setUser(config.getString(CONFIG_SATU_DB_USER))
             .setPassword(config.getString(CONFIG_SATU_DB_PASS))
 
         val poolOptions = PoolOptions()
-            .setMaxSize(20)
-            .setMaxWaitQueueSize(1000)
-            .setIdleTimeout(30)
-            .setIdleTimeoutUnit(TimeUnit.SECONDS)
+            .setMaxSize(config.getInteger(CONFIG_SATU_DB_MAX_POOL))
+            .setShared(true)
+//            .setMaxWaitQueueSize(1000)
+            .setIdleTimeout(config.getInteger(CONFIG_SATU_DB_IDLE_TIMEOUT_MS))
+            .setIdleTimeoutUnit(TimeUnit.MILLISECONDS)
 
         return io.vertx.rxjava3.pgclient.PgBuilder.pool()
-            .connectingTo(config.getString(CONFIG_SATU_DB_URL))
             .with(poolOptions)
             .connectingTo(connectOptions)
-            .using(Vertx.vertx())
+//            .connectingTo(config.getString(CONFIG_SATU_DB_URL))
+            .using(vertxRxJava3)
             .build()
     }
 
     private fun initDatabasePg(config: JsonObject): SqlClient {
         val connectOptions = PgConnectOptions()
+            .setPort(config.getInteger(CONFIG_SATU_DB_PORT))
+            .setHost(config.getString(CONFIG_SATU_DB_HOST))
+            .setDatabase(config.getString(CONFIG_SATU_DB_NAME))
             .setUser(config.getString(CONFIG_SATU_DB_USER))
             .setPassword(config.getString(CONFIG_SATU_DB_PASS))
 
         val poolOptions = PoolOptions()
-            .setMaxSize(20)
+            .setMaxSize(config.getInteger(CONFIG_SATU_DB_MAX_POOL))
             .setMaxWaitQueueSize(1000)
-            .setIdleTimeout(30)
-            .setIdleTimeoutUnit(TimeUnit.SECONDS)
+            .setIdleTimeout(config.getInteger(CONFIG_SATU_DB_IDLE_TIMEOUT_MS))
+            .setIdleTimeoutUnit(TimeUnit.MILLISECONDS)
 
         return PgBuilder.pool()
-            .connectingTo(config.getString(CONFIG_SATU_DB_URL))
             .with(poolOptions)
             .connectingTo(connectOptions)
+//            .connectingTo(config.getString(CONFIG_SATU_DB_URL))
             .using(vertx)
             .build()
     }
@@ -135,8 +138,11 @@ class MainVerticle : AbstractVerticle() {
     private fun createHttpServerOptions(configObject: JsonObject): HttpServerOptions {
         val serverOptions = HttpServerOptions()
             .setTcpKeepAlive(true)
-            .setIdleTimeout(30)
+            //kill request process if too long. better
+            .setIdleTimeout(1200)
+            .setIdleTimeoutUnit(TimeUnit.SECONDS)
             .setAcceptBacklog(1024)
+            .setTcpKeepAlive(true)
 //        serverOptions.port = configObject.getInteger(CONFIG_BIND_PORT)!!
         serverOptions.isSsl = false
         return serverOptions
@@ -238,10 +244,48 @@ class MainVerticle : AbstractVerticle() {
         route("/vendor/*").handler(staticHandler.exec("resources/templates/vendor"))
         route("/backoffice/v1/*").handler(StaticHandler.create(pathResource))
 
-        get("/test/vertx/virtualThread/eventBus").handler(VirtualThreadEventBus(vertx, vt))
-        get("/test/vertx/virtualThread/executeBlocking").handler(VirtualThreadExecuteBlocking(executor, vt))
-        get("/test/vertx/rxJava").handler(VertxRxJava3Testing(vertxScheduler, ioScheduler))
-        get("/test/vertx/rxJava").handler(RepositoryRxJava3Testing(vertxScheduler, ioScheduler, poolPgRxJava3, gson))
+        get("/test/vertx/virtualThread/eventBus/organic").handler(VirtualThreadEventBus(vertx, vt, config()))
+        get("/test/vertx/virtualThread/executorService/organic").handler(
+            VirtualThreadExecutorService(
+                vertx,
+                vt,
+                config()
+            )
+        )
+        get("/test/vertx/virtualThread/executeBlocking/organic").handler(
+            VirtualThreadExecuteBlocking(
+                executor,
+                vt,
+                config()
+            )
+        )
+        get("/test/vertx/virtualThread/executorService/repository").handler(
+            VirtualThreadExecutorServiceRepository(
+                vertx,
+                vt,
+                poolPg,
+                config()
+            )
+        )
+        get("/test/vertx/virtualThread/organic/repository").handler(
+            VirtualThreadExecuteRepository(
+                executor,
+                vt,
+                poolPg,
+                gson,
+                config()
+            )
+        )
+        get("/test/vertx/rxJava3/organic").handler(VertxRxJava3Testing(vertxScheduler, ioScheduler, config()))
+        get("/test/vertx/rxJava3/repository").handler(
+            RepositoryRxJava3Testing(
+                vertxScheduler,
+                ioScheduler,
+                poolPgRxJava3,
+                gson,
+                config()
+            )
+        )
 
         get("/login").handler(LoginWebHandler(renderHandler, "login.html"))
         post("/login").handler(
@@ -325,16 +369,6 @@ class MainVerticle : AbstractVerticle() {
         )
     }
 
-    private fun sasa() {
-        val executor: WorkerExecutor = vertx.createSharedWorkerExecutor("my-worker-pool")
-        executor.executeBlocking {
-
-        }.onComplete { res ->
-            System.out.println("The result is: " + res.result())
-        }
-
-    }
-
     private fun isDatabaseOk(future: Promise<Status>, satuDB: Database) {
         try {
             val conn = satuDB.connectionProvider.get()
@@ -409,170 +443,6 @@ class MainVerticle : AbstractVerticle() {
         val jwtConfig = JWTAuthOptions()
             .addPubSecKey(PubSecKeyOptions().setAlgorithm("HS256").setBuffer(jwtSecret))
         return JWTAuth.create(vertx, jwtConfig)
-    }
-
-    private fun vertxDatabase() {
-        val connectOptions = PgConnectOptions()
-            .setPort(5432)
-            .setHost("the-host")
-            .setDatabase("the-db")
-            .setUser("user")
-            .setPassword("secret")
-
-        val poolOptions: PoolOptions = PoolOptions()
-            .setMaxWaitQueueSize(1000)      // Backpressure
-            .setMaxSize(5)
-            .setIdleTimeout(30)             // seconds
-            .setIdleTimeoutUnit(TimeUnit.SECONDS)
-            .setConnectionTimeout(5_000);   // ms
-
-        val pool = PgBuilder
-            .pool()
-            .with(poolOptions)
-            .connectingTo(connectOptions)
-            .using(vertx)
-            .build()
-        /*
-                pool.connection { ar ->
-                    if (ar.failed()) return@getConnection ar
-
-                    val conn = ar.result()
-                    conn
-                        .prepare("SELECT * FROM users WHERE id = $1")
-                        .compose { ps -> ps.createStream(1).toList() }
-                        .onComplete { conn.close() }
-                }.toSingle()*/
-
-        val client: SqlClient = PgBuilder
-            .client()
-            .with(poolOptions)
-            .connectingTo(connectOptions)
-            .build()
-
-
-        // A simple query
-        val sas = client
-            .query("SELECT * FROM users WHERE id='julien'")
-            .execute()
-            .onComplete { ar: AsyncResult<RowSet<Row?>> ->
-                if (ar.succeeded()) {
-                    val result = ar.result()
-                    System.out.println(("Got " + result.size()).toString() + " rows ")
-                } else {
-                    println("Failure: " + ar.cause().message)
-                }
-                // Now close the pool
-                client.close()
-            }
-
-        client
-            .preparedQuery("SELECT first_name, last_name FROM users")
-            .execute()
-            .onComplete { ar: AsyncResult<RowSet<Row>> ->
-                if (ar.succeeded()) {
-                    val rows = ar.result()
-                    for (row in rows) {
-                        System.out.println(("User " + row.getString(0)).toString() + " " + row.getString(1))
-                    }
-                } else {
-                    println("Failure: " + ar.cause().message)
-                }
-            }
-
-
-        pool.withConnection<Int?> { connection: SqlConnection ->
-            connection
-                .preparedQuery("INSERT INTO Users (first_name,last_name) VALUES ($1, $2)")
-                .executeBatch(
-                    Arrays.asList(
-                        Tuple.of("Julien", "Viet"),
-                        Tuple.of("Emad", "Alblueshi")
-                    )
-                )
-                .compose<@Nullable Int?> { res: RowSet<Row?>? ->
-                    connection // Do something with rows
-                        .query("SELECT COUNT(*) FROM Users")
-                        .execute()
-                        .map<@Nullable Int?> { rows: RowSet<Row> ->
-                            rows.iterator().next().getInteger(0)
-                        }
-                }
-        }.onSuccess { count: Int? ->
-            println("Insert users, now the number of users is $count")
-        }
-
-
-        val testss = pool.withConnection<Int?> { connection: SqlConnection ->
-            return@withConnection connection
-                .preparedQuery("INSERT INTO Users (first_name,last_name) VALUES ($1, $2)")
-                .executeBatch(
-                    Arrays.asList(
-                        Tuple.of("Julien", "Viet"),
-                        Tuple.of("Emad", "Alblueshi")
-                    )
-                )
-                .compose<@Nullable Int?> { res: RowSet<Row?>? ->
-                    connection // Do something with rows
-                        .query("SELECT COUNT(*) FROM Users")
-                        .execute()
-                        .map<@Nullable Int?> { rows: RowSet<Row> ->
-                            rows.iterator().next().getInteger(0)
-                        }
-                }
-        }
-
-
-//
-//
-//        // Get a connection from the pool
-//        pool.connection.compose { conn: SqlConnection ->
-//            println("Got a connection from the pool")
-//            conn
-//                .query("SELECT * FROM users WHERE id='julien'")
-//                .execute()
-//                .compose { res: RowSet<Row?>? ->
-//                     conn
-//                        .query("SELECT * FROM users WHERE id='emad'")
-//                        .execute()
-//                }
-//                .onComplete { ar: AsyncResult<RowSet<Row>>? ->
-//                    // Release the connection to the pool
-//                    conn.close()
-//                }
-//        }.onComplete { ar: AsyncResult<RowSet<Row>> ->
-//            if (ar.succeeded()) {
-//                println("Done")
-//            } else {
-//                println("Something went wrong " + ar.cause().message)
-//            }
-//        }
-//
-//        // Get a connection from the pool
-//        pool.connection.compose { conn: SqlConnection ->
-//            println("Got a connection from the pool")
-//            conn
-//                .query("SELECT * FROM users LIMIT 1")
-//                .execute { res ->
-//                    if (res.failed()) {
-//                        conn.close()
-//                        promise.fail(res.cause())
-//                        return@execute
-//                    }
-//                    val rows: RowSet<Row> = res.result()
-//                    conn.close()
-//
-//                    // blocking-style return
-//                    promise.complete(rows)
-//                }
-//        }.onComplete { ar: AsyncResult<RowSet<Row>> ->
-//            if (ar.succeeded()) {
-//                println("Done")
-//            } else {
-//                println("Something went wrong " + ar.cause().message)
-//            }
-//        }
-
-
     }
 
 }

@@ -1,6 +1,7 @@
 package id.sekawan.point.handler.test
 
 import com.google.gson.Gson
+import id.sekawan.point.util.CONFIG_TEST_MAX_LOP
 import id.sekawan.point.util.DefaultSubscriber
 import id.sekawan.point.util.HttpException
 import id.sekawan.point.util.mylog.LoggerFactory
@@ -10,15 +11,16 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.core.Single
 import io.vertx.core.Handler
+import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
 import io.vertx.rxjava3.sqlclient.SqlClient
-import java.util.ArrayList
 
 class RepositoryRxJava3Testing(
     private val vertxScheduler: Scheduler,
     private val ioScheduler: Scheduler,
     private val sqlClient: SqlClient,
-    private val gson: Gson
+    private val gson: Gson,
+    private val config: JsonObject
 ) :
     Handler<RoutingContext> {
 
@@ -27,14 +29,14 @@ class RepositoryRxJava3Testing(
     override fun handle(ctx: RoutingContext) {
         logger.info("VT THREAD1: ${Thread.currentThread()}")
         Observable.just(true)
-            .observeOn(ioScheduler)
             .concatMap {
                 return@concatMap findById(1).toObservable()
             }
+            .observeOn(ioScheduler)
             .map {
-                logger.info("VT THREAD1.1: ${Thread.currentThread()} ${gson.toJson(it)}")
-                var a = 0
-                for (i in 1..2000000000) {
+                logger.info("VT THREAD1.2: ${Thread.currentThread()} ${gson.toJson(it)}")
+                var a : Long = 0
+                for (i in 1..config.getLong(CONFIG_TEST_MAX_LOP)) {
                     a += i;
                 }
                 logger.info("VT THREAD2: ${Thread.currentThread()}")
@@ -68,12 +70,14 @@ class RepositoryRxJava3Testing(
 
     private fun findById(id: Long): Single<ArrayList<User>> {
         return sqlClient
-            .query("SELECT username FROM ms_user")
-            .execute().map {
+            .query("select name from ms_roles mr ")
+            .execute()
+            .map {
                 it.rowCount();
                 val users = ArrayList<User>()
                 for (row in it) {
-                    val username  = row.getString("username")
+                    logger.info("VT THREAD1.1: ${Thread.currentThread()}")
+                    val username  = row.getString("name")
                     val user = User(username = username)
                     users.add(user)
 

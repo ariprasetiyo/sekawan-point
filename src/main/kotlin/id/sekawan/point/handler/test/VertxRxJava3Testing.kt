@@ -1,5 +1,6 @@
 package id.sekawan.point.handler.test
 
+import id.sekawan.point.util.CONFIG_TEST_MAX_LOP
 import id.sekawan.point.util.DefaultSubscriber
 import id.sekawan.point.util.HttpException
 import id.sekawan.point.util.mylog.LoggerFactory
@@ -7,11 +8,13 @@ import io.netty.handler.codec.http.HttpResponseStatus
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
 import io.vertx.core.Handler
+import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
 
 class VertxRxJava3Testing(
     private val vertxScheduler: Scheduler,
-    private val ioScheduler: Scheduler
+    private val ioScheduler: Scheduler,
+    private val config: JsonObject
 ) :
     Handler<RoutingContext> {
 
@@ -22,8 +25,8 @@ class VertxRxJava3Testing(
         Observable.just(true)
             .observeOn(ioScheduler)
             .map {
-                var a = 0
-                for (i in 1..2000000000) {
+                var a : Long = 0
+                for (i in 1..config.getLong(CONFIG_TEST_MAX_LOP)) {
                     a += i;
                 }
                 logger.info("VT THREAD2: ${Thread.currentThread()}")

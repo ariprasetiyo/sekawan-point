@@ -1,6 +1,7 @@
 package id.sekawan.point.handler.test
 
 import com.google.gson.Gson
+import id.sekawan.point.util.CONFIG_TEST_MAX_LOP
 import id.sekawan.point.util.DefaultSubscriber
 import id.sekawan.point.util.HttpException
 import id.sekawan.point.util.mylog.LoggerFactory
@@ -10,6 +11,7 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.core.Single
 import io.vertx.core.Handler
+import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
 import io.vertx.rxjava3.sqlclient.SqlClient
 import java.util.ArrayList
@@ -18,7 +20,8 @@ class RepositoryRxJava3SingleTesting(
     private val vertxScheduler: Scheduler,
     private val ioScheduler: Scheduler,
     private val sqlClient: SqlClient,
-    private val gson: Gson
+    private val gson: Gson,
+    private val config: JsonObject
 ) :
     Handler<RoutingContext> {
 
@@ -33,8 +36,8 @@ class RepositoryRxJava3SingleTesting(
             }
             .map {
                 logger.info("VT THREAD1.1: ${Thread.currentThread()} ${gson.toJson(it)}")
-                var a = 0
-                for (i in 1..2000000000) {
+                var a : Long = 0
+                for (i in 1..config.getLong(CONFIG_TEST_MAX_LOP)) {
                     a += i;
                 }
                 logger.info("VT THREAD2: ${Thread.currentThread()}")

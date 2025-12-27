@@ -6,12 +6,14 @@ import io.vertx.core.Handler
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
+import io.vertx.sqlclient.SqlClient
 import java.util.concurrent.ExecutorService
 
-class VirtualThreadExecutorService(
+class VirtualThreadExecutorServiceRepository(
     private val vertx: Vertx,
     private val vt: ExecutorService,
-    private val config: JsonObject
+    private val poolPg: SqlClient,
+    private val config : JsonObject
 ) :
     Handler<RoutingContext> {
 
@@ -23,7 +25,7 @@ class VirtualThreadExecutorService(
         vertx.executeBlocking<String>({
             logger.info("VT THREAD2: ${Thread.currentThread()}")
             return@executeBlocking vt.submit<String> {
-                var a: Long = 0
+                var a : Long = 0
                 for (i in 1..config.getLong(CONFIG_TEST_MAX_LOP)) {
                     a += i;
                 }

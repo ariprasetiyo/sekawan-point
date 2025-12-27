@@ -1,13 +1,19 @@
 package id.sekawan.point.handler.test
 
+import id.sekawan.point.util.CONFIG_TEST_MAX_LOP
 import id.sekawan.point.util.mylog.LoggerFactory
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
 import io.vertx.core.impl.cpu.CpuCoreSensor
+import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
 import java.util.concurrent.ExecutorService
 
-class VirtualThreadEventBus(private val vertx: Vertx, private val vt : ExecutorService) : Handler<RoutingContext> {
+class VirtualThreadEventBus(
+    private val vertx: Vertx,
+    private val vt: ExecutorService,
+    private val config: JsonObject
+) : Handler<RoutingContext> {
 
     private val logger = LoggerFactory().createLogger(this::class.simpleName)
 
@@ -27,8 +33,8 @@ class VirtualThreadEventBus(private val vertx: Vertx, private val vt : ExecutorS
     private fun asyncEventBus() {
         vertx.eventBus().consumer<String>("blocking.service") { msg ->
             vt.submit {
-                var a = 0
-                for(i in 1 .. 2000000000){
+                var a: Long = 0
+                for (i in 1..config.getLong(CONFIG_TEST_MAX_LOP)) {
                     a += i;
                 }
                 logger.info("VT THREAD: ${Thread.currentThread()}")
