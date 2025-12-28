@@ -295,15 +295,17 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
 
         // vertx.executeBlocking & virtual thread
         get("/test/vertx/virtualThread/and/executeBlocking/organic").handler(VirtualThreadExecutorService( vertx, vt, config()))
-        get("/test/vertx/virtualThread/and/executeBlocking/repository").handler(VirtualThreadExecutorServiceRepository(vertx, vt, poolPg, config()))
 
-        //sample use compose dan promise
+        //sample executeBlocking with promise
+        get("/test/vertx/executeBlocking/with-promise").handler(VertxExecuteBlockingOrganic(vertx, poolPg, config()))
+
+        //sample use VT, compose , promise
         get("/test/vertx/virtualThread/sql-client").handler(VirtualThreadSqlClientRepository( vt, poolPg, config()))
 
         //rxJava3
         get("/test/vertx/rxJava3/organic").handler(VertxRxJava3Testing(vertxScheduler, ioScheduler, config()))
-        get("/test/vertx/rxJava3/repository/observable").handler(RepositoryRxJava3ObservableTesting(vertxScheduler, ioScheduler, poolPgRxJava3, gson, config()))
-        get("/test/vertx/rxJava3/repository/single").handler(RepositoryRxJava3SingleTesting(vertxScheduler, ioScheduler, poolPgRxJava3, gson, config()))
+        get("/test/vertx/rxJava3/repository/observable").handler(VertxRxJava3ObservableRepository(vertxScheduler, ioScheduler, poolPgRxJava3, gson, config()))
+        get("/test/vertx/rxJava3/repository/single").handler(VertxRxJava3SingleRepository(vertxScheduler, ioScheduler, poolPgRxJava3, gson, config()))
     }
 
     private fun isDatabaseOk(future: Promise<Status>, satuDB: Database) {

@@ -1,5 +1,6 @@
 package id.sekawan.point.handler.test
 
+import id.sekawan.point.util.CONFIG_TEST_MAX_LOP
 import id.sekawan.point.util.mylog.LoggerFactory
 import id.sekawan.point.util.mymodel.User
 import io.vertx.core.Future
@@ -10,13 +11,11 @@ import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
 import io.vertx.sqlclient.SqlClient
 import java.util.concurrent.Callable
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Semaphore
 
 
-class VirtualThreadExecutorServiceRepository(
+class VertxExecuteBlockingOrganic(
     private val vertx: Vertx,
-    private val vt: ExecutorService,
     private val poolPg: SqlClient,
     private val config: JsonObject
 ) :
@@ -30,7 +29,11 @@ class VirtualThreadExecutorServiceRepository(
 
         logger.info("VT THREAD1: ${Thread.currentThread()}")
         runInVirtualThread(vertx) {
-            Thread.sleep(100) // simulate blocking I/O
+            // simulate blocking I/O
+            var a: Long = 0
+            for (i in 1..config.getLong(CONFIG_TEST_MAX_LOP)) {
+                a += i;
+            }
             "OK from virtual thread"
         }.onSuccess { result ->
             ctx.response().end(result);

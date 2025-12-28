@@ -15,7 +15,7 @@ import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
 import io.vertx.rxjava3.sqlclient.SqlClient
 
-class RepositoryRxJava3ObservableTesting(
+class VertxRxJava3ObservableRepository(
     private val vertxScheduler: Scheduler,
     private val ioScheduler: Scheduler,
     private val sqlClient: SqlClient,

@@ -13,7 +13,7 @@ import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
 import io.vertx.rxjava3.sqlclient.SqlClient
 
-class RepositoryRxJava3SingleTesting(
+class VertxRxJava3SingleRepository(
     private val vertxScheduler: Scheduler,
     private val ioScheduler: Scheduler,
     private val sqlClient: SqlClient,
