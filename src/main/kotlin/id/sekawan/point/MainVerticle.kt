@@ -4,7 +4,7 @@ import com.github.davidmoten.rx.jdbc.Database
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import freemarker.cache.FileTemplateLoader
-import id.sekawan.point.database.MasterDataRxStoreImpl
+import id.sekawan.point.database.MasterDataStoreRxImpl
 import id.sekawan.point.database.MasterDataStoreImpl
 import id.sekawan.point.database.MasterTransactionDataStore
 import id.sekawan.point.handler.*
@@ -58,6 +58,7 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
     private lateinit var poolPgRxJava3: io.vertx.rxjava3.sqlclient.SqlClient
     private lateinit var poolPg: SqlClient
     private lateinit var poolJdbc: Database
+    private lateinit var executorServiceRx: ExecutorService
 
     override fun start(startPromise: Promise<Void>) {
 
@@ -185,19 +186,25 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
         // 1. Unlimited threads
         // 2. Can kill memory under load
         // 3. No backpressure
-        //val vt = Executors.newVirtualThreadPerTaskExecutor()
-        val vt: ExecutorService = Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("vt-", 1).factory())
+        val vt = Executors.newVirtualThreadPerTaskExecutor()
+//        val vt: ExecutorService = Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("vt-", 1).factory())
 
         // vertx worker executor
-        executor = vertx.createSharedWorkerExecutor("my-worker-pool")
+        executor = vertx.createSharedWorkerExecutor("my-worker-pool", 6 * Runtime.getRuntime().availableProcessors())
 
-//        val executor = Executors.newFixedThreadPool(16)
+        // use this for Schedulers using another thread external
 //        val ioScheduler = Schedulers.from(vt)
+//        val ioScheduler = RxHelper.scheduler(vertx)
+
+        // newFixedThreadPool isn't computation thread
+//        executorServiceRx = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2)
+//        executorServiceRx = Executors.newVirtualThreadPerTaskExecutor()
+//        val ioScheduler = Schedulers.from(executorServiceRx)
         val ioScheduler = Schedulers.io()
         val masterDatastore = MasterDataStoreImpl(poolJdbc, gson)
         val satuTransactionDataStore = MasterTransactionDataStore(masterDatastore, gson)
 
-        val masterDatastoreRx = MasterDataRxStoreImpl(poolPgRxJava3, gson)
+        val masterDatastoreRx = MasterDataStoreRxImpl(poolPgRxJava3, gson)
         val myHash = MyHash(config().getString(CONFIG_HASH_SALT))
 
         val healthCheckReadiness = HealthCheckHandler.create(vertx)
@@ -268,8 +275,8 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
         route("/api/v1/registration/*").handler(authSuperAdminHandler)
         post("/api/v1/registration/user/save").handler(RegistrationUserHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, myHash, ArrayList()))
         post("/api/v1/registration/user/list").handler(DashboardHandler(masterDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
-        post("/api/v1/registration/role/save").handler(DashboardHandler(masterDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
-        post("/api/v1/registration/role/list").handler(DashboardHandler(masterDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
+        post("/api/v1/registration/role/save").handler(RegistrationRoleHandler(masterDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
+        get("/api/v1/registration/role/list").handler(RegistrationRoleListHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
 
         get("/forbidden").handler(ForbiddenWebHandler(ArrayList(), renderHandler))
         get("/logout").handler(LogoutHandler(ArrayList(), gson, vertxScheduler, ioScheduler, renderHandler))
@@ -290,17 +297,17 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
 
         //virtual thread
         get("/test/vertx/virtualThread/eventBus/organic").handler(VirtualThreadEventBus(vertx, vt, config()))
-        get("/test/vertx/virtualThread/organic").handler(VirtualThreadOrganic( vt, config(), gson))
-        get("/test/vertx/virtualThread/repository").handler(VirtualThreadOrganicRepository( vt, config(), gson, poolPg))
+        get("/test/vertx/virtualThread/organic").handler(VirtualThreadOrganic(vt, config(), gson))
+        get("/test/vertx/virtualThread/repository").handler(VirtualThreadOrganicRepository(vt, config(), gson, poolPg))
 
         // vertx.executeBlocking & virtual thread
-        get("/test/vertx/virtualThread/and/executeBlocking/organic").handler(VirtualThreadExecutorService( vertx, vt, config()))
+        get("/test/vertx/virtualThread/and/executeBlocking/organic").handler(VirtualThreadExecutorService(vertx, vt, config()))
 
         //sample executeBlocking with promise
         get("/test/vertx/executeBlocking/with-promise").handler(VertxExecuteBlockingOrganic(vertx, poolPg, config()))
 
         //sample use VT, compose , promise
-        get("/test/vertx/virtualThread/sql-client").handler(VirtualThreadSqlClientRepository( vt, poolPg, config()))
+        get("/test/vertx/virtualThread/sql-client").handler(VirtualThreadSqlClientRepository(vt, poolPg, config()))
 
         //rxJava3
         get("/test/vertx/rxJava3/organic").handler(VertxRxJava3Testing(vertxScheduler, ioScheduler, config()))

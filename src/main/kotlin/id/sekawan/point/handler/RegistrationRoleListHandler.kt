@@ -1,25 +1,24 @@
 package id.sekawan.point.handler
 
 import com.google.gson.Gson
-import id.sekawan.point.database.MasterDataStoreImpl
-import id.sekawan.point.util.*
+import id.sekawan.point.database.MasterDataStoreRx
+import id.sekawan.point.util.AdminHandler
+import id.sekawan.point.util.DefaultSubscriber
+import id.sekawan.point.util.HttpException
+import id.sekawan.point.util.SESSION_USERNAME
 import id.sekawan.point.util.mylog.LoggerFactory
 import id.sekawan.point.util.mymodel.DefaultResponse
 import id.sekawan.point.util.mymodel.ResponseStatus
-import id.sekawan.point.util.mymodel.SubscribeUnsubscribeRequest
 import io.netty.handler.codec.http.HttpResponseStatus
-import io.vertx.ext.web.RoutingContext
-import io.vertx.ext.web.templ.freemarker.FreeMarkerTemplateEngine
-import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.core.Observable
-import java.util.*
+import io.reactivex.rxjava3.core.Scheduler
+import io.vertx.ext.web.RoutingContext
 
 class RegistrationRoleListHandler(
-    private val satuDatastore: MasterDataStoreImpl,
+    private val masterDataStoreRx: MasterDataStoreRx,
     private val gson: Gson,
     private val vertxScheduler: Scheduler,
     private val ioScheduler: Scheduler,
-    private val freeMakerEngine : FreeMarkerTemplateEngine,
     adminList: List<String>
 ) : AdminHandler<RoutingContext>(adminList) {
 
@@ -28,20 +27,26 @@ class RegistrationRoleListHandler(
     override fun handle(ctx: RoutingContext) {
 
         val username = ctx.session().get<String>(SESSION_USERNAME)
-        isValidRequest()
-            .map {
-                val request = SubscribeUnsubscribeRequest()
-                request.requestId = UUID.randomUUID().toString()
-                request.type = "login"
-                return@map buildResponse(request, ResponseStatus.GENERAL_SUCCESS)
+
+        Observable.just(1)
+            .observeOn(ioScheduler)
+            .concatMap { request ->
+                return@concatMap masterDataStoreRx.getRoles()
+                    .map { result ->
+                        if (result.isEmpty()) {
+                            return@map buildResponse( ResponseStatus.GENERAL_SUCCESS)
+                        } else {
+                            return@map buildResponse( ResponseStatus.GENERAL_FAILED)
+                        }
+                    }
+
             }
             .map { gson.toJson(it) }
-            .subscribeOn(ioScheduler)
             .observeOn(vertxScheduler)
             .subscribe(object : DefaultSubscriber<String>(this::class.java.simpleName, ctx) {
                 override fun onNext(t: String) {
-                    logger.info("response: $t")
-                    ctx.response().end("<h1>Welcome, $username !</h1>")
+                    super.onNext(t)
+                    ctx.response().end(t)
                 }
 
                 override fun onError(e: Throwable) {
@@ -56,17 +61,14 @@ class RegistrationRoleListHandler(
             })
     }
 
-    private fun buildResponse(request: SubscribeUnsubscribeRequest, status: ResponseStatus): DefaultResponse {
+    private fun buildResponse( status: ResponseStatus): DefaultResponse {
         val response = DefaultResponse()
-        response.requestId = request.requestId
-        response.type = request.type
+        response.requestId = ""
+        response.type = ""
         response.status = status.code
         response.statusMessage = status.message
 
         return response
     }
 
-    private fun isValidRequest(): Observable<Boolean> {
-            return Observable.just(true)
-    }
 }

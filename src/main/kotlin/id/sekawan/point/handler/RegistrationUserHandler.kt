@@ -1,8 +1,7 @@
 package id.sekawan.point.handler
 
 import com.google.gson.Gson
-import id.sekawan.point.database.MasterDataRxStore
-import id.sekawan.point.database.MasterDataStoreImpl
+import id.sekawan.point.database.MasterDataStoreRx
 import id.sekawan.point.util.AdminHandler
 import id.sekawan.point.util.DefaultSubscriber
 import id.sekawan.point.util.HttpException
@@ -17,7 +16,7 @@ import io.vertx.ext.web.RoutingContext
 import org.apache.commons.lang3.StringUtils
 
 class RegistrationUserHandler(
-    private val masterDataStoreRx: MasterDataRxStore,
+    private val masterDataStoreRx: MasterDataStoreRx,
     private val gson: Gson,
     private val vertxScheduler: Scheduler,
     private val ioScheduler: Scheduler,
@@ -32,6 +31,7 @@ class RegistrationUserHandler(
         val username = ctx.session().get<String>(SESSION_USERNAME)
 
         Observable.just(ctx.body().asString())
+            .observeOn(ioScheduler)
             .map { gson.fromJson(it!!, UserRequest::class.java) }
             .concatMap { request ->
                 if (isValidRequest(request.body)) {
@@ -57,11 +57,10 @@ class RegistrationUserHandler(
                             } else {
                                 return@map buildResponse(request, ResponseStatus.GENERAL_FAILED)
                             }
-                        }.toObservable()
+                        }
                 } else return@concatMap Observable.just(buildResponse(request, ResponseStatus.GENERAL_BAD_REQUEST))
             }
             .map { gson.toJson(it) }
-            .subscribeOn(ioScheduler)
             .observeOn(vertxScheduler)
             .subscribe(object : DefaultSubscriber<String>(this::class.java.simpleName, ctx) {
                 override fun onNext(t: String) {

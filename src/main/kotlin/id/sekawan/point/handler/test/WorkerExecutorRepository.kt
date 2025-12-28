@@ -33,8 +33,9 @@ class WorkerExecutorRepository(
             }
             return@executeBlocking a
         }, false)
-            .flatMap {
-                return@flatMap findById(1)
+            .compose{
+                logger.info("VT THREAD2.2: ${Thread.currentThread()}")
+                return@compose findById(1)
                     .map { return@map "string" }
                     .flatMap { findById(1) }
                     .map { result ->
@@ -56,11 +57,12 @@ class WorkerExecutorRepository(
                 gson.toJson(it)
             }
             .onSuccess {
+                logger.info("VT THREAD3: ${Thread.currentThread()}")
                 ctx.end(it)
             }
-            .onComplete { s, throwable ->
+            .onFailure{error ->
                 logger.info("VT THREAD3: ${Thread.currentThread()}")
-                ctx.end(s)
+                ctx.fail(error)
             }
     }
 
@@ -72,7 +74,7 @@ class WorkerExecutorRepository(
                 it.rowCount();
                 val users = ArrayList<User>()
                 for (row in it) {
-                    logger.info("VT THREAD1.1: ${Thread.currentThread()}")
+                    logger.info("VT THREAD2.1: ${Thread.currentThread()}")
                     val username = row.getString("name")
                     val user = User(username = username)
                     users.add(user)

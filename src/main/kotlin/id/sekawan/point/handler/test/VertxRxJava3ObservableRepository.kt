@@ -33,16 +33,21 @@ class VertxRxJava3ObservableRepository(
             .concatMap {
                 return@concatMap findById(1).toObservable()
             }
+            .observeOn(ioScheduler)
             .map {
                 logger.info("VT THREAD1.2: ${Thread.currentThread()} ${gson.toJson(it)}")
-                var a : Long = 0
+                var a: Long = 0
                 for (i in 1..config.getLong(CONFIG_TEST_MAX_LOP)) {
                     a += i;
                 }
                 logger.info("VT THREAD2: ${Thread.currentThread()}")
                 return@map "success"
             }
-            .subscribeOn(ioScheduler)
+//            .subscribeOn(vertxScheduler)
+//            .subscribeOn(ioScheduler)
+            //use this subscribe will use thread rxThread
+//            .observeOn(ioScheduler)
+            //use this subscribe will use thread vertx-event-loop
             .observeOn(vertxScheduler)
             //.subscribe(object : DisposableObserver<String>() {}
             .subscribe(object : DefaultSubscriber<String>(this::class.java.simpleName, ctx) {
@@ -77,7 +82,7 @@ class VertxRxJava3ObservableRepository(
                 val users = ArrayList<User>()
                 for (row in it) {
                     logger.info("VT THREAD1.1: ${Thread.currentThread()}")
-                    val username  = row.getString("name")
+                    val username = row.getString("name")
                     val user = User(username = username)
                     users.add(user)
 
