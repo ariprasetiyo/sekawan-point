@@ -32,7 +32,7 @@ class RepositoryRxJava3SingleTesting(
                 return@concatMap findById(1)
             }
             .map {
-                logger.info("VT THREAD1.1: ${Thread.currentThread()} ${gson.toJson(it)}")
+                logger.info("VT THREAD1.2: ${Thread.currentThread()} ${gson.toJson(it)}")
                 var a : Long = 0
                 for (i in 1..config.getLong(CONFIG_TEST_MAX_LOP)) {
                     a += i;
@@ -68,12 +68,14 @@ class RepositoryRxJava3SingleTesting(
 
     private fun findById(id: Long): Single<ArrayList<User>> {
         return sqlClient
-            .query("SELECT username FROM ms_user")
-            .execute().map {
+            .query("SELECT name FROM ms_roles")
+            .execute()
+            .map {
                 it.rowCount();
                 val users = ArrayList<User>()
                 for (row in it) {
-                    val username  = row.getString("username")
+                    logger.info("VT THREAD1.1: ${Thread.currentThread()}")
+                    val username  = row.getString("name")
                     val user = User(username = username)
                     users.add(user)
 

@@ -4,7 +4,6 @@ import com.github.davidmoten.rx.jdbc.Database
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import freemarker.cache.FileTemplateLoader
-import id.sekawan.point.database.MasterDataRxStore
 import id.sekawan.point.database.MasterDataRxStoreImpl
 import id.sekawan.point.database.MasterDataStoreImpl
 import id.sekawan.point.database.MasterTransactionDataStore
@@ -45,6 +44,7 @@ import io.vertx.sqlclient.PoolOptions
 import io.vertx.sqlclient.SqlClient
 import org.joda.time.DateTime
 import java.io.File
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
@@ -181,7 +181,14 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
         val gson = GsonHelper.createGson()
         val vertxScheduler = RxHelper.scheduler(vertx)
 
-        val vt = Executors.newVirtualThreadPerTaskExecutor()
+        // This is dangerous in servers:
+        // 1. Unlimited threads
+        // 2. Can kill memory under load
+        // 3. No backpressure
+        //val vt = Executors.newVirtualThreadPerTaskExecutor()
+        val vt: ExecutorService = Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("vt-", 1).factory())
+
+        // vertx worker executor
         executor = vertx.createSharedWorkerExecutor("my-worker-pool")
 
 //        val executor = Executors.newFixedThreadPool(16)
@@ -252,15 +259,6 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
         route("/vendor/*").handler(staticHandler.exec("resources/templates/vendor"))
         route("/backoffice/v1/*").handler(StaticHandler.create(pathResource))
 
-        get("/test/vertx/virtualThread/eventBus/organic").handler(VirtualThreadEventBus(vertx, vt, config()))
-        get("/test/vertx/virtualThread/executorService/organic").handler(VirtualThreadExecutorService(vertx, vt, config()))
-        get("/test/vertx/virtualThread/executeBlocking/organic").handler(VirtualThreadExecuteBlocking(executor, vt, config()))
-        get("/test/vertx/virtualThread/executorService/repository").handler(VirtualThreadExecutorServiceRepository(vertx, vt, poolPg, config()))
-        get("/test/vertx/virtualThread/organic/repository").handler(VirtualThreadExecuteRepository(executor, vt, poolPg, gson, config()))
-        get("/test/vertx/rxJava3/organic").handler(VertxRxJava3Testing(vertxScheduler, ioScheduler, config()))
-        get("/test/vertx/rxJava3/repository/observable").handler(RepositoryRxJava3Testing(vertxScheduler, ioScheduler, poolPgRxJava3, gson, config()))
-        get("/test/vertx/rxJava3/repository/single").handler(RepositoryRxJava3SingleTesting(vertxScheduler, ioScheduler, poolPgRxJava3, gson, config()))
-
         get("/login").handler(LoginWebHandler(renderHandler, "login.html"))
         post("/login").handler(LoginHandler(masterDatastore, gson, vertxScheduler, ioScheduler, renderHandler, jwtAuth, ArrayList()))
         get("/backoffice/v1").handler(RouteWebHandler(renderHandler, "v-main.html"))
@@ -285,6 +283,27 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
                 masterDatastore, gson, vertxScheduler, ioScheduler, ArrayList()
             )
         )
+
+        //vertx worker executor
+        get("/test/vertx/worker-executor/organic").handler(WorkerExecutorOrganic(executor, config()))
+        get("/test/vertx/worker-executor/repository").handler(WorkerExecutorRepository(executor, config(), poolPg, gson))
+
+        //virtual thread
+        get("/test/vertx/virtualThread/eventBus/organic").handler(VirtualThreadEventBus(vertx, vt, config()))
+        get("/test/vertx/virtualThread/organic").handler(VirtualThreadOrganic( vt, config(), gson))
+        get("/test/vertx/virtualThread/repository").handler(VirtualThreadOrganicRepository( vt, config(), gson, poolPg))
+
+        // vertx.executeBlocking & virtual thread
+        get("/test/vertx/virtualThread/and/executeBlocking/organic").handler(VirtualThreadExecutorService( vertx, vt, config()))
+        get("/test/vertx/virtualThread/and/executeBlocking/repository").handler(VirtualThreadExecutorServiceRepository(vertx, vt, poolPg, config()))
+
+        //sample use compose dan promise
+        get("/test/vertx/virtualThread/sql-client").handler(VirtualThreadSqlClientRepository( vt, poolPg, config()))
+
+        //rxJava3
+        get("/test/vertx/rxJava3/organic").handler(VertxRxJava3Testing(vertxScheduler, ioScheduler, config()))
+        get("/test/vertx/rxJava3/repository/observable").handler(RepositoryRxJava3ObservableTesting(vertxScheduler, ioScheduler, poolPgRxJava3, gson, config()))
+        get("/test/vertx/rxJava3/repository/single").handler(RepositoryRxJava3SingleTesting(vertxScheduler, ioScheduler, poolPgRxJava3, gson, config()))
     }
 
     private fun isDatabaseOk(future: Promise<Status>, satuDB: Database) {

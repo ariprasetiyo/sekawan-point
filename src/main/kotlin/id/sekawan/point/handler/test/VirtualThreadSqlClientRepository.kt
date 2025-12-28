@@ -1,20 +1,19 @@
 package id.sekawan.point.handler.test
 
-import com.google.gson.Gson
 import id.sekawan.point.util.CONFIG_TEST_MAX_LOP
 import id.sekawan.point.util.mylog.LoggerFactory
 import id.sekawan.point.util.mymodel.User
-import io.vertx.core.*
+import io.vertx.core.Future
+import io.vertx.core.Handler
+import io.vertx.core.Promise
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
 import io.vertx.sqlclient.SqlClient
 import java.util.concurrent.ExecutorService
 
-class VirtualThreadExecuteRepository(
-    private val executor: WorkerExecutor,
+class VirtualThreadSqlClientRepository(
     private val vt: ExecutorService,
     private val poolPg: SqlClient,
-    private val gson: Gson,
     private val config : JsonObject
 ) :
     Handler<RoutingContext> {

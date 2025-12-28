@@ -15,7 +15,7 @@ import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
 import io.vertx.rxjava3.sqlclient.SqlClient
 
-class RepositoryRxJava3Testing(
+class RepositoryRxJava3ObservableTesting(
     private val vertxScheduler: Scheduler,
     private val ioScheduler: Scheduler,
     private val sqlClient: SqlClient,
@@ -29,10 +29,10 @@ class RepositoryRxJava3Testing(
     override fun handle(ctx: RoutingContext) {
         logger.info("VT THREAD1: ${Thread.currentThread()}")
         Observable.just(true)
+            .observeOn(ioScheduler)
             .concatMap {
                 return@concatMap findById(1).toObservable()
             }
-            .observeOn(ioScheduler)
             .map {
                 logger.info("VT THREAD1.2: ${Thread.currentThread()} ${gson.toJson(it)}")
                 var a : Long = 0
