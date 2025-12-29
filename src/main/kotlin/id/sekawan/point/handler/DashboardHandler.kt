@@ -2,6 +2,7 @@ package id.sekawan.point.handler
 
 import com.google.gson.Gson
 import id.sekawan.point.database.MasterDataStoreImpl
+import id.sekawan.point.type.RequestType
 import id.sekawan.point.util.*
 import id.sekawan.point.util.mylog.LoggerFactory
 import id.sekawan.point.util.mymodel.DefaultResponse
@@ -59,7 +60,7 @@ class DashboardHandler(
     private fun buildResponse(request: SubscribeUnsubscribeRequest, status: ResponseStatus): DefaultResponse {
         val response = DefaultResponse()
         response.requestId = request.requestId
-        response.type = request.type
+        response.type = RequestType.TYPE_UNKNOWN
         response.status = status.code
         response.statusMessage = status.message
 

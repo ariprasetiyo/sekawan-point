@@ -2,10 +2,8 @@ package id.sekawan.point.handler
 
 import com.google.gson.Gson
 import id.sekawan.point.database.MasterDataStoreRx
-import id.sekawan.point.util.AdminHandler
-import id.sekawan.point.util.DefaultSubscriber
-import id.sekawan.point.util.HttpException
-import id.sekawan.point.util.SESSION_USERNAME
+import id.sekawan.point.type.RequestType
+import id.sekawan.point.util.*
 import id.sekawan.point.util.mylib.MyHash
 import id.sekawan.point.util.mylog.LoggerFactory
 import id.sekawan.point.util.mymodel.*
@@ -71,7 +69,7 @@ class RegistrationUserHandler(
                 override fun onError(e: Throwable) {
                     super.onError(e)
                     if (e !is HttpException) {
-                        ctx.put("error", "Invalid username or password")
+                        ctx.put("error", "${HttpResponseStatus.INTERNAL_SERVER_ERROR.code()} ${e.message}")
                         ctx.response()
                             .setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code())
                             .end()
@@ -83,7 +81,7 @@ class RegistrationUserHandler(
     private fun buildResponse(request: UserRequest, status: ResponseStatus): DefaultResponse {
         val response = DefaultResponse()
         response.requestId = request.requestId
-        response.type = request.type
+        response.type = RequestType.TYPE_REGISTRATION_USER
         response.status = status.code
         response.statusMessage = status.message
 

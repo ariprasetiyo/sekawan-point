@@ -234,10 +234,10 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
                 .allowedHeader("Authorization")
         )
 
-        route().handler { context ->
+     /*   route().handler { context ->
             context.put(KEY_RESPONSE_START_TIME, DateTime())
             context.next()
-        }
+        }*/
 
         route().handler(sessionHandler)
         route().handler(BodyHandler.create())
@@ -275,7 +275,7 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
         route("/api/v1/registration/*").handler(authSuperAdminHandler)
         post("/api/v1/registration/user/save").handler(RegistrationUserHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, myHash, ArrayList()))
         post("/api/v1/registration/user/list").handler(DashboardHandler(masterDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
-        post("/api/v1/registration/role/save").handler(RegistrationRoleHandler(masterDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
+        post("/api/v1/registration/role/save").handler(RegistrationRoleHandler( gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
         get("/api/v1/registration/role/list").handler(RegistrationRoleListHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
 
         get("/forbidden").handler(ForbiddenWebHandler(ArrayList(), renderHandler))
@@ -339,7 +339,8 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
             val method = context.request().method()
             val url = context.request().absoluteURI()
             val body = context.body().asString()
-            logger.info("Incoming request", "method=$method | url=$url | body=$body")
+            val requestId = context.request().getHeader(HEADER_REQUEST_ID)
+            logger.info("Incoming request", "method=$method | url=$url | requestId=$requestId body=$body")
         } catch (ex: Exception) {
             logger.error("Failed to log incoming request", ex.message, ex)
             ex.printStackTrace()

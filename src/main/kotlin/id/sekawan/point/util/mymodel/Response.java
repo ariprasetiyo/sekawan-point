@@ -1,9 +1,11 @@
 package id.sekawan.point.util.mymodel;
 
 
+import id.sekawan.point.type.RequestType;
+
 public class Response<T> {
     private String requestId;
-    private String type;
+    private RequestType type;
     private Integer status;
     private String statusMessage;
     private String statusDisplayMessage;
@@ -17,17 +19,18 @@ public class Response<T> {
         return this.requestId;
     }
 
+    public RequestType getType() {
+        return type;
+    }
+
+    public void setType(RequestType type) {
+        this.type = type;
+    }
+
     public void setRequestId(String requestId) {
         this.requestId = requestId;
     }
 
-    public String getType() {
-        return this.type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
 
     public Integer getStatus() {
         return this.status;

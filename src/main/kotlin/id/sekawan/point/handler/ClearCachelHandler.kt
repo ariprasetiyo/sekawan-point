@@ -1,6 +1,7 @@
 package id.sekawan.point.handler
 
 import com.google.gson.Gson
+import id.sekawan.point.type.RequestType
 import id.sekawan.point.util.*
 import id.sekawan.point.util.mylog.LoggerFactory
 import id.sekawan.point.util.mymodel.DefaultResponse
@@ -55,7 +56,7 @@ class ClearCachelHandler(
     private fun buildResponse(requestId: String, status: ResponseStatus): DefaultResponse {
         val response = DefaultResponse()
         response.requestId = requestId
-        response.type = TYPE_CLEAR_CACHE
+        response.type = RequestType.TYPE_CLEAR_CACHE
         response.status = status.code
         response.statusMessage = status.message
 

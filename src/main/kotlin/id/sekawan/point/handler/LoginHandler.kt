@@ -3,6 +3,7 @@ package id.sekawan.point.handler
 import com.google.gson.Gson
 import id.sekawan.point.database.MasterDataStoreImpl
 import id.sekawan.point.type.JWTTokenType
+import id.sekawan.point.type.RequestType
 import id.sekawan.point.type.RoleType
 import id.sekawan.point.util.*
 import id.sekawan.point.util.mylog.LoggerFactory
@@ -113,7 +114,7 @@ class LoginHandler(
     private fun buildResponse(requestId: String, status: ResponseStatus): DefaultResponse {
         val response = DefaultResponse()
         response.requestId = requestId
-        response.type = TYPE_LOGIN
+        response.type = RequestType.TYPE_LOGIN
         response.status = status.code
         response.statusMessage = status.message
 

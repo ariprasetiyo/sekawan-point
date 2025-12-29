@@ -1,7 +1,7 @@
 package id.sekawan.point.handler
 
 import com.google.gson.Gson
-import id.sekawan.point.database.MasterDataStoreImpl
+import id.sekawan.point.type.RequestType
 import id.sekawan.point.util.AdminHandler
 import id.sekawan.point.util.DefaultSubscriber
 import id.sekawan.point.util.HttpException
@@ -18,11 +18,10 @@ import io.vertx.ext.web.templ.freemarker.FreeMarkerTemplateEngine
 import java.util.*
 
 class RegistrationRoleHandler(
-    private val satuDatastore: MasterDataStoreImpl,
     private val gson: Gson,
     private val vertxScheduler: Scheduler,
     private val ioScheduler: Scheduler,
-    private val freeMakerEngine : FreeMarkerTemplateEngine,
+    private val freeMakerEngine: FreeMarkerTemplateEngine,
     adminList: List<String>
 ) : AdminHandler<RoutingContext>(adminList) {
 
@@ -62,7 +61,7 @@ class RegistrationRoleHandler(
     private fun buildResponse(request: SubscribeUnsubscribeRequest, status: ResponseStatus): DefaultResponse {
         val response = DefaultResponse()
         response.requestId = request.requestId
-        response.type = request.type
+        response.type = RequestType.TYPE_REGISTRATION_ROLE
         response.status = status.code
         response.statusMessage = status.message
 
