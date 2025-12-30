@@ -3,10 +3,7 @@ package id.sekawan.point.middleware
 import com.google.gson.Gson
 import id.sekawan.point.type.ErrorLoginType
 import id.sekawan.point.type.RoleType
-import id.sekawan.point.util.HEADER_REQUEST_ID
-import id.sekawan.point.util.JWT_SUB
-import id.sekawan.point.util.SESSION_LOGIN
-import id.sekawan.point.util.SESSION_USERNAME
+import id.sekawan.point.util.*
 import id.sekawan.point.util.mylog.LoggerFactory
 import id.sekawan.point.util.mymodel.UserSessionDTO
 import io.vertx.core.Handler
@@ -17,6 +14,7 @@ import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.templ.freemarker.FreeMarkerTemplateEngine
 import org.apache.commons.lang3.StringUtils
+import org.apache.http.Header
 
 class AuthRequiredHandler(
     private val jwtAuth: JWTAuth,
@@ -53,24 +51,6 @@ class AuthRequiredHandler(
 
         jwtAuth.authenticate(credentials)
             .onSuccess { user ->
-
-                val requestIdHeader = ctx.request().getHeader(HEADER_REQUEST_ID)
-                if (StringUtils.isBlank(requestIdHeader)) {
-                    val errorCode = ErrorLoginType.INVALID_REQUEST_ID_104
-                    logger.warn(" ${dataSession.user} : invalid request id in body ${errorCode.errorCode}")
-                    renderForbidden(ctx, errorCode)
-                    return@onSuccess
-                }
-
-                if (ctx.request().method() == HttpMethod.POST) {
-                    val requestIdBody = ctx.body().asJsonObject().getString("requestId")
-                    if (requestIdHeader != requestIdBody) {
-                        val errorCode = ErrorLoginType.INVALID_REQUEST_ID_105
-                        logger.warn(" ${dataSession.user} : invalid request id header vs body ${errorCode.errorCode}")
-                        renderForbidden(ctx, errorCode)
-                        return@onSuccess
-                    }
-                }
 
                 val username = user.get<String>(JWT_SUB)
                 logger.info("$username : success login session & jwt")

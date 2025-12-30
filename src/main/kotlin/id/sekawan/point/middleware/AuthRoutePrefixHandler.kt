@@ -1,14 +1,20 @@
 package id.sekawan.point.middleware
 
 import com.google.gson.Gson
+import id.sekawan.point.type.ErrorLoginType
+import id.sekawan.point.util.HEADER_CONTENT_TYPE
+import id.sekawan.point.util.HEADER_REQUEST_ID
+import id.sekawan.point.util.SESSION_USERNAME
 import id.sekawan.point.util.mylog.LoggerFactory
 import io.vertx.core.Handler
+import io.vertx.core.http.HttpMethod
 import io.vertx.ext.web.RoutingContext
+import org.apache.commons.lang3.StringUtils
 
 class AuthRoutePrefixHandler(
     val gson: Gson,
     private val authRequiredHandler: AuthRequiredHandler,
-    private val authAdminHandler : AuthRequiredHandler
+    private val authAdminHandler: AuthRequiredHandler
 ) : Handler<RoutingContext> {
 
     private val logger = LoggerFactory().createLogger(this.javaClass.name)
@@ -17,11 +23,11 @@ class AuthRoutePrefixHandler(
 
         //http://localhost:8080/backoffice/v1/dashboard?username=admin
         val defaultAuthPrefixes = listOf(
-            "/api/v1/", "/v1/admin/", "/backoffice/" , "/js",  "/vendor","/css"
+            "/api/v1/", "/v1/admin/", "/backoffice/", "/js", "/vendor", "/css"
         )
 
         val authAdmin = listOf(
-            "/api/v1/registration/role","/api/v1/registration/user"
+            "/api/v1/registration/role", "/api/v1/registration/user"
         )
 
         val internalAuthPrefixes = listOf(
@@ -33,10 +39,31 @@ class AuthRoutePrefixHandler(
         // bukan pola wildcard seperti "/api/merchant/*".
         val path = ctx.request().path().removeSuffix("/")
         when {
-            defaultAuthPrefixes.any { path.startsWith(it) } -> authRequiredHandler.handle(ctx)
-            internalAuthPrefixes.any { path.startsWith(it) } -> authRequiredHandler.handle(ctx)
-            authAdmin.any { path.startsWith(it) } -> authAdminHandler.handle(ctx)
+            defaultAuthPrefixes.any { path.startsWith(it) } -> authAdminHandler.handle(ctx)
+            internalAuthPrefixes.any { path.startsWith(it) } -> authenticationApi(ctx)
+            authAdmin.any { path.startsWith(it) } -> authenticationApi(ctx)
             else -> ctx.next()
         }
+    }
+
+    private fun authenticationApi(ctx: RoutingContext) {
+        val username = ctx.session().get<String>(SESSION_USERNAME)
+        val requestIdHeader = ctx.request().getHeader(HEADER_REQUEST_ID)
+        if (StringUtils.isBlank(requestIdHeader)) {
+            val errorCode = ErrorLoginType.INVALID_REQUEST_ID_104
+            logger.warn("$username : invalid request id in body ${errorCode.errorCode}")
+            return
+        }
+
+        if (ctx.request().method() == HttpMethod.POST) {
+            val requestIdBody = ctx.body().asJsonObject().getString("requestId")
+            if (requestIdHeader != requestIdBody) {
+                val errorCode = ErrorLoginType.INVALID_REQUEST_ID_105
+                logger.warn("$username : invalid request id header vs body ${errorCode.errorCode}")
+                return
+            }
+        }
+
+        authRequiredHandler.handle(ctx)
     }
 }

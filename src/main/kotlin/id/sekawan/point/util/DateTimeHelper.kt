@@ -154,5 +154,9 @@ class DateTimeHelper {
             val localDate = LocalDate.parse(dateStr, formatter)
             return localDate.atStartOfDay(ZoneId.of(zoneId))
         }
+
+        fun offsetDateTimeJakarta(dateTime: OffsetDateTime) : OffsetDateTime {
+            return dateTime.withOffsetSameInstant(ZoneOffset.ofHours(7))
+        }
     }
 }

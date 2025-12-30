@@ -1,12 +1,14 @@
 package id.sekawan.point.database
 
 import com.google.gson.Gson
+import id.sekawan.point.util.DateTimeHelper.Companion.offsetDateTimeJakarta
 import id.sekawan.point.util.mylog.LoggerFactory
 import id.sekawan.point.util.mymodel.Role
 import id.sekawan.point.util.mymodel.User
 import io.reactivex.rxjava3.core.Observable
 import io.vertx.rxjava3.sqlclient.SqlClient
 import io.vertx.rxjava3.sqlclient.Tuple
+import java.time.ZoneOffset
 import java.util.stream.Collectors
 
 
@@ -19,7 +21,7 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
             value($1, $2 , $3, $4, $5, $6, $7, $8, now(), now())
         """.trimIndent()
     private val getRolesQuery = """
-        "select id, name, description, authorizations, is_active , created_at, updated_at from ms_roles"
+        select id, name, description, authorizations, is_active , created_at, updated_at from ms_roles
     """.trimIndent()
 
     private fun getQuestionMark(list: List<Any>, customQuestionMark: String): String {
@@ -76,10 +78,10 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
                             id = row.getString("id"),
                             name = row.getString("name"),
                             description = row.getString("description"),
-                            authorization = row.getString("authorizations"),
+                            authorization = row.getJsonObject("authorizations"),
                             isActive = row.getBoolean("is_active"),
-                            createdAt = row.getOffsetTime("created_at"),
-                            updatedAt = row.getOffsetTime("updated_at")
+                            createdAt = offsetDateTimeJakarta(row.getOffsetDateTime("created_at")),
+                            updatedAt = offsetDateTimeJakarta(row.getOffsetDateTime("updated_at"))
                         )
                     )
                 }

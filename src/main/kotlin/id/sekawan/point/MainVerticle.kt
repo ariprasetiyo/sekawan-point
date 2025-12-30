@@ -251,7 +251,7 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
             AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, arrayListOf(RoleType.ADMIN, RoleType.BASIC_USER))
 
         val authSuperAdminHandler =
-            AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, arrayListOf(RoleType.SUPER_ADMIN))
+            AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, arrayListOf(RoleType.SUPER_ADMIN, RoleType.ADMIN))
         val authAdminHandler = AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, arrayListOf(RoleType.ADMIN))
         val authBasicHandler = AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, arrayListOf(RoleType.BASIC_USER))
         val authApprovalHandler = AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, arrayListOf(RoleType.APPROVAL))

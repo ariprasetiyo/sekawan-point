@@ -3,7 +3,7 @@ package id.sekawan.point.type
 enum class RoleType (val alias : String){
 
     SUPER_ADMIN( "access"),
-    ADMIN( "refresh"),
+    ADMIN( "admin"),
     APPROVAL( "approval"),
     MAKER( "maker"),
     READ_ONLY( "read_only"),

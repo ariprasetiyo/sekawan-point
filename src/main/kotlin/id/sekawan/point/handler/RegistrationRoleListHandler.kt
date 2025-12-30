@@ -50,14 +50,14 @@ class RegistrationRoleListHandler(
             })
     }
 
-    private fun buildResponse(requestId: String, status: ResponseStatus, roles: List<Role>): DefaultResponse {
+    private fun buildResponse(requestId: String, status: ResponseStatus, roles: List<Role>): DefaultResponseT<RoleResponseBody> {
 
-        val response = DefaultResponse()
+        val response = DefaultResponseT<RoleResponseBody>()
         response.requestId = requestId
         response.type = RequestType.TYPE_ROLE
         response.status = status.code
         response.statusMessage = status.message
-        response.body = roles
+        response.body = RoleResponseBody(roles)
 
         return response
     }
