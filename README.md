@@ -54,6 +54,12 @@ You can use https://sdkman.io/ to easily switch between java version
       -Dlogback.configurationFile=conf-local/mylog.xml \
       -jar build/libs/sekawan-point-1.0-SNAPSHOT-fat.jar conf-local/config.json
       ```
+### Sample curl
+1. get role
+   ```
+   curl -X GET -H 'x-request_id: hallo' -H 'Cookie: token_xxx' localhost:8080/api/v1/registration/role/list
+   ```
+
 ### Stress test with ab ( apache branch )
 1. ab script  ab -n 1000 -c 250 http://localhost:8080/test/vertx/virtualThread/eventBus
    ```
