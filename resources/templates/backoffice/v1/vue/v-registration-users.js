@@ -1,3 +1,17 @@
+async function getClientInfo() {
+
+    const uuid = crypto.randomUUID();
+    const userAgent = navigator.userAgent;
+    const response = await fetch("https://api.ipify.org?format=json");
+    const ipData = await response.json();
+
+   return {
+        uuid,
+        userAgent,
+        ip: ipData.ip
+      };
+}
+
 export default {
     template: `
       <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -121,12 +135,12 @@ export default {
                     name: "Lebron James"
                 }
             ]
-             //dropdown search text end
+            //dropdown search text end
         };
     },
-      mounted() {
+    mounted() {
         this.loadUsers(); // fetch data on load
-      },
+    },
     computed: {
         //dropdown search text
         filteredList() {
@@ -177,33 +191,36 @@ export default {
             this.showDropdown = false;
         },
         async loadUsers() {
-              try {
-
+            try {
+                const info = await getClientInfo();
                 const res = await fetch(
-                  "http://localhost:8080/api/v1/registration/role/list",
-                  {
-                    method: 'GET',
-                    headers: {
-                      'Accept': 'application/json',
-                      'x-request_id': 'application/json',
-                      'Cookie': "'"+document.cookie+"'"
+                    "http://localhost:8080/api/v1/registration/role/list", {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'x-request-id': info.uuid ,
+                            'x-ip':  info.ip,
+//                            'x-user-agent':  info.userAgent ,
+//                            'Cookie': "--sas"
+                        }
                     }
-                  }
                 );
-                const dataJson = await res.json();
-                console.info(dataJson)
+
+/*              console.info(dataJson)
+                console.info(document.cookie)*/
 
                 // Deserialize here
-                      this.items = dataJson.body.list.map(item => ({
-                        id: item.id,
-                        name: item.name,
-                        description: item.description,
-                        active: item.isActive,
-                        createdAt: new Date(item.createdAt),
-                        updatedAt: new Date(item.updatedAt)
-                      }));
+                const dataJson = await res.json();
+                this.items = dataJson.body.list.map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    description: item.description,
+                    active: item.isActive,
+                    createdAt: new Date(item.createdAt),
+                    updatedAt: new Date(item.updatedAt)
+                }));
 
-            console.info(this.items)
+//                console.info(this.items)
 
                 // Map API response
                 /*this.items = data.map(user => ({
@@ -212,9 +229,9 @@ export default {
                 }));*/
 
 
-              } catch (err) {
+            } catch (err) {
                 console.error("Failed to load users:", err);
-              }
-            },
+            }
+        },
     }
 };

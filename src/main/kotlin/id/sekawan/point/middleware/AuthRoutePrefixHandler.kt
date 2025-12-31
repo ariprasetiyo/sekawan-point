@@ -2,9 +2,7 @@ package id.sekawan.point.middleware
 
 import com.google.gson.Gson
 import id.sekawan.point.type.ErrorLoginType
-import id.sekawan.point.util.HEADER_CONTENT_TYPE
-import id.sekawan.point.util.HEADER_REQUEST_ID
-import id.sekawan.point.util.SESSION_USERNAME
+import id.sekawan.point.util.*
 import id.sekawan.point.util.mylog.LoggerFactory
 import io.vertx.core.Handler
 import io.vertx.core.http.HttpMethod
@@ -48,16 +46,18 @@ class AuthRoutePrefixHandler(
 
     private fun authenticationApi(ctx: RoutingContext) {
         val username = ctx.session().get<String>(SESSION_USERNAME)
-        val requestIdHeader = ctx.request().getHeader(HEADER_REQUEST_ID)
-        if (StringUtils.isBlank(requestIdHeader)) {
+        val headerRequestId = ctx.request().getHeader(HEADER_REQUEST_ID)
+        val headerIP = ctx.request().getHeader(HEADER_IP)
+        val headerUserAgent = ctx.request().getHeader(HEADER_USER_AGENT)
+        if (StringUtils.isBlank(headerRequestId) || StringUtils.isBlank(headerIP) || StringUtils.isBlank(headerUserAgent)) {
             val errorCode = ErrorLoginType.INVALID_REQUEST_ID_104
-            logger.warn("$username : invalid request id in body ${errorCode.errorCode}")
+            logger.warn("$username : invalid request id in body ${errorCode.errorCode} $headerRequestId $headerIP $headerUserAgent")
             return
         }
 
         if (ctx.request().method() == HttpMethod.POST) {
             val requestIdBody = ctx.body().asJsonObject().getString("requestId")
-            if (requestIdHeader != requestIdBody) {
+            if (headerRequestId != requestIdBody) {
                 val errorCode = ErrorLoginType.INVALID_REQUEST_ID_105
                 logger.warn("$username : invalid request id header vs body ${errorCode.errorCode}")
                 return

@@ -6,7 +6,7 @@ enum class ErrorLoginType (val errorCode : Int, val errorMessage : String, val d
     FORBIDDEN(101, "Forbidden", "User haven't access resource"),
     INVALID_AUTHENTICATION_102(102, "invalid authentication", "session null"),
     INVALID_AUTHENTICATION_103(103, "invalid authentication", "token jwt invalid"),
-    INVALID_REQUEST_ID_104(104, "invalid request id", "invalid request in header"),
+    INVALID_REQUEST_ID_104(104, "invalid request header", "invalid request in header"),
     INVALID_REQUEST_ID_105(105, "invalid request id", "invalid request id header vs body");
 
     companion object {

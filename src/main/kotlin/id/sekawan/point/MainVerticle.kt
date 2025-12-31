@@ -339,8 +339,10 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
             val method = context.request().method()
             val url = context.request().absoluteURI()
             val body = context.body().asString()
-            val requestId = context.request().getHeader(HEADER_REQUEST_ID)
-            logger.info("Incoming request", "method=$method | url=$url | requestId=$requestId body=$body")
+            val headerRequestId = context.request().getHeader(HEADER_REQUEST_ID)
+            val headerIP = context.request().getHeader(HEADER_IP)
+            val headerUserAgent = context.request().getHeader(HEADER_USER_AGENT)
+            logger.info("Incoming request", "method=$method | url=$url | requestId=$headerRequestId headerIP=$headerIP headerUserAgent=$headerUserAgent body=$body")
         } catch (ex: Exception) {
             logger.error("Failed to log incoming request", ex.message, ex)
             ex.printStackTrace()

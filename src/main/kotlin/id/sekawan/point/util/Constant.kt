@@ -11,5 +11,7 @@ const val JWT_SUB = "sub"
 const val JWT_EXP = "exp"
 const val JWT_TYPE = "type"
 
-const val HEADER_REQUEST_ID = "x-request_id"
+const val HEADER_REQUEST_ID = "x-request-id"
+const val HEADER_IP = "x-ip"
+const val HEADER_USER_AGENT = "user-agent"
 const val HEADER_CONTENT_TYPE = "content-type"

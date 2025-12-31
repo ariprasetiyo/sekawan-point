@@ -57,11 +57,12 @@ You can use https://sdkman.io/ to easily switch between java version
 ### Sample curl
 1. get role
    ```
-   curl -X GET -H 'x-request_id: hallo' -H 'Cookie: token_xxx' localhost:8080/api/v1/registration/role/list
+   curl -X GET -H 'x-request-id: hallo-uuid' -H 'user-agent: Google chrome' -H 'x-ip: 192.168.100.1' -H 'Cookie: token_xxx' localhost:8080/api/v1/registration/role/list
    ```
 
 ### Stress test with ab ( apache branch )
 1. ab script  ab -n 1000 -c 250 http://localhost:8080/test/vertx/virtualThread/eventBus
+   with internal loop 2000000000
    ```
    chrisferdian@Chriss-MacBook-Air ~ %  ab -n 1000 -c 250 http://localhost:8080/test/vertx/virtualThread/eventBus
    This is ApacheBench, Version 2.3 <$Revision: 1879490 $>
@@ -119,7 +120,8 @@ You can use https://sdkman.io/ to easily switch between java version
    99%  56568
    100%  57568 (longest request)
       ```
-2. - ab -n 1000 -c 250 http://localhost:8080/test/vertx/virtualThread/executorService 
+2. - ab -n 1000 -c 250 http://localhost:8080/test/vertx/virtualThread/executorService
+     with internal loop 2000000000
    ```
    ab -n 10 -c 10 http://localhost:8080/test/vertx/virtualThread/executorService
    
@@ -180,7 +182,8 @@ You can use https://sdkman.io/ to easily switch between java version
    100%  63721 (longest request)
 
    ```
-3.  ab -n 1000 -c 250 http://localhost:8080/test/vertx/virtualThread/executeBlocking 
+3.  ab -n 1000 -c 250 http://localhost:8080/test/vertx/virtualThread/executeBlocking
+    with internal loop 2000000000
       ```
       chrisferdian@Chriss-MacBook-Air ~ % ab -n 1000 -c 250 http://localhost:8080/test/vertx/virtualThread/executeBlocking 
       This is ApacheBench, Version 2.3 <$Revision: 1879490 $>
@@ -239,6 +242,7 @@ You can use https://sdkman.io/ to easily switch between java version
        100%  58440 (longest request)
       ```
 4. ab -n 1000 -c 250 http://localhost:8080/test/vertx/rxJava3/organic
+   with internal loop 2000000000
    ```
    ab -n 10 -c 10 http://localhost:8080/test/vertx/rxJava3/organic
    chrisferdian@Chriss-MacBook-Air ~ % ab -n 1000 -c 250 http://localhost:8080/test/vertx/rxJava3/organic
@@ -297,7 +301,7 @@ You can use https://sdkman.io/ to easily switch between java version
    99%  33930
    100%  34175 (longest request)
    ```
-5. thread logs
+5. thread logs with internal loop 2000000000
    ```
    OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
    [otel.javaagent 2025-12-26 14:48:37:540 +0700] [main] INFO io.opentelemetry.javaagent.tooling.VersionLogger - opentelemetry-javaagent - version: 2.22.0
@@ -657,3 +661,4 @@ You can use https://sdkman.io/ to easily switch between java version
 
    ```
 6. ab -n 4 -c 2 http://localhost:8080/test/vertx/virtualThread/organic/repository
+   with internal loop 2000000000
