@@ -5,7 +5,7 @@
 ### Prerequisite
 1. Intellij Idea use 2023++
 
-2. Java 17
+2. Java 21
 You can use https://sdkman.io/ to easily switch between java version
 
 ### Running on IDE

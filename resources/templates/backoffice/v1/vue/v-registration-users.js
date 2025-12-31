@@ -5,11 +5,11 @@ async function getClientInfo() {
     const response = await fetch("https://api.ipify.org?format=json");
     const ipData = await response.json();
 
-   return {
+    return {
         uuid,
         userAgent,
         ip: ipData.ip
-      };
+    };
 }
 
 export default {
@@ -33,16 +33,18 @@ export default {
                      <form class="user">
                         <div class="form-group row">
                            <div class="col-sm-6 mb-3 mb-sm-0">
-                              <input type="text" class="form-control form-control-user" id="exampleFirstName"
+                              <input type="text" class="form-control form-control-user" id="exampleFirstName"  v-model="vModalFistName"
+                              :class="{'is-invalid': !firstNameValid, 'is-valid': firstNameValid}"
                                  placeholder="First Name">
                            </div>
                            <div class="col-sm-6">
-                              <input type="text" class="form-control form-control-user" id="exampleLastName"
+                              <input type="text" class="form-control form-control-user" id="exampleLastName"  v-model="vModalLastName"
                                  placeholder="Last Name">
                            </div>
                         </div>
                         <div class="form-group">
-                           <input type="email" class="form-control form-control-user" id="exampleInputEmail"
+                           <input type="email" class="form-control form-control-user" id="exampleInputEmail"  v-model="vModalEmail"
+                           :class="{'is-invalid': !emailValid, 'is-valid': emailValid}"
                               placeholder="Email Address">
                         </div>
                         <div class="form-group">
@@ -68,7 +70,7 @@ export default {
                         <!-- dropdown search text -->
                         <div class="form-group">
                            <div class="dropdown">
-                              <input type="text" class="form-control dropdown-toggle form-control-user" placeholder="Search role id ..." v-model="search"
+                              <input type="text" class="form-control dropdown-toggle form-control-user" placeholder="Search role id ..." v-model="vmodalRoleName"
                                  @focus="showDropdown = true" @input="filterList"/>
                               <div class="dropdown-menu show w-100" v-if="showDropdown">
                                  <a class="dropdown-item" v-for="item in filteredList" :key="item.id" @click="selectItem(item)">
@@ -83,13 +85,6 @@ export default {
                         <!-- dropdown search text end -->
                         <a class="btn btn-primary btn-user btn-block" @click="submitForm">
                         Register Account
-                        </a>
-                        <hr>
-                        <a href="/backoffice/v1" class="btn btn-google btn-user btn-block">
-                        <i class="fab fa-google fa-fw"></i> Register with Google
-                        </a>
-                        <a href="/backoffice/v1" class="btn btn-facebook btn-user btn-block">
-                        <i class="fab fa-facebook-f fa-fw"></i> Register with Facebook
                         </a>
                      </form>
                      <hr>
@@ -107,6 +102,11 @@ export default {
   `,
     data() {
         return {
+            vModalFistName: "",
+            firstNameValid: false,
+            vModalEmail: "",
+            emailValid: false,
+            vModalLastName: "",
             vmodalInputPhoneNumber: "+62",
             vmodalInputPassword: "",
             vmodalInputPasswordRepeat: "",
@@ -114,10 +114,12 @@ export default {
             phoneValid: false,
             passwordRepeatValid: false,
             //dropdown search text
-            search: "",
+            vmodalRoleName: "",
+            vmodalRoleId: null,
             showDropdown: false,
             selectedItem: null,
             filterList: null,
+            clientInfo: null,
             items: [{
                     id: 1,
                     name: "John Doe"
@@ -138,14 +140,15 @@ export default {
             //dropdown search text end
         };
     },
-    mounted() {
+    async mounted() {
+        this.clientInfo = await getClientInfo();
         this.loadUsers(); // fetch data on load
     },
     computed: {
         //dropdown search text
         filteredList() {
             return this.items.filter(item =>
-                item.name.toLowerCase().includes(this.search.toLowerCase())
+                item.name.toLowerCase().includes(this.vmodalRoleName.toLowerCase())
             );
         }
     },
@@ -167,7 +170,16 @@ export default {
         vmodalInputPhoneNumber(value) {
             const regex = /^(?:\+62|62|0)8[1-9][0-9]{6,10}$/;
             this.phoneValid = regex.test(value);
+        },
+        vModalFistName(value) {
+            const regex = /^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/;
+            this.firstNameValid = regex.test(value);
+        },
+        vModalEmail(value) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            this.emailValid = emailRegex.test(value);
         }
+
     },
     methods: {
         getValue() {
@@ -177,37 +189,46 @@ export default {
             alert(this.vmodalInputPhoneNumber);
         },
         submitForm() {
+            alert(this.vmodalRoleId)
+            alert(this.vModalFistName);
             if (!this.phoneValid) {
                 alert("Nomor HP tidak valid!");
                 return;
             }
 
-            alert("Nomor valid: " + this.phone);
+            this.vModalLastName;
+            this.vModalEmail;
+            this.vmodalInputPassword;
+            this.vmodalInputPasswordRepeat;
+
+            this.vmodalInputPhoneNumber;
+            this.vmodalRoleId;
         },
         //dropdown search text
         selectItem(item) {
-            this.search = item.name;
+            this.vmodalRoleId = item.id;
+            this.vmodalRoleName = item.name
             this.selectedItem = item;
             this.showDropdown = false;
         },
         async loadUsers() {
             try {
-                const info = await getClientInfo();
+
                 const res = await fetch(
                     "http://localhost:8080/api/v1/registration/role/list", {
                         method: 'GET',
                         headers: {
                             'Accept': 'application/json',
-                            'x-request-id': info.uuid ,
-                            'x-ip':  info.ip,
-//                            'x-user-agent':  info.userAgent ,
-//                            'Cookie': "--sas"
+                            'x-request-id': this.clientInfo.uuid,
+                            'x-ip': this.clientInfo.ip,
+                            //                            'x-user-agent':  info.userAgent ,
+                            //                            'Cookie': "--sas"
                         }
                     }
                 );
 
-/*              console.info(dataJson)
-                console.info(document.cookie)*/
+                /*              console.info(dataJson)
+                                console.info(document.cookie)*/
 
                 // Deserialize here
                 const dataJson = await res.json();
@@ -220,7 +241,7 @@ export default {
                     updatedAt: new Date(item.updatedAt)
                 }));
 
-//                console.info(this.items)
+                //                console.info(this.items)
 
                 // Map API response
                 /*this.items = data.map(user => ({
