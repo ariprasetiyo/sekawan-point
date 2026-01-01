@@ -32,14 +32,13 @@ class VertxRxJava3Testing(
                 logger.info("VT THREAD2: ${Thread.currentThread()}")
                 return@map "success"
             }
-            .subscribeOn(ioScheduler)
+//            .subscribeOn(ioScheduler)
             .observeOn(vertxScheduler)
             //.subscribe(object : DisposableObserver<String>() {}
             .subscribe(object : DefaultSubscriber<String>(this::class.java.simpleName, ctx) {
 
                 override fun onNext(t: String) {
-                    logger.info("VT THREAD3: ${Thread.currentThread()}")
-                    logger.info("response: $t")
+                    logger.info("response: ${Thread.currentThread()} $t")
                     ctx.response()
                         .setStatusCode(200)
                         .end(t)

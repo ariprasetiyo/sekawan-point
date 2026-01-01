@@ -141,12 +141,15 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
     private fun createHttpServerOptions(configObject: JsonObject): HttpServerOptions {
         val serverOptions = HttpServerOptions()
             .setReuseAddress(true)
+            .setReusePort(true)
             .setTcpKeepAlive(true)
             //kill request process if too long. better
             .setIdleTimeout(60 * 60)
             .setIdleTimeoutUnit(TimeUnit.SECONDS)
-            .setAcceptBacklog(8192)
-            .setTcpKeepAlive(true)
+//            .setAcceptBacklog(8192)
+            .setAcceptBacklog(65535)
+            .setTcpFastOpen(true)
+            .setTcpNoDelay(true)
 //        serverOptions.port = configObject.getInteger(CONFIG_BIND_PORT)!!
         serverOptions.isSsl = false
         return serverOptions
@@ -234,10 +237,10 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
                 .allowedHeader("Authorization")
         )
 
-     /*   route().handler { context ->
+        route().handler { context ->
             context.put(KEY_RESPONSE_START_TIME, DateTime())
             context.next()
-        }*/
+        }
 
         route().handler(sessionHandler)
         route().handler(BodyHandler.create())

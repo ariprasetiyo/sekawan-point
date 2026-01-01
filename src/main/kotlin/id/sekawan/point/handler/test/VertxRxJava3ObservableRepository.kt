@@ -53,15 +53,15 @@ class VertxRxJava3ObservableRepository(
             .subscribe(object : DefaultSubscriber<String>(this::class.java.simpleName, ctx) {
 
                 override fun onNext(t: String) {
-                    logger.info("VT THREAD3: ${Thread.currentThread()}")
-                    logger.info("response: $t")
+                    logger.info("response: ${Thread.currentThread()} $t")
                     ctx.response()
                         .setStatusCode(200)
                         .end(t)
                 }
 
                 override fun onError(e: Throwable) {
-                    super.onError(e)
+//                    super.onError(e)
+                    logger.error("error response", e.message, e)
                     if (e !is HttpException) {
                         ctx.put("error", "Invalid username or password")
                         ctx.response()
@@ -75,7 +75,7 @@ class VertxRxJava3ObservableRepository(
 
     private fun findById(id: Long): Single<ArrayList<User>> {
         return sqlClient
-            .query("select name from ms_roles mr ")
+            .query("select name from ms_roles mr limit 1 ")
             .execute()
             .map {
                 it.rowCount();

@@ -13,8 +13,10 @@ fun main(args: Array<String>) = runBlocking {
 
     val options = VertxOptions()
         .setPreferNativeTransport(true)
-        .setEventLoopPoolSize(2 * Runtime.getRuntime().availableProcessors())
-        .setWorkerPoolSize(64)
+        .setEventLoopPoolSize(20 * Runtime.getRuntime().availableProcessors())
+        .setWorkerPoolSize(64*2)
+//        .setMaxEventLoopExecuteTime(5_000_000_000L)
+//        .setBlockedThreadCheckInterval(10_000);
 //        .setBlockedThreadCheckInterval(60_000)
 
     val vertx = Vertx.vertx(options)
@@ -27,6 +29,8 @@ fun main(args: Array<String>) = runBlocking {
     deploymentOptions.setConfig(config)
     deploymentOptions.setWorkerPoolName("my-sk-worker-pool")
 
+    val rt = Runtime.getRuntime()
+    logger.info("max memory / heap memory: " + rt.maxMemory() / 1024 / 1024 + " MB")
     val deploymentId = vertx.deployVerticle(MainVerticle(vertxRxJava3),  deploymentOptions).await()
     logger.info("✅ Verticle deployed: $deploymentId")
 
