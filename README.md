@@ -104,12 +104,13 @@ You can use https://sdkman.io/ to easily switch between java version
    ```
 ### Stress test with k6
 - 1000 users concurrently in 1 minutes : 1756 RPS
-  - logic system : logging, looping, otel, read to table db
+  - hardware specifications : laptop MacBook Air (M1, 2020), ram 8 gb, ssd
+  - logic inside rest API : logging, looping, otel, read to table db
   - script stress_test_vertx_rxJava3_repository_observable.js
   - evidence : [Screen Shot 2026-01-01 at 21.07.15.png](stress-test%2Fk6%2Fresults%2FScreen%20Shot%202026-01-01%20at%2021.07.15.png)
 - 
 
-### Stress test with ab ( apache branch )
+### Stress test with ab ( apache branch ). deprecated.
 
 - ab script  ab -n 1000 -c 250 http://localhost:8080/test/vertx/virtualThread/eventBus
    with internal loop 2000000000
