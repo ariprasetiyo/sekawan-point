@@ -76,7 +76,7 @@ class VertxRxJava3SingleRepository(
                 for (row in it) {
                     logger.info("VT THREAD1.1: ${Thread.currentThread()}")
                     val username  = row.getString("name")
-                    val user = User(username = username)
+                    val user = User(userId = username)
                     users.add(user)
 
                 }

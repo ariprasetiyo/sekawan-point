@@ -71,6 +71,7 @@ class AuthRequiredHandler(
         freeMarkerEngine.render(data, "forbidden.html").onSuccess { res ->
             ctx.response()
                 .putHeader("Content-Type", "text/html; charset=UTF-8")
+                .setStatusCode(403)
                 .end(res)
         }.onFailure { res ->
             ctx.fail(res)

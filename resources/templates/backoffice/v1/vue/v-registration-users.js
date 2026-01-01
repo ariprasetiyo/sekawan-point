@@ -12,6 +12,19 @@ async function getClientInfo() {
     };
 }
 
+function unauthorizedRedirect(responseRoleList) {
+    // 🚨 Handle unauthorized / forbidden
+    if (responseRoleList.status === 401 || responseRoleList.status === 403) {
+        window.location.href = "/forbidden"; // or router push
+        return;
+    }
+
+    // ❌ Other server errors
+    if (!responseRoleList.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+    }
+}
+
 export default {
     template: `
       <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -212,9 +225,10 @@ export default {
             this.showDropdown = false;
         },
         async loadUsers() {
+            var responseRoleList = null;
             try {
 
-                const res = await fetch(
+                responseRoleList = await fetch(
                     "http://localhost:8080/api/v1/registration/role/list", {
                         method: 'GET',
                         headers: {
@@ -227,11 +241,12 @@ export default {
                     }
                 );
 
+                unauthorizedRedirect(responseRoleList);
                 /*              console.info(dataJson)
                                 console.info(document.cookie)*/
 
                 // Deserialize here
-                const dataJson = await res.json();
+                const dataJson = await responseRoleList.json();
                 this.items = dataJson.body.list.map(item => ({
                     id: item.id,
                     name: item.name,
@@ -251,6 +266,7 @@ export default {
 
 
             } catch (err) {
+                unauthorizedRedirect(responseRoleList);
                 console.error("Failed to load users:", err);
             }
         },

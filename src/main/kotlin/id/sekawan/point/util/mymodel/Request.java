@@ -1,19 +1,21 @@
 package id.sekawan.point.util.mymodel;
 
+import id.sekawan.point.type.RequestType;
+
 public class Request<T> {
     private String requestId;
-    private Long requestTime;
-    private String type;
+    private String requestTime;
+    private RequestType type;
     private T body;
 
     public Request() {
     }
 
-    public Long getRequestTime() {
-        return this.requestTime;
+    public String getRequestTime() {
+        return requestTime;
     }
 
-    public void setRequestTime(Long requestTime) {
+    public void setRequestTime(String requestTime) {
         this.requestTime = requestTime;
     }
 
@@ -25,11 +27,11 @@ public class Request<T> {
         this.requestId = requestId;
     }
 
-    public String getType() {
-        return this.type;
+    public RequestType getType() {
+        return type;
     }
 
-    public void setType(String type) {
+    public void setType(RequestType type) {
         this.type = type;
     }
 

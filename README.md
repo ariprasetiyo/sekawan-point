@@ -49,15 +49,19 @@ You can use https://sdkman.io/ to easily switch between java version
       -Dotel.service.name=my-app \
       -Dotel.traces.exporter=logging \
       -Dotel.metrics.exporter=none \
-      -Dotel.logs.exporter=none \   
+      -Dotel.logs.exporter=none \
       -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=4012,suspend=n \
       -Dlogback.configurationFile=conf-local/mylog.xml \
       -jar build/libs/sekawan-point-1.0-SNAPSHOT-fat.jar conf-local/config.json
       ```
 ### Sample curl
-1. get role
+1. get roles
    ```
    curl -X GET -H 'x-request-id: hallo-uuid' -H 'user-agent: Google chrome' -H 'x-ip: 192.168.100.1' -H 'Cookie: token_xxx' localhost:8080/api/v1/registration/role/list
+   ```
+2. save user
+   ```
+   curl -X POST -H 'x-request-id: hallo-uuid' -H 'user-agent: Google chrome' -H 'x-ip: 192.168.100.1' -H 'Cookie: token_xxx' localhost:8080/api/v1/registration/user/save -d '{"requestId":"uuid","requestTime":"","type":"registration_user","body":{"username":"ari prasetiyo","password":"cobacoba1","email":"ari@gmail.com","phoneNumber":"+6285600070411","roleId":"super_admin","isActive":true}}'
    ```
 
 ### Stress test with ab ( apache branch )

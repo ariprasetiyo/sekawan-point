@@ -32,12 +32,14 @@ class RegistrationUserHandler(
             .observeOn(ioScheduler)
             .map { gson.fromJson(it!!, UserRequest::class.java) }
             .concatMap { request ->
-                if (isValidRequest(request.body)) {
+                if (isValidRequest(request)) {
 
+                    val userId = UserUtil().generateUserId()
                     val passwordHash = myHash.md5WithSalt(request.body.password!!)
                     val emailHash = myHash.md5WithSalt(request.body.email!!)
                     val phoneNumberHash = myHash.md5WithSalt(request.body.phoneNumber!!)
                     val user = User(
+                        userId = userId,
                         username = request.body.username!!,
                         passwordHash = passwordHash,
                         email = request.body.email!!,
@@ -88,11 +90,14 @@ class RegistrationUserHandler(
         return response
     }
 
-    private fun isValidRequest(user: UserRequestBody): Boolean {
-        return (!StringUtils.isBlank(user.username)
-                && !StringUtils.isBlank(user.email)
-                && !StringUtils.isBlank(user.password)
-                && !StringUtils.isBlank(user.roleId)
-                && !StringUtils.isBlank(user.phoneNumber))
+    private fun isValidRequest(request: UserRequest): Boolean {
+        return (
+                request.type == RequestType.TYPE_REGISTRATION_USER
+                        && !StringUtils.isBlank(request.body.username)
+                        && !StringUtils.isBlank(request.body.email)
+                        && !StringUtils.isBlank(request.body.password)
+                        && !StringUtils.isBlank(request.body.roleId)
+                        && !StringUtils.isBlank(request.body.phoneNumber))
+
     }
 }

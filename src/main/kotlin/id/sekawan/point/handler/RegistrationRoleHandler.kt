@@ -34,7 +34,7 @@ class RegistrationRoleHandler(
             .map {
                 val request = SubscribeUnsubscribeRequest()
                 request.requestId = UUID.randomUUID().toString()
-                request.type = "login"
+                request.type = RequestType.TYPE_REGISTRATION_ROLE
                 return@map buildResponse(request, ResponseStatus.GENERAL_SUCCESS)
             }
             .map { gson.toJson(it) }

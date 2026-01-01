@@ -17,8 +17,8 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
     private val logger = LoggerFactory().createLogger(this.javaClass.simpleName)
 
     private val insertRegistrationUserQuery = """
-            insert into ms_user (username,password_hash, email , email_hash, phone_number, phone_number_hash, role_id, is_active, created_at, updated_at)
-            value($1, $2 , $3, $4, $5, $6, $7, $8, now(), now())
+            insert into ms_users (user_id, username,password_hash, email , email_hash, phone_number, phone_number_hash, role_id, is_active, created_at, updated_at)
+            values ($1, $2 , $3, $4, $5, $6, $7, $8, $9, now(), now())
         """.trimIndent()
     private val getRolesQuery = """
         select id, name, description, authorizations, is_active , created_at, updated_at from ms_roles
@@ -54,7 +54,7 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
          * )
          */
         val tuples = listOf(
-            Tuple.tuple().addString(user.username).addString(user.passwordHash).addString(user.email)
+            Tuple.tuple().addString(user.userId).addString(user.username).addString(user.passwordHash).addString(user.email)
                 .addString(user.emailHash).addString(user.phoneNumber).addString(user.phoneNumberHash)
                 .addString(user.roleId).addBoolean(user.isActive)
         )

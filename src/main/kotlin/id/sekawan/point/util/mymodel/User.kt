@@ -1,7 +1,8 @@
 package id.sekawan.point.util.mymodel
 
 data class User(
-    var username: String,
+    var userId : String,
+    var username: String? = null,
     var passwordHash: String? = null,
     var email: String? = null,
     var emailHash: String? = null,

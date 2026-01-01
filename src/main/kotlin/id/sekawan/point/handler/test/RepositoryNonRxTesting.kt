@@ -54,7 +54,7 @@ class RepositoryNonRxTesting(
                 val users = ArrayList<User>()
                 for (row in it) {
                     val username = row.getString("username")
-                    val user = User(username = username)
+                    val user = User(userId = username)
                     users.add(user)
 
                 }

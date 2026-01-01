@@ -33,7 +33,7 @@ class DashboardHandler(
             .map {
                 val request = SubscribeUnsubscribeRequest()
                 request.requestId = UUID.randomUUID().toString()
-                request.type = "login"
+                request.type = RequestType.TYPE_LOGIN
                 return@map buildResponse(request, ResponseStatus.GENERAL_SUCCESS)
             }
             .map { gson.toJson(it) }
