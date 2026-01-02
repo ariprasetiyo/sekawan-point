@@ -2,12 +2,11 @@ package id.sekawan.point.handler
 
 import com.google.gson.Gson
 import id.sekawan.point.database.MasterDataStoreImpl
+import id.sekawan.point.database.MasterDataStoreRx
 import id.sekawan.point.type.RequestType
 import id.sekawan.point.util.*
 import id.sekawan.point.util.mylog.LoggerFactory
-import id.sekawan.point.util.mymodel.DefaultResponse
-import id.sekawan.point.util.mymodel.ResponseStatus
-import id.sekawan.point.util.mymodel.SubscribeUnsubscribeRequest
+import id.sekawan.point.util.mymodel.*
 import io.netty.handler.codec.http.HttpResponseStatus
 import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.core.Observable
@@ -15,7 +14,7 @@ import io.vertx.ext.web.RoutingContext
 import java.util.*
 
 class RegistrationUserListHandler(
-    private val satuDatastore: MasterDataStoreImpl,
+    private val masterDataStoreRx: MasterDataStoreRx,
     private val gson: Gson,
     private val vertxScheduler: Scheduler,
     private val ioScheduler: Scheduler,
@@ -26,21 +25,19 @@ class RegistrationUserListHandler(
 
     override fun handle(ctx: RoutingContext) {
 
-        val username = ctx.session().get<String>(SESSION_USERNAME)
-        isValidRequest()
-            .map {
-                val request = SubscribeUnsubscribeRequest()
-                request.requestId = UUID.randomUUID().toString()
-                request.type = RequestType.TYPE_REGISTRATION_USER
-                return@map buildResponse(request, ResponseStatus.GENERAL_SUCCESS)
+        val requestId = ctx.request().getHeader(HEADER_REQUEST_ID)
+        Observable.just(requestId)
+            .observeOn(ioScheduler)
+            .concatMap { requestId ->
+                return@concatMap masterDataStoreRx.getRoles()
+                    .map { buildResponse(requestId, ResponseStatus.GENERAL_SUCCESS, it) }
             }
             .map { gson.toJson(it) }
-            .subscribeOn(ioScheduler)
             .observeOn(vertxScheduler)
             .subscribe(object : DefaultSubscriber<String>(this::class.java.simpleName, ctx) {
                 override fun onNext(t: String) {
-                    logger.info("response: $t")
-                    ctx.response().end("<h1>Welcome, $username !</h1>")
+                    super.onNext(t)
+                    ctx.response().end(t)
                 }
 
                 override fun onError(e: Throwable) {
@@ -55,17 +52,15 @@ class RegistrationUserListHandler(
             })
     }
 
-    private fun buildResponse(request: SubscribeUnsubscribeRequest, status: ResponseStatus): DefaultResponse {
-        val response = DefaultResponse()
-        response.requestId = request.requestId
-        response.type = RequestType.TYPE_UNKNOWN
+    private fun buildResponse(requestId: String, status: ResponseStatus, roles: List<Role>): DefaultResponseT<RoleResponseBody> {
+
+        val response = DefaultResponseT<RoleResponseBody>()
+        response.requestId = requestId
+        response.type = RequestType.TYPE_ROLE
         response.status = status.code
         response.statusMessage = status.message
+        response.body = RoleResponseBody(roles)
 
         return response
-    }
-
-    private fun isValidRequest(): Observable<Boolean> {
-            return Observable.just(true)
     }
 }

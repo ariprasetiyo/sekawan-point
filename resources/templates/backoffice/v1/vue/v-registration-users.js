@@ -28,86 +28,190 @@ function unauthorizedRedirect(responseRoleList) {
 export default {
     template: `
       <div class="d-sm-flex align-items-center justify-content-between mb-4">
-         <h1 class="h3 mb-0 text-gray-800">Create User</h1>
-         <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-download fa-sm text-white-50"></i> Generate Report</a>
+         <h1 class="h3 mb-0 text-gray-800">User Registration</h1>
+         <a
+            href="#"
+            class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"
+            data-toggle="modal"
+            data-target="#registerModal"
+            ><i class="fas fa-user-plus"></i> Create user</a
+         >
       </div>
+
       <div class="card o-hidden border-0 shadow-lg my-3">
          <div class="card-body p-0">
             <!-- Nested Row within Card Body -->
-            <div class="row">
-               <!--<div class="col-lg-5 d-none d-lg-block bg-register-image"></div> -->
-               <div class="col-lg-7">
-                  <div class="p-5">
-                     <!--
-                        <div class="text-center">
-                            <h1 class="h4 text-gray-900 mb-4">Create an Account!</h1>
-                        </div>
-                        -->
-                     <form class="user">
-                        <div class="form-group row">
-                           <div class="col-sm-6 mb-3 mb-sm-0">
-                              <input type="text" class="form-control form-control-user" id="exampleFirstName"  v-model="vModalFistName"
+            <div class="card-body">
+               <div class="table-responsive">
+                  <table
+                     class="table table-bordered"
+                     id="dataTable"
+                     width="100%"
+                     cellspacing="0"
+                  >
+                     <thead>
+                        <tr>
+                           <th>Name</th>
+                           <th>Position</th>
+                           <th>Office</th>
+                           <th>Age</th>
+                           <th>Start date</th>
+                           <th>Salary</th>
+                        </tr>
+                     </thead>
+                     <tfoot>
+                        <tr>
+                           <th>Name</th>
+                           <th>Position</th>
+                           <th>Office</th>
+                           <th>Age</th>
+                           <th>Start date</th>
+                           <th>Salary</th>
+                        </tr>
+                     </tfoot>
+                     <tbody>
+                        <tr v-for="user in listOfUser" :key="user.id">
+                           <td>{{ user.name }}</td>
+                           <td>{{ user.position }}</td>
+                           <td>{{ user.office }}</td>
+                           <td>{{ user.age }}</td>
+                           <td>{{ user.startDate }}</td>
+                           <td>{{ user.salary }}</td>
+                        </tr>
+                     </tbody>
+                  </table>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      <div
+         class="modal fade"
+         id="registerModal"
+         tabindex="-1"
+         role="dialog"
+         aria-labelledby="registerModalLabel"
+         aria-hidden="true"
+      >
+         <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+               <!-- Modal Header -->
+               <div class="modal-header">
+                  <h5 class="modal-title" id="registerModalLabel">Create New User</h5>
+                  <button type="button" class="close" data-dismiss="modal">
+                     <span>&times;</span>
+                  </button>
+               </div>
+
+               <!-- Modal Body -->
+               <div class="modal-body">
+                  <form class="user" id="registerForm">
+                     <div class="form-group row">
+                        <div class="col-sm-6 mb-3 mb-sm-0">
+                           <input
+                              type="text"
+                              class="form-control form-control-user"
+                              id="exampleFirstName"
+                              v-model="vModalFistName"
                               :class="{'is-invalid': !firstNameValid, 'is-valid': firstNameValid}"
-                                 placeholder="First Name">
-                           </div>
-                           <div class="col-sm-6">
-                              <input type="text" class="form-control form-control-user" id="exampleLastName"  v-model="vModalLastName"
-                                 placeholder="Last Name">
-                           </div>
+                              placeholder="First Name"
+                           />
                         </div>
-                        <div class="form-group">
-                           <input type="email" class="form-control form-control-user" id="exampleInputEmail"  v-model="vModalEmail"
+                        <div class="col-sm-6">
+                           <input
+                              type="text"
+                              class="form-control form-control-user"
+                              id="exampleLastName"
+                              v-model="vModalLastName"
+                              placeholder="Last Name"
+                           />
+                        </div>
+                     </div>
+                     <div class="form-group">
+                        <input
+                           type="email"
+                           class="form-control form-control-user"
+                           id="exampleInputEmail"
+                           v-model="vModalEmail"
                            :class="{'is-invalid': !emailValid, 'is-valid': emailValid}"
-                              placeholder="Email Address">
+                           placeholder="Email Address"
+                        />
+                     </div>
+                     <div class="form-group">
+                        <input
+                           type="text"
+                           class="form-control form-control-user"
+                           id="inputPhoneNumber"
+                           placeholder="Phone Number"
+                           ref="refInputPhoneNumber"
+                           v-model="vmodalInputPhoneNumber"
+                           :class="{'is-invalid': !phoneValid, 'is-valid': phoneValid}"
+                        />
+                     </div>
+                     <div class="form-group row">
+                        <div class="col-sm-6 mb-3 mb-sm-0">
+                           <input
+                              type="password"
+                              class="form-control form-control-user"
+                              id="inputPassword"
+                              placeholder="Password"
+                              ref="refInputPassword"
+                              v-model="vmodalInputPassword"
+                              :class="{'is-invalid': !passwordValid, 'is-valid': passwordValid}"
+                           />
                         </div>
-                        <div class="form-group">
-                           <input type="text" class="form-control form-control-user" id="inputPhoneNumber"
-                              placeholder="Phone Number" ref="refInputPhoneNumber"
-                              v-model="vmodalInputPhoneNumber"
-                              :class="{'is-invalid': !phoneValid, 'is-valid': phoneValid}">
+                        <div class="col-sm-6">
+                           <input
+                              type="password"
+                              class="form-control form-control-user"
+                              id="exampleRepeatPassword"
+                              placeholder="Repeat Password"
+                              :class="{'is-invalid': !passwordRepeatValid, 'is-valid': passwordRepeatValid}"
+                              v-model="vmodalInputPasswordRepeat"
+                           />
                         </div>
-                        <div class="form-group row">
-                           <div class="col-sm-6 mb-3 mb-sm-0">
-                              <input type="password" class="form-control form-control-user" id="inputPassword"
-                                 placeholder="Password" ref="refInputPassword"
-                                 v-model="vmodalInputPassword"
-                                 :class="{'is-invalid': !passwordValid, 'is-valid': passwordValid}">
-                           </div>
-                           <div class="col-sm-6">
-                              <input type="password" class="form-control form-control-user"
-                                 id="exampleRepeatPassword" placeholder="Repeat Password"
-                                 :class="{'is-invalid': !passwordRepeatValid, 'is-valid': passwordRepeatValid}"
-                                 v-model="vmodalInputPasswordRepeat">
-                           </div>
-                        </div>
-                        <!-- dropdown search text -->
-                        <div class="form-group">
-                           <div class="dropdown">
-                              <input type="text" class="form-control dropdown-toggle form-control-user" placeholder="Search role id ..." v-model="vmodalRoleName"
-                                 @focus="showDropdown = true" @input="filterList"/>
-                              <div class="dropdown-menu show w-100" v-if="showDropdown">
-                                 <a class="dropdown-item" v-for="item in filteredList" :key="item.id" @click="selectItem(item)">
+                     </div>
+                     <!-- dropdown search text -->
+                     <div class="form-group">
+                        <div class="dropdown">
+                           <input
+                              type="text"
+                              class="form-control dropdown-toggle form-control-user"
+                              placeholder="Search role id ..."
+                              v-model="vmodalRoleName"
+                              @focus="showDropdown = true"
+                              @input="filterList"
+                           />
+                           <div class="dropdown-menu show w-100" v-if="showDropdown">
+                              <a
+                                 class="dropdown-item"
+                                 v-for="item in filteredList"
+                                 :key="item.id"
+                                 @click="selectItem(item)"
+                              >
                                  {{ item.name }}
-                                 </a>
-                                 <div v-if="filteredList.length === 0" class="dropdown-item text-muted">
-                                    No result found
-                                 </div>
+                              </a>
+                              <div
+                                 v-if="filteredList.length === 0"
+                                 class="dropdown-item text-muted"
+                              >
+                                 No result found
                               </div>
                            </div>
                         </div>
-                        <!-- dropdown search text end -->
-                        <a class="btn btn-primary btn-user btn-block" @click="submitForm">
-                        Register Account
-                        </a>
-                     </form>
-                     <hr>
-                     <div class="text-center">
-                        <a class="small" href="forgot-password.html">Forgot Password?</a>
                      </div>
-                     <div class="text-center">
-                        <a class="small" href="login.old">Already have an account? Login!</a>
-                     </div>
-                  </div>
+                     <!-- dropdown search text end -->
+                  </form>
+               </div>
+
+               <!-- Modal Footer -->
+               <div class="modal-footer">
+                  <a class="btn btn-secondary btn-user" data-dismiss="modal">
+                     Cancel</a
+                  >
+                  <a class="btn btn-primary btn-user" @click="submitForm">
+                     Register Account</a
+                  >
                </div>
             </div>
          </div>
@@ -115,6 +219,7 @@ export default {
   `,
     data() {
         return {
+            listOfUser: [],
             vModalFistName: "",
             firstNameValid: false,
             vModalEmail: "",
@@ -154,8 +259,12 @@ export default {
         };
     },
     async mounted() {
+        this.listOfUser = await this.loadListOfUser()
         this.clientInfo = await getClientInfo();
         this.loadUsers(); // fetch data on load
+        this.$nextTick(() => {
+            $('#dataTable').DataTable();
+        });
     },
     computed: {
         //dropdown search text
@@ -195,6 +304,27 @@ export default {
 
     },
     methods: {
+        async loadListOfUser() {
+            return [{
+                    id: 1,
+                    name: 'John Doe',
+                    position: 'System Architect',
+                    office: 'Edinburgh',
+                    age: 61,
+                    startDate: '2011/04/25',
+                    salary: '$320,800'
+                },
+                {
+                    id: 1,
+                    name: 'Ari Prasetiyo',
+                    position: 'BE Java Developer',
+                    office: 'Edinburgh',
+                    age: 61,
+                    startDate: '2015/04/25',
+                    salary: '$920,800'
+                }
+            ];
+        },
         getValue() {
             alert(this.$refs.refInputPhoneNumber.value);
         },
