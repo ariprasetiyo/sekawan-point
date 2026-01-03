@@ -1,5 +1,7 @@
 package id.sekawan.point.util.mymodel
 
+import java.time.OffsetDateTime
+
 data class User(
     var userId : String,
     var username: String? = null,
@@ -10,4 +12,7 @@ data class User(
     var phoneNumberHash: String? = null,
     var roleId: String? = null,
     var isActive: Boolean? = null,
+    var createdAt: OffsetDateTime? = null,
+    var updatedAt: OffsetDateTime? = null
+
 )

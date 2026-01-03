@@ -260,11 +260,11 @@ export default {
     },
     async mounted() {
         this.listOfUser = await this.loadListOfUser()
+        this.$nextTick(() => {
+                    $('#dataTable').DataTable();
+                });
         this.clientInfo = await getClientInfo();
         this.loadUsers(); // fetch data on load
-        this.$nextTick(() => {
-            $('#dataTable').DataTable();
-        });
     },
     computed: {
         //dropdown search text

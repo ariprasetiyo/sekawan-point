@@ -1,17 +1,19 @@
 package id.sekawan.point.handler
 
 import com.google.gson.Gson
-import id.sekawan.point.database.MasterDataStoreImpl
 import id.sekawan.point.database.MasterDataStoreRx
 import id.sekawan.point.type.RequestType
-import id.sekawan.point.util.*
+import id.sekawan.point.util.AdminHandler
+import id.sekawan.point.util.DefaultSubscriber
+import id.sekawan.point.util.HEADER_REQUEST_ID
+import id.sekawan.point.util.HttpException
 import id.sekawan.point.util.mylog.LoggerFactory
 import id.sekawan.point.util.mymodel.*
 import io.netty.handler.codec.http.HttpResponseStatus
-import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.core.Scheduler
 import io.vertx.ext.web.RoutingContext
-import java.util.*
+import org.apache.commons.lang3.StringUtils
 
 class RegistrationUserListHandler(
     private val masterDataStoreRx: MasterDataStoreRx,
@@ -26,17 +28,21 @@ class RegistrationUserListHandler(
     override fun handle(ctx: RoutingContext) {
 
         val requestId = ctx.request().getHeader(HEADER_REQUEST_ID)
-        Observable.just(requestId)
+        Observable.just(ctx.body().asString())
             .observeOn(ioScheduler)
-            .concatMap { requestId ->
-                return@concatMap masterDataStoreRx.getRoles()
-                    .map { buildResponse(requestId, ResponseStatus.GENERAL_SUCCESS, it) }
+            .map { gson.fromJson(it!!, UserRequest::class.java) }
+            .concatMap { request ->
+                if (isValidRequest(request)) {
+                    return@concatMap masterDataStoreRx.getUsers()
+                        .map { buildResponse(requestId, ResponseStatus.GENERAL_SUCCESS, it) }
+                }
+                return@concatMap Observable.just(buildResponse(requestId, ResponseStatus.GENERAL_FAILED, emptyList()))
             }
             .map { gson.toJson(it) }
             .observeOn(vertxScheduler)
             .subscribe(object : DefaultSubscriber<String>(this::class.java.simpleName, ctx) {
                 override fun onNext(t: String) {
-                    super.onNext(t)
+//                    super.onNext(t)
                     ctx.response().end(t)
                 }
 
@@ -52,14 +58,18 @@ class RegistrationUserListHandler(
             })
     }
 
-    private fun buildResponse(requestId: String, status: ResponseStatus, roles: List<Role>): DefaultResponseT<RoleResponseBody> {
+    private fun isValidRequest(request: UserRequest): Boolean {
+        return (request.type == RequestType.TYPE_USERS)
+    }
 
-        val response = DefaultResponseT<RoleResponseBody>()
+    private fun buildResponse(requestId: String, status: ResponseStatus, roles: List<User>): DefaultResponseT<UsersResponseBody> {
+
+        val response = DefaultResponseT<UsersResponseBody>()
         response.requestId = requestId
-        response.type = RequestType.TYPE_ROLE
+        response.type = RequestType.TYPE_USERS
         response.status = status.code
         response.statusMessage = status.message
-        response.body = RoleResponseBody(roles)
+        response.body = UsersResponseBody(roles)
 
         return response
     }

@@ -94,13 +94,17 @@ You can use https://sdkman.io/ to easily switch between java version
          -Dotel.traces.exporter=logging \
          ```
 ### Sample curl
-1. get roles
+- get roles
    ```
    curl -X GET -H 'x-request-id: hallo-uuid' -H 'user-agent: Google chrome' -H 'x-ip: 192.168.100.1' -H 'Cookie: token_xxx' localhost:8080/api/v1/registration/role/list
    ```
-2. save user
+- save user
    ```
-   curl -X POST -H 'x-request-id: hallo-uuid' -H 'user-agent: Google chrome' -H 'x-ip: 192.168.100.1' -H 'Cookie: token_xxx' localhost:8080/api/v1/registration/user/save -d '{"requestId":"uuid","requestTime":"","type":"registration_user","body":{"username":"ari prasetiyo","password":"cobacoba1","email":"ari@gmail.com","phoneNumber":"+6285600070411","roleId":"super_admin","isActive":true}}'
+   curl -X POST -H 'x-request-id: hallo-uuid' -H 'user-agent: Google chrome' -H 'x-ip: 192.168.100.1' -H 'Cookie: token_xxx' localhost:8080/api/v1/registration/user/save -d '{"requestId":"hallo-uuid","requestTime":"","type":"registration_user","body":{"username":"ari prasetiyo","password":"cobacoba1","email":"ari@gmail.com","phoneNumber":"+6285600070411","roleId":"super_admin","isActive":true}}'
+   ```
+- get users
+   ```
+   curl -X POST -H 'x-request-id: hallo-uuid' -H 'user-agent: Google chrome' -H 'x-ip: 192.168.100.1' -H 'Cookie: token_xxx' localhost:8080/api/v1/registration/user/list -d '{"requestId":"hallo-uuid","requestTime":"","type":"users","body":{}}'
    ```
 ### Stress test with k6
 - 1000 users concurrently in 1 minutes : 1756 RPS

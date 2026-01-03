@@ -10,6 +10,8 @@ enum class RequestType(val alias: String, val desc: String) {
     TYPE_LOGIN("login", "login"),
     @SerializedName("role")
     TYPE_ROLE("role", "role"),
+    @SerializedName("users")
+    TYPE_USERS("users", "users"),
     @SerializedName("registration_role")
     TYPE_REGISTRATION_ROLE("registration_role", "registration_role"),
     @SerializedName("registration_user")
