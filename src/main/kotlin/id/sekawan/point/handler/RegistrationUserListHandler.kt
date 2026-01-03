@@ -42,14 +42,13 @@ class RegistrationUserListHandler(
             .observeOn(vertxScheduler)
             .subscribe(object : DefaultSubscriber<String>(this::class.java.simpleName, ctx) {
                 override fun onNext(t: String) {
-//                    super.onNext(t)
+                    super.onNext(t)
                     ctx.response().end(t)
                 }
 
                 override fun onError(e: Throwable) {
                     super.onError(e)
                     if (e !is HttpException) {
-                        ctx.put("error", "Invalid username or password")
                         ctx.response()
                             .setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code())
                             .end()

@@ -19,7 +19,7 @@ open class DefaultSubscriber<T : Any>(val response: String, val routingContext: 
 
 
     override fun onNext(t: T) {
-//        logger.info("Response $t")
+        logger.info("Response $t")
     }
 
     override fun onError(e: Throwable) {

@@ -53,7 +53,7 @@ class AuthRequiredHandler(
             .onSuccess { user ->
 
                 val username = user.get<String>(JWT_SUB)
-                logger.info("$username : success login session & jwt")
+                logger.info("success login session & jwt $username")
                 ctx.session().put(SESSION_USERNAME, dataSession.user)
                 ctx.next()
             }

@@ -12,15 +12,28 @@ async function getClientInfo() {
     };
 }
 
+function formatDate(date) {
+    const pad = (n) => n.toString().padStart(2, '0');
+
+    const year = date.getFullYear();
+    const month = pad(date.getMonth() + 1);
+    const day = pad(date.getDate());
+    const hour = pad(date.getHours());
+    const minute = pad(date.getMinutes());
+    const second = pad(date.getSeconds());
+
+    return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+}
+
 function unauthorizedRedirect(responseRoleList) {
     // 🚨 Handle unauthorized / forbidden
-    if (responseRoleList.status === 401 || responseRoleList.status === 403) {
+    if (responseRoleList != null && responseRoleList.status != null && (responseRoleList.status === 401 || responseRoleList.status === 403)) {
         window.location.href = "/forbidden"; // or router push
         return;
     }
 
     // ❌ Other server errors
-    if (!responseRoleList.ok) {
+    if (responseRoleList != null && !responseRoleList.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
     }
 }
@@ -51,32 +64,38 @@ export default {
                   >
                      <thead>
                         <tr>
-                           <th>Name</th>
-                           <th>Position</th>
-                           <th>Office</th>
-                           <th>Age</th>
-                           <th>Start date</th>
-                           <th>Salary</th>
+                           <th>User Id</th>
+                           <th>Username</th>
+                           <th>Phone Number</th>
+                           <th>Email</th>
+                           <th>Role Id</th>
+                           <th>Is Active</th>
+                           <th>Created</th>
+                           <th>Updated</th>
                         </tr>
                      </thead>
                      <tfoot>
                         <tr>
-                           <th>Name</th>
-                           <th>Position</th>
-                           <th>Office</th>
-                           <th>Age</th>
-                           <th>Start date</th>
-                           <th>Salary</th>
+                           <th>User Id</th>
+                           <th>Username</th>
+                           <th>Phone Number</th>
+                           <th>Email</th>
+                           <th>Role Id</th>
+                           <th>Is Active</th>
+                           <th>Created</th>
+                           <th>Updated</th>
                         </tr>
                      </tfoot>
                      <tbody>
                         <tr v-for="user in listOfUser" :key="user.id">
-                           <td>{{ user.name }}</td>
-                           <td>{{ user.position }}</td>
-                           <td>{{ user.office }}</td>
-                           <td>{{ user.age }}</td>
-                           <td>{{ user.startDate }}</td>
-                           <td>{{ user.salary }}</td>
+                           <td>{{ user.userId }}</td>
+                           <td>{{ user.username }}</td>
+                           <td>{{ user.phoneNumber }}</td>
+                           <td>{{ user.email }}</td>
+                           <td>{{ user.roleId }}</td>
+                           <td>{{ user.isActive }}</td>
+                           <td>{{ user.createdAt }}</td>
+                           <td>{{ user.updatedAt }}</td>
                         </tr>
                      </tbody>
                   </table>
@@ -259,11 +278,13 @@ export default {
         };
     },
     async mounted() {
-        this.listOfUser = await this.loadListOfUser()
-        this.$nextTick(() => {
-                    $('#dataTable').DataTable();
-                });
+
         this.clientInfo = await getClientInfo();
+
+        this.listOfUser = await this.loadListOfUser();
+        this.$nextTick(() => {
+            $('#dataTable').DataTable();
+        });
         this.loadUsers(); // fetch data on load
     },
     computed: {
@@ -304,27 +325,6 @@ export default {
 
     },
     methods: {
-        async loadListOfUser() {
-            return [{
-                    id: 1,
-                    name: 'John Doe',
-                    position: 'System Architect',
-                    office: 'Edinburgh',
-                    age: 61,
-                    startDate: '2011/04/25',
-                    salary: '$320,800'
-                },
-                {
-                    id: 1,
-                    name: 'Ari Prasetiyo',
-                    position: 'BE Java Developer',
-                    office: 'Edinburgh',
-                    age: 61,
-                    startDate: '2015/04/25',
-                    salary: '$920,800'
-                }
-            ];
-        },
         getValue() {
             alert(this.$refs.refInputPhoneNumber.value);
         },
@@ -353,6 +353,70 @@ export default {
             this.vmodalRoleName = item.name
             this.selectedItem = item;
             this.showDropdown = false;
+        },
+        async loadListOfUser() {
+
+            const uuidReq = this.clientInfo.uuid;
+            const requestJson = {
+                requestId: uuidReq,
+                type: "users",
+                body: {}
+            };
+
+            var responseListOfUser = null;
+            try {
+                responseListOfUser = await fetch(
+                    "http://localhost:8080/api/v1/registration/user/list", {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'x-request-id': uuidReq,
+                            'x-ip': this.clientInfo.ip,
+                        },
+                        body: JSON.stringify(requestJson)
+                    }
+                );
+
+                unauthorizedRedirect(responseListOfUser);
+                /*              console.info(dataJson)
+                                console.info(document.cookie)*/
+
+                // Deserialize here
+                const dataJson = await responseListOfUser.json();
+                return dataJson.body.list.map(item => ({
+                    userId: item.userId,
+                    username: item.username,
+                    passwordHash: item.passwordHash,
+                    email: item.email,
+                    roleId: item.roleId,
+                    isActive: item.isActive,
+                    phoneNumber: item.phoneNumber,
+                    createdAt: item.createdAt,
+                    updatedAt: item.updatedAt
+                }));
+            } catch (err) {
+                unauthorizedRedirect(responseListOfUser);
+                console.error("Failed to load users:", err);
+            }
+            /*return [{
+                    id: 1,
+                    name: 'John Doe',
+                    position: 'System Architect',
+                    office: 'Edinburgh',
+                    age: 61,
+                    startDate: '2011/04/25',
+                    salary: '$320,800'
+                },
+                {
+                    id: 1,
+                    name: 'Ari Prasetiyo',
+                    position: 'BE Java Developer',
+                    office: 'Edinburgh',
+                    age: 61,
+                    startDate: '2015/04/25',
+                    salary: '$920,800'
+                }
+            ];*/
         },
         async loadUsers() {
             var responseRoleList = null;

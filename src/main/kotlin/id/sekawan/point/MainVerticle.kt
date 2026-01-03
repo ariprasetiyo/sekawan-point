@@ -10,7 +10,7 @@ import id.sekawan.point.database.MasterTransactionDataStore
 import id.sekawan.point.handler.*
 import id.sekawan.point.handler.test.*
 import id.sekawan.point.middleware.AuthRequiredHandler
-import id.sekawan.point.middleware.AuthRoutePrefixHandler
+import id.sekawan.point.middleware.AuthValidateRequestHandler
 import id.sekawan.point.type.RoleType
 import id.sekawan.point.util.*
 import id.sekawan.point.util.mylib.GsonHelper
@@ -250,49 +250,37 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
             context.next()
         }
 
-        val authRequiredHandler =
-            AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, arrayListOf(RoleType.ADMIN, RoleType.BASIC_USER))
+        get("/login").handler(LoginWebHandler(renderHandler, "login.html"))
+        post("/login").handler(LoginHandler(masterDatastore, gson, vertxScheduler, ioScheduler, renderHandler, jwtAuth, ArrayList()))
+        get("/forbidden").handler(ForbiddenWebHandler(ArrayList(), renderHandler))
+        get("/logout").handler(LogoutHandler(ArrayList(), gson, vertxScheduler, ioScheduler, renderHandler))
+        get("/clear-cache").handler(ClearCachelHandler(ArrayList(), freeMakerEngine, gson, vertxScheduler, ioScheduler))
 
-        val authSuperAdminHandler =
-            AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, arrayListOf(RoleType.SUPER_ADMIN, RoleType.ADMIN))
-        val authAdminHandler = AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, arrayListOf(RoleType.ADMIN))
-        val authBasicHandler = AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, arrayListOf(RoleType.BASIC_USER))
-        val authApprovalHandler = AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, arrayListOf(RoleType.APPROVAL))
-        val authReadOnlyHandler = AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, arrayListOf(RoleType.READ_ONLY))
-
-        route().handler(AuthRoutePrefixHandler(gson, authRequiredHandler, authAdminHandler))
-
+        val authAdmin =
+            AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, arrayListOf(RoleType.SUPER_ADMIN, RoleType.ADMIN, RoleType.BASIC_USER, RoleType.APPROVAL, RoleType.READ_ONLY))
+        route().handler(AuthValidateRequestHandler(authAdmin, false, listOf("/v1/admin/", "/backoffice/", "/js", "/vendor", "/css")))
         route("/css/*").handler(staticHandler.exec("resources/templates/css"))
         route("/img/*").handler(staticHandler.exec("resources/templates/img"))
         route("/js/*").handler(staticHandler.exec("resources/templates/js"))
         route("/scss/*").handler(staticHandler.exec("resources/templates/scss"))
         route("/vendor/*").handler(staticHandler.exec("resources/templates/vendor"))
         route("/backoffice/v1/*").handler(StaticHandler.create(pathResource))
-
-        get("/login").handler(LoginWebHandler(renderHandler, "login.html"))
-        post("/login").handler(LoginHandler(masterDatastore, gson, vertxScheduler, ioScheduler, renderHandler, jwtAuth, ArrayList()))
         get("/backoffice/v1").handler(RouteWebHandler(renderHandler, "v-main.html"))
         post("/backoffice/v1").handler(DashboardHandler(masterDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
         get("/backoffice/v1/v-main").handler(RouteWebHandler(renderHandler, "v-main.html"))
 
-        route("/api/v1/registration/*").handler(authSuperAdminHandler)
+        val authSuperAdminHandler = AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, arrayListOf(RoleType.SUPER_ADMIN, RoleType.ADMIN))
+        route().handler(AuthValidateRequestHandler(authSuperAdminHandler, true, listOf("/api/v1/subscribe", "/api/v1/registration/role", "/api/v1/registration/user")))
         post("/api/v1/registration/user/save").handler(RegistrationUserHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, myHash, ArrayList()))
         post("/api/v1/registration/user/list").handler(RegistrationUserListHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
-        post("/api/v1/registration/role/save").handler(RegistrationRoleHandler( gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
+        post("/api/v1/registration/role/save").handler(RegistrationRoleHandler(gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
         get("/api/v1/registration/role/list").handler(RegistrationRoleListHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
+        post("/api/v1/subscribe").handler(SatuTestHandler(masterDatastore, gson, vertxScheduler, ioScheduler, ArrayList()))
 
-        get("/forbidden").handler(ForbiddenWebHandler(ArrayList(), renderHandler))
-        get("/logout").handler(LogoutHandler(ArrayList(), gson, vertxScheduler, ioScheduler, renderHandler))
-        get("/clear-cache").handler(ClearCachelHandler(ArrayList(), freeMakerEngine, gson, vertxScheduler, ioScheduler))
-
+        val authAPIInternal = AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, arrayListOf(RoleType.SUPER_ADMIN))
+        route().handler(AuthValidateRequestHandler(authAPIInternal, false, listOf("/internal/*")))
         get("/internal/v1/health/ready").handler(healthCheckReadiness)
         get("/internal/v1/health/live").handler(healthCheckLiveness)
-
-        post("/api/v1/subscribe").handler(
-            SatuTestHandler(
-                masterDatastore, gson, vertxScheduler, ioScheduler, ArrayList()
-            )
-        )
 
         //vertx worker executor
         get("/test/vertx/worker-executor/organic").handler(WorkerExecutorOrganic(executor, config()))
