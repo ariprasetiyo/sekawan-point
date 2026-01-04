@@ -20,7 +20,6 @@ import io.reactivex.rxjava3.schedulers.Schedulers
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Promise
 import io.vertx.core.WorkerExecutor
-import io.vertx.core.http.CookieSameSite
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.core.json.JsonObject
@@ -208,7 +207,7 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
         val satuTransactionDataStore = MasterTransactionDataStore(masterDatastore, gson)
 
         val masterDatastoreRx = MasterDataStoreRxImpl(poolPgRxJava3, gson)
-        val myHash = MyHash(config().getString(CONFIG_HASH_SALT))
+        val myHash = MyHash(config().getString(CONFIG_SECURITY_HASH_SALT))
 
         val healthCheckReadiness = HealthCheckHandler.create(vertx)
         val healthCheckLiveness = HealthCheckHandler.create(vertx)
@@ -255,7 +254,7 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
         }
 
         get("/login").handler(LoginWebHandler(renderHandler, "login.html"))
-        post("/login").handler(LoginHandler(masterDatastore, gson, vertxScheduler, ioScheduler, renderHandler, jwtAuth, ArrayList()))
+        post("/login").handler(LoginHandler(masterDatastore, gson, vertxScheduler, ioScheduler, renderHandler, jwtAuth, config(), ArrayList()))
         get("/forbidden").handler(ForbiddenWebHandler(ArrayList(), renderHandler))
         get("/logout").handler(LogoutHandler(ArrayList(), gson, vertxScheduler, ioScheduler, renderHandler))
         get("/clear-cache").handler(ClearCachelHandler(ArrayList(), freeMakerEngine, gson, vertxScheduler, ioScheduler))
@@ -335,7 +334,7 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
             val url = context.request().absoluteURI()
             val body = context.body().asString()
             val headerRequestId = context.request().getHeader(HEADER_REQUEST_ID)
-            val remoteIpAddress  = context.request().remoteAddress()
+            val remoteIpAddress = context.request().remoteAddress()
             val headerUserAgent = context.request().getHeader(HEADER_USER_AGENT)
             logger.info("Incoming request", "method=$method | url=$url | requestId=$headerRequestId remoteIpAddress=$remoteIpAddress headerUserAgent=$headerUserAgent body=$body")
         } catch (ex: Exception) {
@@ -368,22 +367,25 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
     }
 
     private fun sessionHandler(): SessionHandler {
+
         // next could be change to SessionStore store = RedisSessionStore.create(vertx, redis);
-        val sessionStore = CookieSessionStore.create(vertx, "abc")
+        val sessionStore = CookieSessionStore.create(vertx, config().getString(CONFIG_SESSION_SECRET)!!)
         val sessionSetup = SessionHandler.create(sessionStore)
-            .setSessionTimeout(10 * 60 * 1000)   // 30 menit idle timeout
+            //in milliseconds
+            .setSessionTimeout(1000 * config().getLong(CONFIG_SESSION_TIMEOUT_IN_SECONDS)!!)
             //in seconds. if not set will session remove when browser closed
-            .setCookieMaxAge(30 * 60)
-            .setNagHttps(false)
-            .setCookieSecureFlag(true)
-            .setCookieSameSite(CookieSameSite.LAX)
-        //.setCookieHttpOnlyFlag(true)
+            .setCookieMaxAge(60 * config().getLong(CONFIG_SESSION_COOKIE_MAX_AGE_IN_SECONDS)!!)
+            .setNagHttps(config().getBoolean(CONFIG_SESSION_COOKIE_NAG_HTTP)!!)
+            .setCookieSecureFlag(config().getBoolean(CONFIG_SESSION_COOKIE_SECURE_FLAG)!!)
+            .setCookieHttpOnlyFlag(config().getBoolean(CONFIG_SESSION_COOKIE_HTTP_ONLY_FLAG)!!)
+//            .setCookieSameSite(CookieSameSite.LAX)
+
         return sessionSetup
     }
 
     private fun jwtAuth(): JWTAuth {
         // Secret key for HMAC SHA256 (gunakan key yang kuat di production)
-        val jwtSecret = config().getString(CONFIG_SECRET_JWT)
+        val jwtSecret = config().getString(CONFIG_SECURITY_JWT_SECRET)!!
         val jwtConfig = JWTAuthOptions()
             .addPubSecKey(PubSecKeyOptions().setAlgorithm("HS256").setBuffer(jwtSecret))
         return JWTAuth.create(vertx, jwtConfig)

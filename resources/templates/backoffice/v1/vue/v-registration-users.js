@@ -14,16 +14,16 @@ function formatDate(date) {
 }
 
 function generateUUIDv4() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
 }
 
 function unauthorizedRedirect(responseRoleList) {
     // 🚨 Handle unauthorized / forbidden
-   if (responseRoleList != null && responseRoleList.status != null && (responseRoleList.status === 401 || responseRoleList.status === 403)) {
+    if (responseRoleList != null && responseRoleList.status != null && (responseRoleList.status === 401 || responseRoleList.status === 403)) {
         window.location.href = "/forbidden"; // or router push
         return;
     }
@@ -224,7 +224,12 @@ export default {
 
                <!-- Modal Footer -->
                <div class="modal-footer">
-                  <a class="btn btn-secondary btn-user" data-dismiss="modal">
+                <div v-if="vResponseStatusRegistrationUser != null" class="card bg-success text-white shadow">
+                  <div class="card-body">
+                    Registration {{ vResponseStatusRegistrationUser }} !
+                  </div>
+                </div>
+                  <a class="btn btn-secondary btn-user"  @click="closeModalUserRegistration">
                      Cancel</a
                   >
                   <a class="btn btn-primary btn-user" @click="submitSaveUserForm">
@@ -237,7 +242,9 @@ export default {
   `,
     data() {
         return {
+            vResponseStatusRegistrationUser: null,
             listOfUser: [],
+
             vModalFistName: "",
             firstNameValid: false,
             vModalEmail: "",
@@ -245,33 +252,18 @@ export default {
             vModalLastName: "",
             vmodalInputPhoneNumber: "+62",
             vmodalInputPassword: "",
-            vmodalInputPasswordRepeat: "",
+            vmodalInputPasswordRepeat: null,
             passwordValid: false,
             phoneValid: false,
             passwordRepeatValid: false,
             //dropdown search text
             vmodalRoleName: "",
             vmodalRoleId: null,
+
             showDropdown: false,
             selectedItem: null,
             filterList: null,
-            items: [{
-                    id: 1,
-                    name: "John Doe"
-                },
-                {
-                    id: 2,
-                    name: "Jane Smith"
-                },
-                {
-                    id: 3,
-                    name: "Michael Jordan"
-                },
-                {
-                    id: 4,
-                    name: "Lebron James"
-                }
-            ]
+            items: []
             //dropdown search text end
         };
     },
@@ -279,20 +271,20 @@ export default {
 
         this.listOfUser = await this.loadListOfUser();
         this.$nextTick(() => {
-//            $('#dataTable').DataTable();
+            //            $('#dataTable').DataTable();
 
-             if ($.fn.DataTable.isDataTable('#dataTable')) {
-                    $('#dataTable').DataTable().destroy();
+            if ($.fn.DataTable.isDataTable('#dataTable')) {
+                $('#dataTable').DataTable().destroy();
+            }
+
+            $('#dataTable').DataTable({
+                responsive: true,
+                pageLength: 25,
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search..."
                 }
-
-                $('#dataTable').DataTable({
-                    responsive: true,
-                    pageLength: 10,
-                    language: {
-                        search: "_INPUT_",
-                        searchPlaceholder: "Search..."
-                    }
-                });
+            });
         });
 
         this.loadUsers(); // fetch data on load
@@ -335,6 +327,37 @@ export default {
 
     },
     methods: {
+        closeModalUserRegistration() {
+            $('#registerNewUserModal').modal('hide');
+            this.vModalFistName = "",
+            this.firstNameValid= false;
+            this.vModalEmail= "";
+            this.emailValid= false;
+            this.vModalLastName= "";
+            this.vmodalInputPhoneNumber= "+62";
+            this.vmodalInputPassword= "";
+            this.vmodalInputPasswordRepeat= null;
+            this.passwordValid= false;
+            this.phoneValid= false;
+            this.passwordRepeatValid= false;
+            //dropdown search text
+            this.vmodalRoleName= "";
+            this.vmodalRoleId= null;
+        },
+        buildCreateUserRequestJson(uuid) {
+            return {
+                requestId: uuid,
+                type: "registration_user",
+                body: {
+                    username: this.vModalFistName.trim() + " " + this.vModalLastName.trim(),
+                    password: this.vmodalInputPassword,
+                    email: this.vModalEmail.trim().toLowerCase(),
+                    phoneNumber: this.vmodalInputPhoneNumber,
+                    roleId: this.vmodalRoleId,
+                    isActive: true
+                }
+            };
+        },
         getValue() {
             alert(this.$refs.refInputPhoneNumber.value);
         },
@@ -346,49 +369,32 @@ export default {
                 alert("Nomor HP tidak valid!");
                 return;
             }
-/*
+            var clientInfo = this.getClientInfo();
+            const requestJson = this.buildCreateUserRequestJson(clientInfo.uuid)
+            var responseSaveUser = null;
+            try {
+                responseSaveUser = await fetch(
+                    hostServer + "/api/v1/registration/user/save", {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'x-request-id': clientInfo.uuid,
+                        },
+                        body: JSON.stringify(requestJson)
+                    }
+                );
 
-            var clientInfo = async getClientInfo();
-            var responseListOfUser2 = null;
-                        try {
-                            responseListOfUser2 = await fetch(
-                                "http://localhost:8080/api/v1/registration/user/save", {
-                                    method: 'POST',
-                                    headers: {
-                                        'Accept': 'application/json',
-                                        'x-request-id': clientInfo.uuid
-                                    },
-                                    body: JSON.stringify(requestJson)
-                                }
-                            );
-
-                            unauthorizedRedirect(responseListOfUser2);
-                            // Deserialize here
-                            const dataJson = await responseListOfUser2.json();
-                            return dataJson.body.list.map(item => ({
-                                userId: item.userId,
-                                username: item.username,
-                                passwordHash: item.passwordHash,
-                                email: item.email,
-                                roleId: item.roleId,
-                                isActive: item.isActive,
-                                phoneNumber: item.phoneNumber,
-                                createdAt: item.createdAt,
-                                updatedAt: item.updatedAt
-                            }));
-                        } catch (err) {
-                            unauthorizedRedirect(responseListOfUser2);
-                            console.error("Failed to load users:", err);
-                        }
-*/
-
-            this.vModalLastName;
-            this.vModalEmail;
-            this.vmodalInputPassword;
-            this.vmodalInputPasswordRepeat;
-
-            this.vmodalInputPhoneNumber;
-            this.vmodalRoleId;
+                unauthorizedRedirect(responseSaveUser);
+                // Deserialize here
+                const dataJson = await responseSaveUser.json();
+                this.vResponseStatusRegistrationUser = dataJson.statusMessage
+                if(dataJson.status == 100){
+                    this.listOfUser = await this.loadListOfUser();
+                }
+            } catch (err) {
+                unauthorizedRedirect(responseSaveUser);
+                console.error("Failed to load users:", err);
+            }
         },
         //dropdown search text
         selectItem(item) {
@@ -418,12 +424,12 @@ export default {
             var responseListOfUser = null;
             try {
                 responseListOfUser = await fetch(
-                    hostServer+"/api/v1/registration/user/list", {
+                    hostServer + "/api/v1/registration/user/list", {
                         method: 'POST',
                         credentials: 'include',
                         headers: {
                             'Accept': 'application/json',
-                            'x-request-id':clientInfo.uuid
+                            'x-request-id': clientInfo.uuid
                         },
                         body: JSON.stringify(requestJson)
                     }
@@ -473,14 +479,14 @@ export default {
             var responseRoleList = null;
             try {
                 responseRoleList = await fetch(
-                    hostServer+"/api/v1/registration/role/list", {
+                    hostServer + "/api/v1/registration/role/list", {
                         method: 'GET',
                         credentials: 'include',
                         headers: {
                             'Accept': 'application/json',
-                            'x-request-id':  clientInfo.uuid
+                            'x-request-id': clientInfo.uuid
                             //                            'x-user-agent':  info.userAgent ,
-                            //                            'Cookie': "--sas"
+                            //                            'Cookie': document.cookie
                         }
                     }
                 );

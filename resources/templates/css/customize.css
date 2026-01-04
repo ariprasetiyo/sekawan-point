@@ -21,6 +21,21 @@ table.dataTable thead th {
     border-bottom: none;
 }
 
+.table td,
+.table th {
+  /*padding: 0.55rem; */
+  line-height: 2;
+/*  padding-bottom:0.1rem;*/
+}
+
+.table tbody tr:nth-child(odd) {
+  background-color: #f2efef;
+}
+
+.table tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
 /* Hover row */
 table.dataTable tbody tr:hover {
     background-color: #e0f2f1;

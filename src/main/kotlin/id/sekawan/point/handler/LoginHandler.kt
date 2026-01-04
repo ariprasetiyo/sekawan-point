@@ -29,6 +29,7 @@ class LoginHandler(
     private val ioScheduler: Scheduler,
     private val renderHandler: RenderHandler,
     private val jwtAuth: JWTAuth,
+    private val config: JsonObject,
     adminList: List<String>
 ) : AdminHandler<RoutingContext>(adminList) {
 
@@ -61,12 +62,10 @@ class LoginHandler(
                     return@map buildResponse(requestId, ResponseStatus.GENERAL_FAILED)
                 }
 
-                // 15 menit
-                val jwtClaimsAccess = jwtClaims(username, 900, JWTTokenType.ACCESS.alias)
+                val jwtClaimsAccess = jwtClaims(username, config.getLong(CONFIG_SECURITY_JWT_TOKEN_EXPIRED_IN_SECONDS)!!, JWTTokenType.ACCESS.alias)
                 val accessToken = jwtAuth.generateToken(jwtClaimsAccess, JWTOptions().setAlgorithm("HS256"))
 
-                // 7 hari
-                val jwtClaimsRefresh = jwtClaims(username, 604800, JWTTokenType.REFRESH.alias)
+                val jwtClaimsRefresh = jwtClaims(username, config.getLong(CONFIG_SECURITY_JWT_TOKEN_REFRESH_EXPIRED_IN_SECONDS)!!, JWTTokenType.REFRESH.alias)
                 val refreshToken = jwtAuth.generateToken(jwtClaimsRefresh, JWTOptions().setAlgorithm("HS256"))
 
                 val tokenDto = TokenDTO()
