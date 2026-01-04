@@ -35,11 +35,12 @@ class AuthValidateRequestHandler(
     private fun authenticationApi(ctx: RoutingContext) {
         val username = ctx.session().get<String>(SESSION_USERNAME)
         val headerRequestId = ctx.request().getHeader(HEADER_REQUEST_ID)
-        val headerIP = ctx.request().getHeader(HEADER_IP)
+        val remoteIpAddress = ctx.request().remoteAddress()
+
         val headerUserAgent = ctx.request().getHeader(HEADER_USER_AGENT)
-        if (StringUtils.isBlank(headerRequestId) || StringUtils.isBlank(headerIP) || StringUtils.isBlank(headerUserAgent)) {
+        if (StringUtils.isBlank(headerRequestId) || StringUtils.isBlank(headerUserAgent)) {
             val errorCode = ErrorLoginType.INVALID_REQUEST_ID_104
-            logger.warn("$username : invalid request id in body ${errorCode.errorCode} $headerRequestId $headerIP $headerUserAgent")
+            logger.warn("$username : invalid request id in body ${errorCode.errorCode} $headerRequestId $remoteIpAddress $headerUserAgent")
             return
         }
 
@@ -47,7 +48,7 @@ class AuthValidateRequestHandler(
             val requestIdBody = ctx.body().asJsonObject().getString("requestId")
             if (headerRequestId != requestIdBody) {
                 val errorCode = ErrorLoginType.INVALID_REQUEST_ID_105
-                logger.warn("invalid request id header vs body $username $headerRequestId vs $requestIdBody: ${errorCode.errorCode}")
+                logger.warn("invalid request id header vs body $username $remoteIpAddress $headerRequestId vs $requestIdBody: ${errorCode.errorCode}")
                 return
             }
         }

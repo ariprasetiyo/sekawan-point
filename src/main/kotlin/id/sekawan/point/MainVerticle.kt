@@ -226,6 +226,7 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
         route().handler(
             CorsHandler.create()
                 .addOrigin("*")
+                .allowCredentials(true)
                 .allowedMethod(HttpMethod.GET)
                 .allowedMethod(HttpMethod.POST)
                 .allowedMethod(HttpMethod.OPTIONS)
@@ -235,6 +236,9 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
                 .allowedHeader("Access-Control-Allow-Headers")
                 .allowedHeader("Content-Type")
                 .allowedHeader("Authorization")
+                .allowedHeader("x-request-id")
+                .allowedHeader("user-agent")
+                .allowedHeader("Cookie")
         )
 
         route().handler { context ->
@@ -331,9 +335,9 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
             val url = context.request().absoluteURI()
             val body = context.body().asString()
             val headerRequestId = context.request().getHeader(HEADER_REQUEST_ID)
-            val headerIP = context.request().getHeader(HEADER_IP)
+            val remoteIpAddress  = context.request().remoteAddress()
             val headerUserAgent = context.request().getHeader(HEADER_USER_AGENT)
-            logger.info("Incoming request", "method=$method | url=$url | requestId=$headerRequestId headerIP=$headerIP headerUserAgent=$headerUserAgent body=$body")
+            logger.info("Incoming request", "method=$method | url=$url | requestId=$headerRequestId remoteIpAddress=$remoteIpAddress headerUserAgent=$headerUserAgent body=$body")
         } catch (ex: Exception) {
             logger.error("Failed to log incoming request", ex.message, ex)
             ex.printStackTrace()

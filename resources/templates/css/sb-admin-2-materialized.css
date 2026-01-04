@@ -1,0 +1,139 @@
+
+/* Materialized look for SB Admin 2 */
+/* Author: ChatGPT */
+/* This file overrides SB Admin 2 styles to resemble Material Design */
+
+/*:root {
+  --primary: #6200ee;
+  --primary-dark: #3700b3;
+  --secondary: #03dac6;
+  --surface: #ffffff;
+  --background: #f5f5f5;
+  --error: #b00020;
+  --on-primary: #ffffff;
+  --on-surface: #000000;
+  --radius: 12px;
+  --shadow-1: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.24);
+  --shadow-2: 0 4px 6px rgba(0,0,0,.16), 0 2px 4px rgba(0,0,0,.23);
+}*/
+/*:root {
+    --primary: #27a69a;
+    --primary-dark: #126d65;
+    --secondary: #03dac6;
+    --surface: #ffffff;
+    --background: #f5f5f5;
+    --error: #b00020;
+    --on-primary: #ffffff;
+    --on-surface: #000000;
+    --radius: 12px;
+    --shadow-1: 0 1px 3px rgba(0, 0, 0, .12), 0 1px 2px rgba(0, 0, 0, .24);
+    --shadow-2: 0 4px 6px rgba(0, 0, 0, .16), 0 2px 4px rgba(0, 0, 0, .23);
+}*/
+
+/* Global */
+body {
+  background-color: var(--background);
+  font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  color: var(--on-surface);
+}
+
+/* Cards */
+.card {
+  border-radius: var(--radius);
+  border: none;
+  box-shadow: var(--shadow-1);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-2);
+}
+
+/* Buttons */
+.btn,
+.btn-primary {
+  border-radius: 999px;
+  background-color: var(--primary);
+  border: none;
+  box-shadow: var(--shadow-1);
+  transition: box-shadow .2s ease, background-color .2s ease;
+}
+
+.btn:hover,
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+  box-shadow: var(--shadow-2);
+}
+
+/* Inputs */
+.form-control {
+  border-radius: var(--radius);
+  border: 1px solid #ddd;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.form-control:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(98,0,238,.2);
+}
+
+/* Validation */
+.is-valid {
+  border-color: #4caf50;
+}
+
+.is-invalid {
+  border-color: var(--error);
+}
+
+/* Navbar */
+.navbar {
+  background-color: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+
+/* Sidebar */
+.sidebar {
+  background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+}
+
+.sidebar .nav-item .nav-link {
+  color: rgba(255,255,255,.85);
+  border-radius: var(--radius);
+  margin: .25rem .5rem;
+}
+
+.sidebar .nav-item .nav-link:hover {
+  background-color: rgba(255,255,255,.15);
+}
+
+/* Tables */
+.table {
+  background-color: var(--surface);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.table thead th {
+  border-bottom: none;
+  background-color: #eeeeee;
+}
+
+/* Dropdown */
+.dropdown-menu {
+  border-radius: var(--radius);
+  border: none;
+  box-shadow: var(--shadow-2);
+}
+
+/* Modal */
+.modal-content {
+  border-radius: var(--radius);
+  border: none;
+  box-shadow: var(--shadow-2);
+}
+
+/* Footer */
+footer {
+  background-color: var(--surface);
+  box-shadow: var(--shadow-1);
+}
