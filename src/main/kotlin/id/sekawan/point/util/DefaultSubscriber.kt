@@ -11,8 +11,7 @@ import org.joda.time.DateTime
 import org.joda.time.Duration
 import java.util.concurrent.atomic.AtomicReference
 
-open class DefaultSubscriber<T : Any>(val response: String, val routingContext: RoutingContext?) : Observer<T>,
-    Disposable {
+open class DefaultSubscriber<T : Any>(val response: String, private val routingContext: RoutingContext?) : Observer<T>{
     internal var logger = LoggerFactory().createLogger("DefaultSubscriber")
     private var requestTime = routingContext!!.get<DateTime>(KEY_RESPONSE_START_TIME)!!
     val upstream: AtomicReference<Disposable?> = AtomicReference<Disposable?>()
@@ -23,7 +22,7 @@ open class DefaultSubscriber<T : Any>(val response: String, val routingContext: 
     }
 
     override fun onError(e: Throwable) {
-        processBeforeSendError(e)
+        logger.info("requestError default", e.message, e)
         routingContext?.response()?.setStatusCode(getErrorCode(e))?.end()
     }
 
@@ -41,18 +40,6 @@ open class DefaultSubscriber<T : Any>(val response: String, val routingContext: 
         }
     }
 
-    private fun processBeforeSendError(e: Throwable) {
-        logger.error("requestError", createErrorMessage(e.message), e)
-    }
-
-    private fun createErrorMessage(message: String?): String {
-        return """"Subscriber failed : $response
-            Request IN : ${routingContext?.request()?.absoluteURI()}
-            Body IN : ${routingContext?.body()?.asString()}
-            Message : $message
-             """.trimMargin()
-    }
-
     private fun getErrorCode(e: Throwable): Int {
         return if (e is HttpException) {
             e.getErrorCode()
@@ -67,14 +54,6 @@ open class DefaultSubscriber<T : Any>(val response: String, val routingContext: 
         }
     }
 
-    protected fun onStart() {
-    }
-
-    override fun isDisposed(): Boolean {
-        return upstream.get() === DisposableHelper.DISPOSED
-    }
-
-    override fun dispose() {
-        DisposableHelper.dispose(this.upstream)
+    private fun onStart() {
     }
 }

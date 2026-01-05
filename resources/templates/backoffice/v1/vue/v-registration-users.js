@@ -94,7 +94,7 @@ export default {
                            <td>{{ user.isActive }}</td>
                            <td>{{ user.createdAt }}</td>
                            <td>{{ user.updatedAt }}</td>
-                           <td><a class="btn btn-primary btn-user" id="{{user.userId}}" >edit</a> <a class="btn btn-primary btn-user">delete</a></td>
+                           <td><a class="btn btn-primary btn-user" id="{{user.userId}}" >edit</a> <button class="btn btn-primary btn-user"  @click="submitDeleteUser(user.userId, user.username)" >delete</button></td>
                         </tr>
                      </tbody>
                   </table>
@@ -344,7 +344,7 @@ export default {
             this.vmodalRoleName= "";
             this.vmodalRoleId= null;
         },
-        buildCreateUserRequestJson(uuid) {
+        buildCreateUserJson(uuid) {
             return {
                 requestId: uuid,
                 type: "registration_user",
@@ -358,6 +358,16 @@ export default {
                 }
             };
         },
+        buildDeleteUserJson(uuid, userId, username) {
+                    return {
+                        requestId: uuid,
+                        type: "delete_user",
+                        body: {
+                            userId: userId,
+                            username: username
+                        }
+                    };
+                },
         getValue() {
             alert(this.$refs.refInputPhoneNumber.value);
         },
@@ -370,7 +380,7 @@ export default {
                 return;
             }
             var clientInfo = this.getClientInfo();
-            const requestJson = this.buildCreateUserRequestJson(clientInfo.uuid)
+            const requestJson = this.buildCreateUserJson(clientInfo.uuid)
             var responseSaveUser = null;
             try {
                 responseSaveUser = await fetch(
@@ -393,9 +403,38 @@ export default {
                 }
             } catch (err) {
                 unauthorizedRedirect(responseSaveUser);
-                console.error("Failed to load users:", err);
+                console.error("Failed to save users:", err);
             }
         },
+        async submitDeleteUser(userId, username) {
+
+                    var clientInfo = this.getClientInfo();
+                    const requestJson = this.buildDeleteUserJson(clientInfo.uuid, userId, username)
+                    var responseDeleteUser = null;
+                    try {
+                        responseDeleteUser = await fetch(
+                            hostServer + "/api/v1/registration/user/delete", {
+                                method: 'POST',
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'x-request-id': clientInfo.uuid,
+                                },
+                                body: JSON.stringify(requestJson)
+                            }
+                        );
+
+                        unauthorizedRedirect(responseDeleteUser);
+                        // Deserialize here
+                        const dataJson = await responseDeleteUser.json();
+                        this.vResponseStatusRegistrationUser = dataJson.statusMessage
+                        if(dataJson.status == 100){
+                            this.listOfUser = await this.loadListOfUser();
+                        }
+                    } catch (err) {
+                        unauthorizedRedirect(responseDeleteUser);
+                        console.error("Failed to delete users:", err);
+                    }
+                },
         //dropdown search text
         selectItem(item) {
             this.vmodalRoleId = item.id;

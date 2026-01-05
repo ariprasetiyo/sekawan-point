@@ -180,6 +180,88 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
         return Database.fromDataSource(dataSource)
     }
 
+    private fun isDatabaseOk(future: Promise<Status>, satuDB: Database) {
+        try {
+            val conn = satuDB.connectionProvider.get()
+            try {
+                if (conn.isClosed) {
+                    future.complete(Status.KO())
+                } else {
+                    future.complete(Status.OK())
+                }
+            } finally {
+                conn.close()
+            }
+        } catch (ex: Exception) {
+            logger.error("error db", ex.message, ex)
+            future.complete(Status.KO())
+        }
+    }
+
+    private fun logIncomingRequestWithTraceId(context: RoutingContext) {
+        try {
+            //val traceId = Span.current().spanContext.traceId
+            val method = context.request().method()
+            val url = context.request().absoluteURI()
+            val body = context.body().asString()
+            val headerRequestId = context.request().getHeader(HEADER_REQUEST_ID)
+            val remoteIpAddress = context.request().remoteAddress()
+            val headerUserAgent = context.request().getHeader(HEADER_USER_AGENT)
+            logger.info("Incoming request", "method=$method | url=$url | requestId=$headerRequestId remoteIpAddress=$remoteIpAddress headerUserAgent=$headerUserAgent body=$body")
+        } catch (ex: Exception) {
+            logger.error("Failed to log incoming request", ex.message, ex)
+            ex.printStackTrace()
+        }
+    }
+
+    private fun unwrapFreemakerConfiguration(freeMakerEngine: FreeMarkerTemplateEngine) {
+        // get the underlying FreeMarker Configuration
+        val cfg = freeMakerEngine.unwrap()
+        // Only proceed if unwrap() returns a valid Configuration
+        if (cfg != null) {
+            cfg.templateLoader = FileTemplateLoader(File(pathResource))
+            cfg.defaultEncoding = "UTF-8"
+
+            //cache in middleware
+            if (config().getBoolean(CONFIG_IS_ACTIVE_FREEMAKER_CACHE)) {
+                cfg.templateUpdateDelayMilliseconds = Long.MAX_VALUE    // check changes every 5 sec
+                cfg.cacheStorage = freemarker.cache.MruCacheStorage(0, 250)  // default LRU cache
+                logger.info("freeMaker cache is active")
+
+                // optional: disable caching for hot reload
+                // cfg.templateUpdateDelayMilliseconds = 0
+                // cfg.cacheStorage = freemarker.cache.NullCacheStorage()
+            }
+        } else {
+            throw IllegalStateException("Cannot unwrap FreeMarker configuration")
+        }
+    }
+
+    private fun sessionHandler(): SessionHandler {
+
+        // next could be change to SessionStore store = RedisSessionStore.create(vertx, redis);
+        val sessionStore = CookieSessionStore.create(vertx, config().getString(CONFIG_SESSION_SECRET)!!)
+        val sessionSetup = SessionHandler.create(sessionStore)
+            //in milliseconds
+            .setSessionTimeout(1000 * config().getLong(CONFIG_SESSION_TIMEOUT_IN_SECONDS)!!)
+            //in seconds. if not set will session remove when browser closed
+            .setCookieMaxAge(60 * config().getLong(CONFIG_SESSION_COOKIE_MAX_AGE_IN_SECONDS)!!)
+            .setNagHttps(config().getBoolean(CONFIG_SESSION_COOKIE_NAG_HTTP)!!)
+            .setCookieSecureFlag(config().getBoolean(CONFIG_SESSION_COOKIE_SECURE_FLAG)!!)
+            .setCookieHttpOnlyFlag(config().getBoolean(CONFIG_SESSION_COOKIE_HTTP_ONLY_FLAG)!!)
+//            .setCookieSameSite(CookieSameSite.LAX)
+
+        return sessionSetup
+    }
+
+    private fun jwtAuth(): JWTAuth {
+        // Secret key for HMAC SHA256 (gunakan key yang kuat di production)
+        val jwtSecret = config().getString(CONFIG_SECURITY_JWT_SECRET)!!
+        val jwtConfig = JWTAuthOptions()
+            .addPubSecKey(PubSecKeyOptions().setAlgorithm("HS256").setBuffer(jwtSecret))
+        return JWTAuth.create(vertx, jwtConfig)
+    }
+
     private fun createRouter() = Router.router(vertx).apply {
         val gson = GsonHelper.createGson()
         val vertxScheduler = RxHelper.scheduler(vertx)
@@ -275,6 +357,7 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
         val authSuperAdminHandler = AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, arrayListOf(RoleType.SUPER_ADMIN, RoleType.ADMIN))
         route().handler(AuthValidateRequestHandler(authSuperAdminHandler, true, listOf("/api/v1/subscribe", "/api/v1/registration/role", "/api/v1/registration/user")))
         post("/api/v1/registration/user/save").handler(RegistrationUserHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, myHash, ArrayList()))
+        post("/api/v1/registration/user/delete").handler(RegistrationUserDeleteHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
         post("/api/v1/registration/user/list").handler(RegistrationUserListHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
         post("/api/v1/registration/role/save").handler(RegistrationRoleHandler(gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
         get("/api/v1/registration/role/list").handler(RegistrationRoleListHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
@@ -308,87 +391,4 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
         get("/test/vertx/rxJava3/repository/observable").handler(VertxRxJava3ObservableRepository(vertxScheduler, ioScheduler, poolPgRxJava3, gson, config()))
         get("/test/vertx/rxJava3/repository/single").handler(VertxRxJava3SingleRepository(vertxScheduler, ioScheduler, poolPgRxJava3, gson, config()))
     }
-
-    private fun isDatabaseOk(future: Promise<Status>, satuDB: Database) {
-        try {
-            val conn = satuDB.connectionProvider.get()
-            try {
-                if (conn.isClosed) {
-                    future.complete(Status.KO())
-                } else {
-                    future.complete(Status.OK())
-                }
-            } finally {
-                conn.close()
-            }
-        } catch (ex: Exception) {
-            logger.error("error db", ex.message, ex)
-            future.complete(Status.KO())
-        }
-    }
-
-    private fun logIncomingRequestWithTraceId(context: RoutingContext) {
-        try {
-            //val traceId = Span.current().spanContext.traceId
-            val method = context.request().method()
-            val url = context.request().absoluteURI()
-            val body = context.body().asString()
-            val headerRequestId = context.request().getHeader(HEADER_REQUEST_ID)
-            val remoteIpAddress = context.request().remoteAddress()
-            val headerUserAgent = context.request().getHeader(HEADER_USER_AGENT)
-            logger.info("Incoming request", "method=$method | url=$url | requestId=$headerRequestId remoteIpAddress=$remoteIpAddress headerUserAgent=$headerUserAgent body=$body")
-        } catch (ex: Exception) {
-            logger.error("Failed to log incoming request", ex.message, ex)
-            ex.printStackTrace()
-        }
-    }
-
-    private fun unwrapFreemakerConfiguration(freeMakerEngine: FreeMarkerTemplateEngine) {
-        // get the underlying FreeMarker Configuration
-        val cfg = freeMakerEngine.unwrap()
-        // Only proceed if unwrap() returns a valid Configuration
-        if (cfg != null) {
-            cfg.templateLoader = FileTemplateLoader(File(pathResource))
-            cfg.defaultEncoding = "UTF-8"
-
-            //cache in middleware
-            if (config().getBoolean(CONFIG_IS_ACTIVE_FREEMAKER_CACHE)) {
-                cfg.templateUpdateDelayMilliseconds = Long.MAX_VALUE    // check changes every 5 sec
-                cfg.cacheStorage = freemarker.cache.MruCacheStorage(0, 250)  // default LRU cache
-                logger.info("freeMaker cache is active")
-
-                // optional: disable caching for hot reload
-                // cfg.templateUpdateDelayMilliseconds = 0
-                // cfg.cacheStorage = freemarker.cache.NullCacheStorage()
-            }
-        } else {
-            throw IllegalStateException("Cannot unwrap FreeMarker configuration")
-        }
-    }
-
-    private fun sessionHandler(): SessionHandler {
-
-        // next could be change to SessionStore store = RedisSessionStore.create(vertx, redis);
-        val sessionStore = CookieSessionStore.create(vertx, config().getString(CONFIG_SESSION_SECRET)!!)
-        val sessionSetup = SessionHandler.create(sessionStore)
-            //in milliseconds
-            .setSessionTimeout(1000 * config().getLong(CONFIG_SESSION_TIMEOUT_IN_SECONDS)!!)
-            //in seconds. if not set will session remove when browser closed
-            .setCookieMaxAge(60 * config().getLong(CONFIG_SESSION_COOKIE_MAX_AGE_IN_SECONDS)!!)
-            .setNagHttps(config().getBoolean(CONFIG_SESSION_COOKIE_NAG_HTTP)!!)
-            .setCookieSecureFlag(config().getBoolean(CONFIG_SESSION_COOKIE_SECURE_FLAG)!!)
-            .setCookieHttpOnlyFlag(config().getBoolean(CONFIG_SESSION_COOKIE_HTTP_ONLY_FLAG)!!)
-//            .setCookieSameSite(CookieSameSite.LAX)
-
-        return sessionSetup
-    }
-
-    private fun jwtAuth(): JWTAuth {
-        // Secret key for HMAC SHA256 (gunakan key yang kuat di production)
-        val jwtSecret = config().getString(CONFIG_SECURITY_JWT_SECRET)!!
-        val jwtConfig = JWTAuthOptions()
-            .addPubSecKey(PubSecKeyOptions().setAlgorithm("HS256").setBuffer(jwtSecret))
-        return JWTAuth.create(vertx, jwtConfig)
-    }
-
 }

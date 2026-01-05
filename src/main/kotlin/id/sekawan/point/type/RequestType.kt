@@ -16,6 +16,8 @@ enum class RequestType(val alias: String, val desc: String) {
     TYPE_REGISTRATION_ROLE("registration_role", "registration_role"),
     @SerializedName("registration_user")
     TYPE_REGISTRATION_USER("registration_user", "registration_user"),
+    @SerializedName("delete_user")
+    TYPE_DELETE_USER("delete_user", "delete_user"),
     @SerializedName("unknown")
     TYPE_UNKNOWN("unknown", "unknown");
 

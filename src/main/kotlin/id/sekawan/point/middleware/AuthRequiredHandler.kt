@@ -40,7 +40,7 @@ class AuthRequiredHandler(
 
         if (!authorizationRoles.any { it in roles }) {
             val authorizationRolesJson = gson.toJson(authorizationRoles)
-            logger.warn("${dataSession.user} : invalid authorization / forbidden. authorization roles = $authorizationRolesJson,  dataSession $dataSession")
+            logger.warn("invalid authorization / forbidden. authorization roles ${dataSession.user} = $authorizationRolesJson,  dataSession $dataSession")
             renderForbidden(ctx, ErrorLoginType.FORBIDDEN)
             return
         }
@@ -51,14 +51,12 @@ class AuthRequiredHandler(
 
         jwtAuth.authenticate(credentials)
             .onSuccess { user ->
-
-                val username = user.get<String>(JWT_SUB)
-                logger.info("success login session & jwt $username")
+                logger.warn("login success ${dataSession.user} = ${gson.toJson(user)}")
                 ctx.session().put(SESSION_USERNAME, dataSession.user)
                 ctx.next()
             }
             .onFailure { err ->
-                logger.warn(" ${dataSession.user} : invalid authentication jwt token", err.message, err)
+                logger.warn("invalid authentication jwt token ${dataSession.user}", err.message, err)
                 renderForbidden(ctx, ErrorLoginType.INVALID_AUTHENTICATION_103)
             }
     }

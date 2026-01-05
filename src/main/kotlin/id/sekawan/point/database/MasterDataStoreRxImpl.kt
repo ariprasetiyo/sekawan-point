@@ -20,12 +20,17 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
             insert into ms_users (user_id, username,password_hash, email , email_hash, phone_number, phone_number_hash, role_id, is_active, created_at, updated_at)
             values ($1, $2 , $3, $4, $5, $6, $7, $8, $9, now(), now())
         """.trimIndent()
+
+    private val deleteRegistrationUserQuery = """
+            update ms_users set deleted_at = now() where user_id = $1 and username = $2
+        """.trimIndent()
+
     private val getRolesQuery = """
         select id, name, description, authorizations, is_active , created_at, updated_at from ms_roles
     """.trimIndent()
 
     private val getUsersQuery = """
-        select user_id, username,password_hash, email , email_hash, phone_number, phone_number_hash, role_id, is_active, created_at, updated_at from ms_users
+        select user_id, username,password_hash, email , email_hash, phone_number, phone_number_hash, role_id, is_active, created_at, updated_at from ms_users where deleted_at is null 
     """.trimIndent()
 
     private fun getQuestionMark(list: List<Any>, customQuestionMark: String): String {
@@ -65,6 +70,18 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
 
         return sqlClient
             .preparedQuery(insertRegistrationUserQuery)
+            .executeBatch(tuples)
+            .map {
+                return@map it.rowCount()
+            }.toObservable()
+    }
+
+    override fun deleteRegistrationUser(user: User): Observable<Int> {
+        val tuples = listOf(
+            Tuple.tuple().addString(user.userId).addString(user.username))
+
+        return sqlClient
+            .preparedQuery(deleteRegistrationUserQuery)
             .executeBatch(tuples)
             .map {
                 return@map it.rowCount()
