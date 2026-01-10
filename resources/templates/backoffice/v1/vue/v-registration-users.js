@@ -1,38 +1,4 @@
-const hostServer = "http://192.168.1.4:8080";
-
-function formatDate(date) {
-    const pad = (n) => n.toString().padStart(2, '0');
-
-    const year = date.getFullYear();
-    const month = pad(date.getMonth() + 1);
-    const day = pad(date.getDate());
-    const hour = pad(date.getHours());
-    const minute = pad(date.getMinutes());
-    const second = pad(date.getSeconds());
-
-    return '${year}-${month}-${day} ${hour}:${minute}:${second}';
-}
-
-function generateUUIDv4() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-        const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-}
-
-function unauthorizedRedirect(responseRoleList) {
-    // 🚨 Handle unauthorized / forbidden
-    if (responseRoleList != null && responseRoleList.status != null && (responseRoleList.status === 401 || responseRoleList.status === 403)) {
-        window.location.href = "/forbidden"; // or router push
-        return;
-    }
-
-    // ❌ Other server errors
-    if (responseRoleList != null && !responseRoleList.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-    }
-}
+import {  hostServer, formatDate, generateUUIDv4, unauthorizedRedirect, fetchPOST, fetchGET } from "./common.js";
 
 export default {
     template: `
@@ -330,19 +296,19 @@ export default {
         closeModalUserRegistration() {
             $('#registerNewUserModal').modal('hide');
             this.vModalFistName = "",
-            this.firstNameValid= false;
-            this.vModalEmail= "";
-            this.emailValid= false;
-            this.vModalLastName= "";
-            this.vmodalInputPhoneNumber= "+62";
-            this.vmodalInputPassword= "";
-            this.vmodalInputPasswordRepeat= null;
-            this.passwordValid= false;
-            this.phoneValid= false;
-            this.passwordRepeatValid= false;
+                this.firstNameValid = false;
+            this.vModalEmail = "";
+            this.emailValid = false;
+            this.vModalLastName = "";
+            this.vmodalInputPhoneNumber = "+62";
+            this.vmodalInputPassword = "";
+            this.vmodalInputPasswordRepeat = null;
+            this.passwordValid = false;
+            this.phoneValid = false;
+            this.passwordRepeatValid = false;
             //dropdown search text
-            this.vmodalRoleName= "";
-            this.vmodalRoleId= null;
+            this.vmodalRoleName = "";
+            this.vmodalRoleId = null;
         },
         buildCreateUserJson(uuid) {
             return {
@@ -359,15 +325,15 @@ export default {
             };
         },
         buildDeleteUserJson(uuid, userId, username) {
-                    return {
-                        requestId: uuid,
-                        type: "delete_user",
-                        body: {
-                            userId: userId,
-                            username: username
-                        }
-                    };
-                },
+            return {
+                requestId: uuid,
+                type: "delete_user",
+                body: {
+                    userId: userId,
+                    username: username
+                }
+            };
+        },
         getValue() {
             alert(this.$refs.refInputPhoneNumber.value);
         },
@@ -383,22 +349,12 @@ export default {
             const requestJson = this.buildCreateUserJson(clientInfo.uuid)
             var responseSaveUser = null;
             try {
-                responseSaveUser = await fetch(
-                    hostServer + "/api/v1/registration/user/save", {
-                        method: 'POST',
-                        headers: {
-                            'Accept': 'application/json',
-                            'x-request-id': clientInfo.uuid,
-                        },
-                        body: JSON.stringify(requestJson)
-                    }
-                );
-
+                responseSaveUser = await fetchPOST("/api/v1/registration/user/save", clientInfo, JSON.stringify(requestJson))
                 unauthorizedRedirect(responseSaveUser);
                 // Deserialize here
                 const dataJson = await responseSaveUser.json();
                 this.vResponseStatusRegistrationUser = dataJson.statusMessage
-                if(dataJson.status == 100){
+                if (dataJson.status == 100) {
                     this.listOfUser = await this.loadListOfUser();
                 }
             } catch (err) {
@@ -408,33 +364,23 @@ export default {
         },
         async submitDeleteUser(userId, username) {
 
-                    var clientInfo = this.getClientInfo();
-                    const requestJson = this.buildDeleteUserJson(clientInfo.uuid, userId, username)
-                    var responseDeleteUser = null;
-                    try {
-                        responseDeleteUser = await fetch(
-                            hostServer + "/api/v1/registration/user/delete", {
-                                method: 'POST',
-                                headers: {
-                                    'Accept': 'application/json',
-                                    'x-request-id': clientInfo.uuid,
-                                },
-                                body: JSON.stringify(requestJson)
-                            }
-                        );
-
-                        unauthorizedRedirect(responseDeleteUser);
-                        // Deserialize here
-                        const dataJson = await responseDeleteUser.json();
-                        this.vResponseStatusRegistrationUser = dataJson.statusMessage
-                        if(dataJson.status == 100){
-                            this.listOfUser = await this.loadListOfUser();
-                        }
-                    } catch (err) {
-                        unauthorizedRedirect(responseDeleteUser);
-                        console.error("Failed to delete users:", err);
-                    }
-                },
+            var clientInfo = this.getClientInfo();
+            const requestJson = this.buildDeleteUserJson(clientInfo.uuid, userId, username)
+            var responseDeleteUser = null;
+            try {
+                responseDeleteUser = await fetchPOST("/api/v1/registration/user/delete", clientInfo, JSON.stringify(requestJson))
+                unauthorizedRedirect(responseDeleteUser);
+                // Deserialize here
+                const dataJson = await responseDeleteUser.json();
+                this.vResponseStatusRegistrationUser = dataJson.statusMessage
+                if (dataJson.status == 100) {
+                    this.listOfUser = await this.loadListOfUser();
+                }
+            } catch (err) {
+                unauthorizedRedirect(responseDeleteUser);
+                console.error("Failed to delete users:", err);
+            }
+        },
         //dropdown search text
         selectItem(item) {
             this.vmodalRoleId = item.id;
@@ -462,18 +408,7 @@ export default {
 
             var responseListOfUser = null;
             try {
-                responseListOfUser = await fetch(
-                    hostServer + "/api/v1/registration/user/list", {
-                        method: 'POST',
-                        credentials: 'include',
-                        headers: {
-                            'Accept': 'application/json',
-                            'x-request-id': clientInfo.uuid
-                        },
-                        body: JSON.stringify(requestJson)
-                    }
-                );
-
+                responseListOfUser = await fetchPOST("/api/v1/registration/user/list", clientInfo, JSON.stringify(requestJson))
                 unauthorizedRedirect(responseListOfUser);
                 // Deserialize here
                 const dataJson = await responseListOfUser.json();
@@ -492,48 +427,14 @@ export default {
                 unauthorizedRedirect(responseListOfUser);
                 console.error("Failed to load users:", err);
             }
-            /*return [{
-                    id: 1,
-                    name: 'John Doe',
-                    position: 'System Architect',
-                    office: 'Edinburgh',
-                    age: 61,
-                    startDate: '2011/04/25',
-                    salary: '$320,800'
-                },
-                {
-                    id: 1,
-                    name: 'Ari Prasetiyo',
-                    position: 'BE Java Developer',
-                    office: 'Edinburgh',
-                    age: 61,
-                    startDate: '2015/04/25',
-                    salary: '$920,800'
-                }
-            ];*/
         },
         async loadUsers() {
 
             var clientInfo = this.getClientInfo()
             var responseRoleList = null;
             try {
-                responseRoleList = await fetch(
-                    hostServer + "/api/v1/registration/role/list", {
-                        method: 'GET',
-                        credentials: 'include',
-                        headers: {
-                            'Accept': 'application/json',
-                            'x-request-id': clientInfo.uuid
-                            //                            'x-user-agent':  info.userAgent ,
-                            //                            'Cookie': document.cookie
-                        }
-                    }
-                );
-
+                responseRoleList = await fetchGET("/api/v1/registration/role/list", clientInfo);
                 unauthorizedRedirect(responseRoleList);
-                /*              console.info(dataJson)
-                                console.info(document.cookie)*/
-
                 // Deserialize here
                 const dataJson = await responseRoleList.json();
                 this.items = dataJson.body.list.map(item => ({
