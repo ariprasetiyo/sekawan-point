@@ -22,7 +22,7 @@ open class DefaultSubscriber<T : Any>(val response: String, private val routingC
     }
 
     override fun onError(e: Throwable) {
-        logger.info("requestError default", e.message, e)
+        logger.info("requestError default", e.rootCause().message, e)
         routingContext?.response()?.setStatusCode(getErrorCode(e))?.end()
     }
 

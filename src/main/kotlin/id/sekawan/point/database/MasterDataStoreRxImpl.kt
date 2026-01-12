@@ -33,6 +33,10 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
         select user_id, username,password_hash, email , email_hash, phone_number, phone_number_hash, role_id, is_active, created_at, updated_at from ms_users where deleted_at is null 
     """.trimIndent()
 
+    private val getUserDetailQuery = """
+        select user_id, username,password_hash, email , email_hash, phone_number, phone_number_hash, role_id, is_active, created_at, updated_at from ms_users where user_id = $1 and deleted_at is null 
+    """.trimIndent()
+
     private fun getQuestionMark(list: List<Any>, customQuestionMark: String): String {
         return list
             .stream()
@@ -109,6 +113,29 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
                 return@map roles
             }.toObservable()
 
+    }
+
+    override fun getUserDetails(userId: String): Observable<User> {
+
+        val tuples = Tuple.tuple().addString(userId)
+        return sqlClient.preparedQuery(getUserDetailQuery)
+            .execute(tuples)
+            .map { rows ->
+                for (row in rows) {
+                    return@map User(
+                        userId = row.getString("user_id"),
+                        username = row.getString("username"),
+                        passwordHash = row.getString("password_hash"),
+                        email = row.getString("email"),
+                        phoneNumber = row.getString("phone_number"),
+                        roleId = row.getString("role_id"),
+                        isActive = row.getBoolean("is_active"),
+                        createdAt = offsetDateTimeJakarta(row.getOffsetDateTime("created_at")),
+                        updatedAt = offsetDateTimeJakarta(row.getOffsetDateTime("updated_at"))
+                    )
+                }
+                return@map User(userId = userId)
+            }.toObservable()
     }
 
     override fun getUsers(): Observable<ArrayList<User>> {

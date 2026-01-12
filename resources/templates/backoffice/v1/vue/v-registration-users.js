@@ -73,7 +73,7 @@ export default {
                            <td>{{ user.isActive }}</td>
                            <td>{{ user.createdAt }}</td>
                            <td>{{ user.updatedAt }}</td>
-                           <td><a class="btn btn-primary btn-user" id="{{user.userId}}" >edit</a> <button class="btn btn-primary btn-user"  @click="submitDeleteUser(user.userId, user.username)" >delete</button></td>
+                           <td><a class="btn btn-primary btn-user" id="{{user.userId}}" @click="submitEditUser(user.userId, user.username)" >edit</a> <button class="btn btn-primary btn-user"  @click="submitDeleteUser(user.userId, user.username)" >delete</button></td>
                         </tr>
                      </tbody>
                   </table>
@@ -304,11 +304,11 @@ export default {
     },
     methods: {
         resetFormInputUserRegistration(isHideShowForm) {
-            if(isHideShowForm){
+            if (isHideShowForm) {
                 $('#registerNewUserModal').modal('hide');
             }
             this.vModalFistName = "",
-            this.firstNameValid = false;
+                this.firstNameValid = false;
             this.vModalEmail = "";
             this.emailValid = false;
             this.vModalLastName = "";
@@ -347,6 +347,16 @@ export default {
                 }
             };
         },
+        buildGetUserJson(uuid, userId, username) {
+            return {
+                requestId: uuid,
+                type: "users",
+                body: {
+                    userId: userId,
+                    username: username
+                }
+            };
+        },
         getValue() {
             alert(this.$refs.refInputPhoneNumber.value);
         },
@@ -373,16 +383,16 @@ export default {
         async submitDeleteUser(userId, username) {
 
             const resultConfirmation = await Swal.fire({
-              title: "Are you sure delete this user "+ username+" ?",
-              text: "This action cannot be undone",
-              icon: "warning",
-              showCancelButton: true,
-              confirmButtonText: "Yes, submit"
+                title: "Are you sure delete this user " + username + " ?",
+                text: "This action cannot be undone",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Yes, submit"
             });
 
-           if(!resultConfirmation.isConfirmed){
+            if (!resultConfirmation.isConfirmed) {
                 return;
-           }
+            }
 
             var clientInfo = getClientInfo();
             const requestJson = this.buildDeleteUserJson(clientInfo.uuid, userId, username)
@@ -391,6 +401,25 @@ export default {
             if (responseDeleteUser.status == 100) {
                 this.listOfUser = await this.loadListOfUser();
             }
+
+        },
+        async submitEditUser(userId, username) {
+
+            var clientInfo = getClientInfo()
+            const requestJson = this.buildGetUserJson(clientInfo.uuid, userId, username)
+            const dataJson = await fetchPOSTFull("/api/v1/registration/user/detail", clientInfo, JSON.stringify(requestJson));
+
+            var userId = dataJson.body.userId;
+            var username = dataJson.body.username;
+            var passwordHash = dataJson.body.passwordHash;
+            var email = dataJson.body.email;
+            var roleId = dataJson.body.roleId;
+            var isActive = dataJson.body.isActive;
+            var phoneNumber = dataJson.body.phoneNumber;
+            var createdAt = dataJson.body.createdAt;
+            var updatedAt = dataJson.body.updatedAt;
+
+            alert(userId +" "+ username+" "+ passwordHash+" "+ phoneNumber +" "+updatedAt);
 
         },
         //dropdown search text
@@ -438,6 +467,6 @@ export default {
                 createdAt: new Date(item.createdAt),
                 updatedAt: new Date(item.updatedAt)
             }));
-        },
+        }
     }
 };
