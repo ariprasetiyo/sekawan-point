@@ -1,4 +1,17 @@
-import {  hostServer, formatDate, generateUUIDv4, unauthorizedRedirect, fetchPOST, fetchGET } from "./common.js";
+import {
+    hostServer,
+    formatDate,
+    generateUUIDv4,
+    unauthorizedRedirect,
+    fetchPOST,
+    fetchGET,
+    getClientInfo,
+    isValidPhoneNumber,
+    isValidAlphabetic,
+    isValidEmail,
+    fetchPOSTFull,
+    fetchGETFull
+} from "./common.js";
 
 export default {
     template: `
@@ -195,7 +208,7 @@ export default {
                     Registration {{ vResponseStatusRegistrationUser }} !
                   </div>
                 </div>
-                  <a class="btn btn-secondary btn-user"  @click="closeModalUserRegistration">
+                  <a class="btn btn-secondary btn-user"  @click="resetFormInputUserRegistration(true)">
                      Cancel</a
                   >
                   <a class="btn btn-primary btn-user" @click="submitSaveUserForm">
@@ -279,24 +292,23 @@ export default {
             }
         },
         vmodalInputPhoneNumber(value) {
-            const regex = /^(?:\+62|62|0)8[1-9][0-9]{6,10}$/;
-            this.phoneValid = regex.test(value);
+            this.phoneValid = isValidPhoneNumber(value)
         },
         vModalFistName(value) {
-            const regex = /^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/;
-            this.firstNameValid = regex.test(value);
+            this.firstNameValid = isValidAlphabetic(value)
         },
         vModalEmail(value) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            this.emailValid = emailRegex.test(value);
+            this.emailValid = isValidEmail(value)
         }
 
     },
     methods: {
-        closeModalUserRegistration() {
-            $('#registerNewUserModal').modal('hide');
+        resetFormInputUserRegistration(isHideShowForm) {
+            if(isHideShowForm){
+                $('#registerNewUserModal').modal('hide');
+            }
             this.vModalFistName = "",
-                this.firstNameValid = false;
+            this.firstNameValid = false;
             this.vModalEmail = "";
             this.emailValid = false;
             this.vModalLastName = "";
@@ -309,6 +321,7 @@ export default {
             //dropdown search text
             this.vmodalRoleName = "";
             this.vmodalRoleId = null;
+            this.vResponseStatusRegistrationUser = null
         },
         buildCreateUserJson(uuid) {
             return {
@@ -345,41 +358,40 @@ export default {
                 alert("Nomor HP tidak valid!");
                 return;
             }
-            var clientInfo = this.getClientInfo();
+            var clientInfo = getClientInfo();
             const requestJson = this.buildCreateUserJson(clientInfo.uuid)
-            var responseSaveUser = null;
-            try {
-                responseSaveUser = await fetchPOST("/api/v1/registration/user/save", clientInfo, JSON.stringify(requestJson))
-                unauthorizedRedirect(responseSaveUser);
-                // Deserialize here
-                const dataJson = await responseSaveUser.json();
-                this.vResponseStatusRegistrationUser = dataJson.statusMessage
-                if (dataJson.status == 100) {
-                    this.listOfUser = await this.loadListOfUser();
-                }
-            } catch (err) {
-                unauthorizedRedirect(responseSaveUser);
-                console.error("Failed to save users:", err);
+
+            const responseSaveUser = await fetchPOSTFull("/api/v1/registration/user/save", clientInfo, JSON.stringify(requestJson));
+            console.info(responseSaveUser);
+            this.vResponseStatusRegistrationUser = responseSaveUser.statusMessage
+            if (responseSaveUser.status == 100) {
+                this.listOfUser = await this.loadListOfUser();
             }
+            this.resetFormInputUserRegistration(true);
+
         },
         async submitDeleteUser(userId, username) {
 
-            var clientInfo = this.getClientInfo();
+            const resultConfirmation = await Swal.fire({
+              title: "Are you sure delete this user "+ username+" ?",
+              text: "This action cannot be undone",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonText: "Yes, submit"
+            });
+
+           if(!resultConfirmation.isConfirmed){
+                return;
+           }
+
+            var clientInfo = getClientInfo();
             const requestJson = this.buildDeleteUserJson(clientInfo.uuid, userId, username)
-            var responseDeleteUser = null;
-            try {
-                responseDeleteUser = await fetchPOST("/api/v1/registration/user/delete", clientInfo, JSON.stringify(requestJson))
-                unauthorizedRedirect(responseDeleteUser);
-                // Deserialize here
-                const dataJson = await responseDeleteUser.json();
-                this.vResponseStatusRegistrationUser = dataJson.statusMessage
-                if (dataJson.status == 100) {
-                    this.listOfUser = await this.loadListOfUser();
-                }
-            } catch (err) {
-                unauthorizedRedirect(responseDeleteUser);
-                console.error("Failed to delete users:", err);
+            const responseDeleteUser = await fetchPOSTFull("/api/v1/registration/user/delete", clientInfo, JSON.stringify(requestJson));
+            this.vResponseStatusRegistrationUser = responseDeleteUser.statusMessage
+            if (responseDeleteUser.status == 100) {
+                this.listOfUser = await this.loadListOfUser();
             }
+
         },
         //dropdown search text
         selectItem(item) {
@@ -388,75 +400,44 @@ export default {
             this.selectedItem = item;
             this.showDropdown = false;
         },
-        getClientInfo() {
-
-            const uuid = generateUUIDv4();
-            const userAgent = navigator.userAgent;
-            return {
-                uuid,
-                userAgent
-            };
-        },
         async loadListOfUser() {
 
-            var clientInfo = this.getClientInfo()
+            var clientInfo = getClientInfo()
             const requestJson = {
                 requestId: clientInfo.uuid,
                 type: "users",
                 body: {}
             };
 
-            var responseListOfUser = null;
-            try {
-                responseListOfUser = await fetchPOST("/api/v1/registration/user/list", clientInfo, JSON.stringify(requestJson))
-                unauthorizedRedirect(responseListOfUser);
-                // Deserialize here
-                const dataJson = await responseListOfUser.json();
-                return dataJson.body.list.map(item => ({
-                    userId: item.userId,
-                    username: item.username,
-                    passwordHash: item.passwordHash,
-                    email: item.email,
-                    roleId: item.roleId,
-                    isActive: item.isActive,
-                    phoneNumber: item.phoneNumber,
-                    createdAt: item.createdAt,
-                    updatedAt: item.updatedAt
-                }));
-            } catch (err) {
-                unauthorizedRedirect(responseListOfUser);
-                console.error("Failed to load users:", err);
-            }
+            // Deserialize here
+            const dataJson = await fetchPOSTFull("/api/v1/registration/user/list", clientInfo, JSON.stringify(requestJson));
+            return dataJson.body.list.map(item => ({
+                userId: item.userId,
+                username: item.username,
+                passwordHash: item.passwordHash,
+                email: item.email,
+                roleId: item.roleId,
+                isActive: item.isActive,
+                phoneNumber: item.phoneNumber,
+                createdAt: item.createdAt,
+                updatedAt: item.updatedAt
+            }));
         },
         async loadUsers() {
 
-            var clientInfo = this.getClientInfo()
-            var responseRoleList = null;
-            try {
-                responseRoleList = await fetchGET("/api/v1/registration/role/list", clientInfo);
-                unauthorizedRedirect(responseRoleList);
-                // Deserialize here
-                const dataJson = await responseRoleList.json();
-                this.items = dataJson.body.list.map(item => ({
-                    id: item.id,
-                    name: item.name,
-                    description: item.description,
-                    active: item.isActive,
-                    createdAt: new Date(item.createdAt),
-                    updatedAt: new Date(item.updatedAt)
-                }));
-
-                //                console.info(this.items)
-
-                // Map API response
-                /*this.items = data.map(user => ({
-                  id: user.id,
-                  name: user.name
-                }));*/
-            } catch (err) {
-                unauthorizedRedirect(responseRoleList);
-                console.error("Failed to load users:", err);
-            }
+            var clientInfo = getClientInfo()
+            var responseRoleList = await fetchGET("/api/v1/registration/role/list", clientInfo);
+            unauthorizedRedirect(responseRoleList);
+            // Deserialize here
+            const dataJson = await responseRoleList.json();
+            this.items = dataJson.body.list.map(item => ({
+                id: item.id,
+                name: item.name,
+                description: item.description,
+                active: item.isActive,
+                createdAt: new Date(item.createdAt),
+                updatedAt: new Date(item.updatedAt)
+            }));
         },
     }
 };

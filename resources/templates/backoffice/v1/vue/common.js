@@ -1,5 +1,29 @@
 export const hostServer = "http://192.168.1.4:8080";
 
+export function getClientInfo() {
+    const uuid = generateUUIDv4();
+    const userAgent = navigator.userAgent;
+    return {
+        uuid,
+        userAgent
+    };
+}
+
+export function isValidPhoneNumber(value) {
+    const regex = /^(?:\+62|62|0)8[1-9][0-9]{6,10}$/;
+    return regex.test(value);
+}
+
+export function isValidAlphabetic(value) {
+    const regex = /^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/;
+    return regex.test(value);
+}
+
+export function isValidEmail(value) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(value);
+}
+
 export function formatDate(date) {
     const pad = (n) => n.toString().padStart(2, '0');
 
@@ -21,16 +45,16 @@ export function generateUUIDv4() {
     });
 }
 
-export function unauthorizedRedirect(responseRoleList) {
+export function unauthorizedRedirect(response) {
     // 🚨 Handle unauthorized / forbidden
-    if (responseRoleList != null && responseRoleList.status != null && (responseRoleList.status === 401 || responseRoleList.status === 403)) {
+    if (response != null && response.status != null && (response.status === 401 || response.status === 403)) {
         window.location.href = "/forbidden"; // or router push
         return;
     }
 
     // ❌ Other server errors
-    if (responseRoleList != null && !responseRoleList.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
+    if (response != null && !response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
     }
 }
 
@@ -49,6 +73,7 @@ export function fetchPOST(url, clientInfo, requestBodyJson) {
 }
 
 export function fetchGET(url, clientInfo) {
+
     return fetch(
         hostServer + url, {
             method: 'GET',
@@ -61,4 +86,30 @@ export function fetchGET(url, clientInfo) {
             }
         }
     );
+}
+
+export async function fetchPOSTFull(url, clientInfo, requestJson){
+var response = null;
+try {
+                response =  await fetchPOST(url, clientInfo, requestJson);
+                unauthorizedRedirect(response);
+                // Deserialize here
+                return await response.json();
+            } catch (err) {
+                unauthorizedRedirect(response);
+                console.error("Error system:", err);
+            }
+}
+
+export async function fetchGETFull(url, clientInfo){
+var response = null;
+try {
+                response =  await fetchGET(url, clientInfo);
+                unauthorizedRedirect(response);
+                // Deserialize here
+                return await response.json();
+            } catch (err) {
+                unauthorizedRedirect(response);
+                console.error("Error system:", err);
+            }
 }
