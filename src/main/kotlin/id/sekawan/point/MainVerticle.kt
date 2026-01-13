@@ -336,7 +336,7 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
         }
 
         get("/login").handler(LoginWebHandler(renderHandler, "login.html"))
-        post("/login").handler(LoginHandler(masterDatastore, gson, vertxScheduler, ioScheduler, renderHandler, jwtAuth, config(), ArrayList()))
+        post("/login").handler(LoginHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, renderHandler, jwtAuth, myHash, config(), ArrayList()))
         get("/forbidden").handler(ForbiddenWebHandler(ArrayList(), renderHandler))
         get("/logout").handler(LogoutHandler(ArrayList(), gson, vertxScheduler, ioScheduler, renderHandler))
         get("/clear-cache").handler(ClearCachelHandler(ArrayList(), freeMakerEngine, gson, vertxScheduler, ioScheduler))

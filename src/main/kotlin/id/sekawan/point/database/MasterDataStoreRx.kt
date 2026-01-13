@@ -9,6 +9,7 @@ interface MasterDataStoreRx {
     fun deleteRegistrationUser(user: User) : Observable<Int>
     fun getRoles(): Observable<ArrayList<Role>>
     fun getUsers(): Observable<ArrayList<User>>
+    fun getUserAuthByUsername(username: String, passwordHash : String): Observable<User>
     fun getUserDetails(userId : String): Observable<User>
 
 }

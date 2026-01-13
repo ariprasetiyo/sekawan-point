@@ -1,11 +1,12 @@
 package id.sekawan.point.handler
 
 import com.google.gson.Gson
-import id.sekawan.point.database.MasterDataStoreImpl
+import id.sekawan.point.database.MasterDataStoreRx
 import id.sekawan.point.type.JWTTokenType
 import id.sekawan.point.type.RequestType
 import id.sekawan.point.type.RoleType
 import id.sekawan.point.util.*
+import id.sekawan.point.util.mylib.MyHash
 import id.sekawan.point.util.mylog.LoggerFactory
 import id.sekawan.point.util.mymodel.DefaultResponse
 import id.sekawan.point.util.mymodel.ResponseStatus
@@ -18,17 +19,19 @@ import io.vertx.core.json.JsonObject
 import io.vertx.ext.auth.JWTOptions
 import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.web.RoutingContext
+import org.apache.commons.lang3.StringUtils
 import java.time.Instant
 import java.util.*
 import kotlin.collections.ArrayList
 
 class LoginHandler(
-    private val satuDatastore: MasterDataStoreImpl,
+    private val masterDbRx: MasterDataStoreRx,
     private val gson: Gson,
     private val vertxScheduler: Scheduler,
     private val ioScheduler: Scheduler,
     private val renderHandler: RenderHandler,
     private val jwtAuth: JWTAuth,
+    private val myHash: MyHash,
     private val config: JsonObject,
     adminList: List<String>
 ) : AdminHandler<RoutingContext>(adminList) {
@@ -37,30 +40,24 @@ class LoginHandler(
 
     override fun handle(ctx: RoutingContext) {
 
-        val username = ctx.request().getFormAttribute("username") ?: ""
-        val password = ctx.request().getFormAttribute("password") ?: ""
+        val username = ctx.request().getFormAttribute("username")
+        val password = ctx.request().getFormAttribute("password")
 
-        var isValidLogin = false
-        val roles = ArrayList<RoleType>()
-        if (username == "admin" && password == "admin") {
-            roles.add(RoleType.ADMIN)
-            roles.add(RoleType.BASIC_USER)
-            isValidLogin = true
-        } else if (username == "user" && password == "user") {
-            roles.add(RoleType.BASIC_USER)
-            isValidLogin = true
-        } else if (username == "user1" && password == "user1") {
-            roles.add(RoleType.BLOCK_USER)
-            isValidLogin = true
-        }
-
-        Observable.just(isValidLogin)
-            .map {
+        isValidRequest(username, password)
+            .flatMap {
+                val passwordHash = myHash.md5WithSalt(password)
+                return@flatMap masterDbRx.getUserAuthByUsername(username, passwordHash) }
+            .map { user ->
 
                 val requestId = UUID.randomUUID().toString()
-                if (!it) {
+                if(StringUtils.isBlank(user.userId)){
                     return@map buildResponse(requestId, ResponseStatus.GENERAL_FAILED)
+                } else if (user.role == null){
+                    return@map buildResponse(requestId, ResponseStatus.GENERAL_INVALID_USER_ROLE)
                 }
+
+                val roles = ArrayList<RoleType>()
+                roles.add(user.role!!)
 
                 val jwtClaimsAccess = jwtClaims(username, config.getLong(CONFIG_SECURITY_JWT_TOKEN_EXPIRED_IN_SECONDS)!!, JWTTokenType.ACCESS.alias)
                 val accessToken = jwtAuth.generateToken(jwtClaimsAccess, JWTOptions().setAlgorithm("HS256"))
@@ -120,11 +117,17 @@ class LoginHandler(
         return response
     }
 
+    private fun isValidRequest(username: String, password: String): Observable<Boolean> {
+        if(StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password) ){
+            return Observable.just(true)
+        }
+        return throwErrorBadRequest()
+    }
+
     private fun jwtClaims(username: String, expiredInSecond: Long, type: String): JsonObject {
         return JsonObject()
             .put(JWT_SUB, username)
             .put(JWT_EXP, Instant.now().plusSeconds(expiredInSecond).epochSecond)
             .put(JWT_TYPE, type)
     }
-
 }

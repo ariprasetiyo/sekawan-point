@@ -1,6 +1,7 @@
 package id.sekawan.point.database
 
 import com.google.gson.Gson
+import id.sekawan.point.type.RoleType
 import id.sekawan.point.util.DateTimeHelper.Companion.offsetDateTimeJakarta
 import id.sekawan.point.util.mylog.LoggerFactory
 import id.sekawan.point.util.mymodel.Role
@@ -35,6 +36,10 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
 
     private val getUserDetailQuery = """
         select user_id, username,password_hash, email , email_hash, phone_number, phone_number_hash, role_id, is_active, created_at, updated_at from ms_users where user_id = $1 and deleted_at is null 
+    """.trimIndent()
+
+    private val getUserAuthByUsername = """
+        select user_id, username,password_hash, email , email_hash, phone_number, phone_number_hash, role_id from ms_users  where username = $1 and password_hash = $2 and is_active = true and deleted_at is null 
     """.trimIndent()
 
     private fun getQuestionMark(list: List<Any>, customQuestionMark: String): String {
@@ -135,6 +140,28 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
                     )
                 }
                 return@map User(userId = userId)
+            }.toObservable()
+    }
+
+    override fun getUserAuthByUsername(username: String, passwordHash : String): Observable<User> {
+
+        val tuples = Tuple.tuple().addString(username).addString(passwordHash)
+        return sqlClient.preparedQuery(getUserAuthByUsername)
+            .execute(tuples)
+            .map { rows ->
+                for (row in rows) {
+                    return@map User(
+                        userId = row.getString("user_id"),
+                        username = row.getString("username"),
+                        passwordHash = row.getString("password_hash"),
+                        email = row.getString("email"),
+                        emailHash = row.getString("email_hash"),
+                        phoneNumber = row.getString("phone_number"),
+                        phoneNumberHash = row.getString("phone_number_hash"),
+                        role = RoleType.fromId(row.getString("role_id"))
+                    )
+                }
+                return@map User()
             }.toObservable()
     }
 
