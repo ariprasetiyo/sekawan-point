@@ -9,6 +9,7 @@ import {
     isValidPhoneNumber,
     isValidAlphabetic,
     isValidEmail,
+    isValidDate,
     fetchPOSTFull,
     fetchGETFull
 } from "./common.js";
@@ -22,6 +23,7 @@ export default {
             class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"
             data-toggle="modal"
             data-target="#registerNewUserModal"
+            @click="resetFormInputUserRegistration(false)"
             ><i class="fas fa-user-plus"></i> Create user</a
          >
       </div>
@@ -103,8 +105,7 @@ export default {
                <!-- Modal Body -->
                <div class="modal-body">
                   <form class="user" id="registerForm">
-                     <div class="form-group row">
-                        <div class="col-sm-6 mb-3 mb-sm-0">
+                     <div class="form-group">
                            <input
                               type="text"
                               class="form-control form-control-user"
@@ -113,17 +114,28 @@ export default {
                               :class="{'is-invalid': !firstNameValid, 'is-valid': firstNameValid}"
                               placeholder="First Name"
                            />
-                        </div>
-                        <div class="col-sm-6">
-                           <input
-                              type="text"
-                              class="form-control form-control-user"
-                              id="exampleLastName"
-                              v-model="vModalLastName"
-                              placeholder="Last Name"
-                           />
-                        </div>
                      </div>
+                     <div class="form-group row">
+                         <div class="col-sm-6 mb-3 mb-sm-0">
+                            <input
+                               type="text"
+                               class="form-control form-control-user"
+                               placeholder="Birth Place"
+                               v-model="vModalBirthPlace"
+                               :class="{'is-invalid': !isValidBirthPlace, 'is-valid': isValidBirthPlace}"
+                            />
+                         </div>
+                         <div class="col-sm-6">
+                            <input
+                               type="text"
+                               class="form-control form-control-user"
+                               id="calendarInput"
+                               placeholder="Birth date"
+                               :class="{'is-invalid': !isBirthDateValid, 'is-valid': isBirthDateValid}"
+                               v-model="vModalBirthDate"
+                            />
+                         </div>
+                      </div>
                      <div class="form-group">
                         <input
                            type="email"
@@ -223,12 +235,14 @@ export default {
         return {
             vResponseStatusRegistrationUser: null,
             listOfUser: [],
-
+            vModalBirthPlace: null,
+            isValidBirthPlace: false,
+            vModalBirthDate: null,
+            isBirthDateValid: false,
             vModalFistName: "",
             firstNameValid: false,
             vModalEmail: "",
             emailValid: false,
-            vModalLastName: "",
             vmodalInputPhoneNumber: "+62",
             vmodalInputPassword: "",
             vmodalInputPasswordRepeat: null,
@@ -248,6 +262,9 @@ export default {
     },
     async mounted() {
 
+        flatpickr("#calendarInput", {
+          dateFormat: "Y-m-d"
+        });
         this.listOfUser = await this.loadListOfUser();
         this.$nextTick(() => {
             //            $('#dataTable').DataTable();
@@ -299,8 +316,13 @@ export default {
         },
         vModalEmail(value) {
             this.emailValid = isValidEmail(value)
+        },
+        vModalBirthDate(value){
+            this.isBirthDateValid = isValidDate(value)
+        },
+        vModalBirthPlace(value){
+            this.isValidBirthPlace = isValidAlphabetic(value)
         }
-
     },
     methods: {
         resetFormInputUserRegistration(isHideShowForm) {
@@ -308,10 +330,13 @@ export default {
                 $('#registerNewUserModal').modal('hide');
             }
             this.vModalFistName = "",
-                this.firstNameValid = false;
+            this.firstNameValid = false;
+            this.vModalBirthPlace = null;
+            this.isValidBirthPlace = false;
+            this.vModalBirthDate = null;
+            this.isBirthDateValid = false;
             this.vModalEmail = "";
             this.emailValid = false;
-            this.vModalLastName = "";
             this.vmodalInputPhoneNumber = "+62";
             this.vmodalInputPassword = "";
             this.vmodalInputPasswordRepeat = null;
@@ -328,7 +353,7 @@ export default {
                 requestId: uuid,
                 type: "registration_user",
                 body: {
-                    username: this.vModalFistName.trim() + " " + this.vModalLastName.trim(),
+                    username: this.vModalFistName.trim() ,
                     password: this.vmodalInputPassword,
                     email: this.vModalEmail.trim().toLowerCase(),
                     phoneNumber: this.vmodalInputPhoneNumber,
@@ -409,17 +434,16 @@ export default {
             const requestJson = this.buildGetUserJson(clientInfo.uuid, userId, username)
             const dataJson = await fetchPOSTFull("/api/v1/registration/user/detail", clientInfo, JSON.stringify(requestJson));
 
-            var userId = dataJson.body.userId;
-            var username = dataJson.body.username;
-            var passwordHash = dataJson.body.passwordHash;
-            var email = dataJson.body.email;
-            var roleId = dataJson.body.roleId;
-            var isActive = dataJson.body.isActive;
-            var phoneNumber = dataJson.body.phoneNumber;
-            var createdAt = dataJson.body.createdAt;
-            var updatedAt = dataJson.body.updatedAt;
-
-            alert(userId +" "+ username+" "+ passwordHash+" "+ phoneNumber +" "+updatedAt);
+            var vModalFistName = dataJson.body.userId;
+            this.vModalFistName = dataJson.body.username;
+            this.vmodalInputPassword = dataJson.body.passwordHash;
+            this.vModalEmail = dataJson.body.email;
+            this.vmodalRoleId = dataJson.body.roleId;
+            this.vmodalRoleName = dataJson.body.roleName;
+            this.vmodalInputPhoneNumber = dataJson.body.phoneNumber;
+            console.info(dataJson.body.createdAt);
+            console.info(dataJson.body.updatedAt);
+            $('#registerNewUserModal').modal('show');
 
         },
         //dropdown search text

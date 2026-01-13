@@ -100,6 +100,17 @@ table.dataTable tbody tr:hover {
     border-top: none;
 }
 
+form.user .form-control-user {
+    font-size: .8rem;
+    border-radius: 0rem;
+    padding: 1.5rem 1rem;
+}
+
+.form-control:disabled, .form-control[readonly] {
+    background-color: #f3f4f8;
+    opacity: 1;
+}
+
 /* Materialize input style */
 .form-control-user {
     border-radius: 0;

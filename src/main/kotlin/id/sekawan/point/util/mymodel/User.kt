@@ -11,6 +11,7 @@ data class User(
     var phoneNumber: String? = null,
     var phoneNumberHash: String? = null,
     var roleId: String? = null,
+    var roleName: String? = null,
     var isActive: Boolean? = null,
     var createdAt: OffsetDateTime? = null,
     var updatedAt: OffsetDateTime? = null

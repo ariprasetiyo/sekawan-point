@@ -1,26 +1,29 @@
 package id.sekawan.point.type
 
-enum class RoleType (val alias : String){
+enum class RoleType (val id : String, val alias: String?){
 
-    SUPER_ADMIN( "access"),
-    ADMIN( "admin"),
-    APPROVAL( "approval"),
-    MAKER( "maker"),
-    READ_ONLY( "read_only"),
-    GUEST_USER("guest_user"),
-    BASIC_USER("basic_user"),
-    PREMIUM_USER("premium_user"),
-    BLOCK_USER("block_users");
+    SUPER_ADMIN( "super_admin", "super admin"),
+    ADMIN( "admin", "admin"),
+    APPROVAL( "approval", "approval"),
+    MAKER( "maker", "maker"),
+    READ_ONLY( "read_only", "read only"),
+    GUEST_USER("guest", "guest"),
+    BASIC_USER("basic", "basic"),
+    PREMIUM_USER("premium", "premium"),
+    BLOCK_USER("block_user", "block user");
 
     companion object {
-        private val aliasMap = values().associateBy { it.alias }
-        fun fromAlias(alias: String): RoleType? {
-            return aliasMap[alias]
+        private val idMap = values().associateBy { it.id }
+        fun fromId(id: String?): RoleType? {
+            if(id == null){
+                return id
+            }
+            return idMap[id]
         }
     }
 
     override fun toString(): String {
-        return alias
+        return id
     }
 
 }

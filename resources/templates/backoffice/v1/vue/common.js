@@ -24,6 +24,13 @@ export function isValidEmail(value) {
     return emailRegex.test(value);
 }
 
+export function isValidDate(value){
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+    const d = new Date(value);
+    return !isNaN(d) && d.toISOString().slice(0, 10) === value;
+}
+
 export function formatDate(date) {
     const pad = (n) => n.toString().padStart(2, '0');
 

@@ -3,6 +3,7 @@ package id.sekawan.point.handler
 import com.google.gson.Gson
 import id.sekawan.point.database.MasterDataStoreRx
 import id.sekawan.point.type.RequestType
+import id.sekawan.point.type.RoleType
 import id.sekawan.point.util.AdminHandler
 import id.sekawan.point.util.DefaultSubscriber
 import id.sekawan.point.util.HEADER_REQUEST_ID
@@ -13,7 +14,6 @@ import io.netty.handler.codec.http.HttpResponseStatus
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
 import io.vertx.ext.web.RoutingContext
-import org.apache.commons.lang3.StringUtils
 
 class RegistrationUserDetailHandler(
     private val masterDataStoreRx: MasterDataStoreRx,
@@ -34,6 +34,10 @@ class RegistrationUserDetailHandler(
             .concatMap { request ->
                 if (isValidRequest(request)) {
                     return@concatMap masterDataStoreRx.getUserDetails(request.body.userId!!)
+                        .map {
+                            it.roleName  = RoleType.fromId(it.roleId)?.alias
+                            return@map it
+                        }
                         .map { buildResponse(requestId, ResponseStatus.GENERAL_SUCCESS, it) }
                 }
                 return@concatMap Observable.just(buildResponse(requestId, ResponseStatus.GENERAL_FAILED, User(userId = request.body.userId!! )))
