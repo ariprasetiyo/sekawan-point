@@ -19,7 +19,15 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
 
     private val insertRegistrationUserQuery = """
             insert into ms_users (user_id, username,password_hash, email , email_hash, phone_number, phone_number_hash, role_id, is_active, created_at, updated_at)
-            values ($1, $2 , $3, $4, $5, $6, $7, $8, $9, now(), now())
+            values ($1, $2 , $3, $4, $5, $6, $7, $8, $9, now(), now()) on conflict(user_id) 
+            do update SET 
+            username = EXCLUDED.username, 
+            email = EXCLUDED.email,
+            email_hash = EXCLUDED.email_hash,
+            phone_number = EXCLUDED.phone_number,
+            phone_number_hash = EXCLUDED.phone_number_hash,
+            role_id = EXCLUDED.role_id,
+            is_active = EXCLUDED.is_active
         """.trimIndent()
 
     private val deleteRegistrationUserQuery = """

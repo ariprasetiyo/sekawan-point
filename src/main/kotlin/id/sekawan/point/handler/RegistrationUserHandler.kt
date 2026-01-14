@@ -34,8 +34,14 @@ class RegistrationUserHandler(
             .concatMap { request ->
                 if (isValidRequest(request)) {
 
-                    val userId = UserUtil().generateUserId()
-                    val passwordHash = myHash.md5WithSalt(request.body.password!!)
+                    // userid blank is new user
+                    var userId = request.body.userId
+                    var passwordHash: String? = null
+                    if(StringUtils.isBlank(userId)){
+                        userId = UserUtil().generateUserId()
+                        passwordHash  = myHash.md5WithSalt(request.body.password!!)
+                    }
+
                     val emailHash = myHash.md5WithSalt(request.body.email!!)
                     val phoneNumberHash = myHash.md5WithSalt(request.body.phoneNumber!!)
                     val user = User(

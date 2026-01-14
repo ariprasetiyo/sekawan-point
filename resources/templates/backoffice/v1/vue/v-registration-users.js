@@ -105,15 +105,22 @@ export default {
                <!-- Modal Body -->
                <div class="modal-body">
                   <form class="user" id="registerForm">
-                     <div class="form-group">
+                     <div class="form-group row">
+                            <div class="col-sm-6 mb-3 mb-sm-0">
                            <input
                               type="text"
                               class="form-control form-control-user"
                               id="exampleFirstName"
                               v-model="vModalFistName"
                               :class="{'is-invalid': !firstNameValid, 'is-valid': firstNameValid}"
-                              placeholder="First Name"
-                           />
+                              placeholder="First Name"/>
+                            </div>
+                            <div class="col-sm-6">
+                           <input
+                              type="text"
+                              class="form-control form-control-user text-center"
+                              v-model="vModalUserId"/>
+                           </div>
                      </div>
                      <div class="form-group row">
                          <div class="col-sm-6 mb-3 mb-sm-0">
@@ -239,6 +246,7 @@ export default {
             isValidBirthPlace: false,
             vModalBirthDate: null,
             isBirthDateValid: false,
+            vModalUserId: null,
             vModalFistName: "",
             firstNameValid: false,
             vModalEmail: "",
@@ -329,6 +337,7 @@ export default {
             if (isHideShowForm) {
                 $('#registerNewUserModal').modal('hide');
             }
+            this.vModalUserId = null,
             this.vModalFistName = "",
             this.firstNameValid = false;
             this.vModalBirthPlace = null;
@@ -353,6 +362,7 @@ export default {
                 requestId: uuid,
                 type: "registration_user",
                 body: {
+                    userId: this.vModalUserId,
                     username: this.vModalFistName.trim() ,
                     password: this.vmodalInputPassword,
                     email: this.vModalEmail.trim().toLowerCase(),
@@ -426,7 +436,6 @@ export default {
             if (responseDeleteUser.status == 100) {
                 this.listOfUser = await this.loadListOfUser();
             }
-
         },
         async submitEditUser(userId, username) {
 
@@ -434,16 +443,16 @@ export default {
             const requestJson = this.buildGetUserJson(clientInfo.uuid, userId, username)
             const dataJson = await fetchPOSTFull("/api/v1/registration/user/detail", clientInfo, JSON.stringify(requestJson));
 
-            var vModalFistName = dataJson.body.userId;
+            $('#registerNewUserModal').modal('show');
+            this.vModalUserId = dataJson.body.userId;
             this.vModalFistName = dataJson.body.username;
             this.vmodalInputPassword = dataJson.body.passwordHash;
             this.vModalEmail = dataJson.body.email;
             this.vmodalRoleId = dataJson.body.roleId;
             this.vmodalRoleName = dataJson.body.roleName;
             this.vmodalInputPhoneNumber = dataJson.body.phoneNumber;
-            console.info(dataJson.body.createdAt);
-            console.info(dataJson.body.updatedAt);
-            $('#registerNewUserModal').modal('show');
+            console.info(dataJson);
+
 
         },
         //dropdown search text
