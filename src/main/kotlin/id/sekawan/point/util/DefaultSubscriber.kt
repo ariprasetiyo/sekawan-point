@@ -3,7 +3,6 @@ package id.sekawan.point.util
 import id.sekawan.point.util.mylog.LoggerFactory
 import io.reactivex.rxjava3.core.Observer
 import io.reactivex.rxjava3.disposables.Disposable
-import io.reactivex.rxjava3.internal.disposables.DisposableHelper
 import io.reactivex.rxjava3.internal.util.EndConsumerHelper
 import io.vertx.ext.web.RoutingContext
 import org.apache.http.HttpStatus

@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import id.sekawan.point.type.RoleType
 import id.sekawan.point.util.DateTimeHelper.Companion.offsetDateTimeJakarta
 import id.sekawan.point.util.mylog.LoggerFactory
+import id.sekawan.point.util.mymodel.Menu
 import id.sekawan.point.util.mymodel.Role
 import id.sekawan.point.util.mymodel.User
 import io.reactivex.rxjava3.core.Observable
@@ -48,6 +49,10 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
 
     private val getUserAuthByUsername = """
         select user_id, username,password_hash, email , email_hash, phone_number, phone_number_hash, role_id from ms_users  where username = $1 and password_hash = $2 and is_active = true and deleted_at is null 
+    """.trimIndent()
+
+    private val getMenus = """
+       select id, name, parent, description, icon, url, is_active from ms_menu where is_active = true order by seq asc
     """.trimIndent()
 
     private fun getQuestionMark(list: List<Any>, customQuestionMark: String): String {
@@ -194,6 +199,28 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
                     )
                 }
                 return@map roles
+            }.toObservable()
+    }
+
+    override fun getMenus(): Observable<ArrayList<Menu>> {
+        return sqlClient.preparedQuery(getMenus)
+            .execute()
+            .map { rows ->
+                val menus = ArrayList<Menu>()
+                for (row in rows) {
+                    menus.add(
+                        Menu(
+                            id = row.getInteger("id"),
+                            name = row.getString("name"),
+                            parent = row.getInteger("parent"),
+                            description = row.getString("description"),
+                            icon = row.getString("icon"),
+                            url = row.getString("url"),
+                            isActive = row.getBoolean("is_active")
+                        )
+                    )
+                }
+                return@map menus
             }.toObservable()
     }
 

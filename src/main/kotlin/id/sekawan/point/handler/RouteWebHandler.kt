@@ -20,5 +20,4 @@ class RouteWebHandler(
         data.put("username", username)
         renderHandler.exec(ctx, pathHTML, data)
     }
-
 }

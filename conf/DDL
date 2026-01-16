@@ -70,16 +70,19 @@ create table ms_roles_menu
 create index concurrently ms_mrm_role_id_idx on ms_roles_menu using btree(role_id)
 create index concurrently ms_mrm_menu_id_idx on ms_roles_menu using btree(menu_id)
 
-
 CREATE TRIGGER updated_at_ms_roles_menu
 BEFORE UPDATE ON ms_roles_menu
 FOR EACH ROW EXECUTE PROCEDURE updated_at_automatically();
 
 create table ms_menu
 (
-    id varchar(255) primary key,
+    id int primary key,
+    seq int not null,
     name varchar,
+    parent int,
     description varchar,
+    icon varchar,
+    url text,
     is_active  bool,
     created_at timestamp with time zone not null,
     updated_at timestamp with time zone not null,
@@ -89,6 +92,18 @@ create table ms_menu
 CREATE TRIGGER updated_at_ms_menu
 BEFORE UPDATE ON ms_menu
 FOR EACH ROW EXECUTE PROCEDURE updated_at_automatically();
+
+INSERT INTO ms_menu ( id, seq, name, parent, icon, url, is_active, created_at, updated_at)
+values
+( 1, 1, 'Dashboard', null, 'fas fa-fw fa-tachometer-alt', '#/nav-main', true, now(), now() ),
+( 2, 2, 'Utilities',null, 'fas fa-fw fa-wrench','#', true, now(), now() ),
+( 3, 3, 'Transaction', null ,'fas fa-fw fa-folder','#',true, now(), now() ),
+( 4, 4, 'Registration user', 2, null, '#/nav-registration', true, now(), now() ),
+( 5, 5, 'roles', 2, null,'#' ,true, now(), now() ),
+( 6, 6, 'menus', 2, null,'#', true, now(), now() ),
+( 8, 7, 'payment', 3,null, '#', true, now(), now() ),
+( 9, 8, 'Payment in',  8, null, '#', true, now(), now() ),
+( 10, 9, 'Payment out', 8,null,  '#', true, now(), now() )
 
 INSERT into ms_roles (id, name, description, authorizations, is_active, created_at, updated_at) values ('super_admin', 'super admin', 'can access all', '{}', true, now(), now() )
 

@@ -43,53 +43,86 @@
             </div>
             <div class="sidebar-brand-text mx-3">SB Admin <sup>2</sup></div>
         </a>
-
         <!-- Divider -->
         <hr class="sidebar-divider my-0">
+        <@renderMenu menus=menus />
 
-        <!-- Nav Item - Dashboard -->
+        <#macro renderMenu menus>
+        <#list menus as menu>
+
+        <#-- MENU PARENT -->
+        <#if menu.children?has_content>
         <li class="nav-item active">
-            <a class="nav-link" href="#/nav-main">
-                <i class="fas fa-fw fa-tachometer-alt"></i>
-                <span>Dashboard</span></a>
-        </li>
 
-        <!-- Divider -->
-        <hr class="sidebar-divider">
+            <a class="nav-link collapsed"
+               href="#"
+               data-toggle="collapse"
+               data-target="#collapse-${menu.id}"
+               aria-expanded="false"
+               aria-controls="collapse-${menu.id}">
 
-        <!-- Heading -->
-        <div class="sidebar-heading">
-            Transactions
+                <#if menu.icon??>
+                <i class="${menu.icon}"></i>
+            </#if>
+            <span>${menu.name}</span>
+            </a>
+
+            <div id="collapse-${menu.id}"
+                 class="collapse"
+                 data-parent="#accordionSidebar">
+
+                <div class="bg-white py-2 collapse-inner rounded">
+                    <h6 class="collapse-header">${menu.name}</h6>
+
+                    <#-- CHILD MENU -->
+                    <#list menu.children as child>
+                    <#if child.children?has_content>
+                    <#-- OPTIONAL LEVEL 3 -->
+                    <a class="collapse-item collapsed"
+                       href="#"
+                       data-toggle="collapse"
+                       data-target="#collapse-${child.id}">
+                        ${child.name}
+                    </a>
+
+                    <div id="collapse-${child.id}" class="collapse">
+                        <div class="collapse-inner pl-3">
+                            <#list child.children as sub>
+                            <a class="collapse-item"
+                               href="${sub.url!'#'}">
+                                ${sub.name}
+                            </a>
+                        </#list>
+                    </div>
+                </div>
+                <#else>
+                <a class="collapse-item"
+                   href="${child.url!'#'}">
+                    ${child.name}
+                </a>
+            </#if>
+        </#list>
+
+        </div>
         </div>
 
-        <!-- Nav Item - main-->
-        <li class="nav-item">
-            <a class="nav-link" href="#/nav-main">
-                <i class="fas fa-fw fa-table"></i>
-                <span>Transaction list</span></a>
         </li>
 
-        <!-- Nav Item - main-->
-        <li class="nav-item">
-            <a class="nav-link" href="#/nav-main">
-                <i class="fas fa-fw fa-table"></i>
-                <span>Payment</span></a>
+        <#-- MENU TANPA CHILD -->
+        <#else>
+        <li class="nav-item active">
+            <a class="nav-link" href="${menu.url!'#'}">
+                <#if menu.icon??>
+                <i class="${menu.icon}"></i>
+            </#if>
+            <span>${menu.name}</span>
+            </a>
         </li>
+        </#if>
 
-        <!-- Divider -->
-        <hr class="sidebar-divider">
+        </#list>
+        </#macro>
 
-        <!-- Heading -->
-        <div class="sidebar-heading">
-            User Management
-        </div>
-
-        <!-- Nav Item - v-user-registration-->
-        <li class="nav-item">
-            <a class="nav-link" href="#/nav-registration">
-                <i class="fas fa-fw fa-table"></i>
-                <span>User registration</span></a>
-        </li>
 
         <!-- Nav Item - main-->
         <li class="nav-item">

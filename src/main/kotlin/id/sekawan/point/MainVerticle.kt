@@ -350,7 +350,8 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
         route("/scss/*").handler(staticHandler.exec("resources/templates/scss"))
         route("/vendor/*").handler(staticHandler.exec("resources/templates/vendor"))
         route("/backoffice/v1/*").handler(StaticHandler.create(pathResource))
-        get("/backoffice/v1").handler(RouteWebHandler(renderHandler, "v-main.html"))
+//        get("/backoffice/v1").handler(RouteWebHandler(renderHandler, "v-main.html"))
+        get("/backoffice/v1").handler(MainBackofficeHandler(vertxScheduler, ioScheduler, gson, masterDatastoreRx, freeMakerEngine, config()))
         post("/backoffice/v1").handler(DashboardHandler(masterDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
         get("/backoffice/v1/v-main").handler(RouteWebHandler(renderHandler, "v-main.html"))
 
