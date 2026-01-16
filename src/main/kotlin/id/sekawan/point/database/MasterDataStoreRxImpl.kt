@@ -10,7 +10,6 @@ import id.sekawan.point.util.mymodel.User
 import io.reactivex.rxjava3.core.Observable
 import io.vertx.rxjava3.sqlclient.SqlClient
 import io.vertx.rxjava3.sqlclient.Tuple
-import java.time.ZoneOffset
 import java.util.stream.Collectors
 
 
@@ -53,6 +52,10 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
 
     private val getMenus = """
        select id, name, parent, description, icon, url, is_active from ms_menu where is_active = true order by seq asc
+    """.trimIndent()
+
+    private val getRoles = """
+        select id, authorizations , is_active from ms_roles where is_active = true and deleted_at is null 
     """.trimIndent()
 
     private fun getQuestionMark(list: List<Any>, customQuestionMark: String): String {
@@ -100,7 +103,8 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
 
     override fun deleteRegistrationUser(user: User): Observable<Int> {
         val tuples = listOf(
-            Tuple.tuple().addString(user.userId).addString(user.username))
+            Tuple.tuple().addString(user.userId).addString(user.username)
+        )
 
         return sqlClient
             .preparedQuery(deleteRegistrationUserQuery)
@@ -156,7 +160,7 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
             }.toObservable()
     }
 
-    override fun getUserAuthByUsername(username: String, passwordHash : String): Observable<User> {
+    override fun getUserAuthByUsername(username: String, passwordHash: String): Observable<User> {
 
         val tuples = Tuple.tuple().addString(username).addString(passwordHash)
         return sqlClient.preparedQuery(getUserAuthByUsername)
@@ -221,6 +225,24 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
                     )
                 }
                 return@map menus
+            }.toObservable()
+    }
+
+    override fun getAuthorizationRoles(): Observable<ArrayList<Role>> {
+        return sqlClient.preparedQuery(getRoles)
+            .execute()
+            .map { rows ->
+                val authorizationRole = ArrayList<Role>()
+                for (row in rows) {
+                    authorizationRole.add(
+                        Role(
+                            id = row.getString("id"),
+                            authorization = row.getJsonObject("authorizations"),
+                            isActive = row.getBoolean("is_active")
+                        )
+                    )
+                }
+                return@map authorizationRole
             }.toObservable()
     }
 

@@ -14,5 +14,6 @@ interface MasterDataStoreRx {
     fun getUserAuthByUsername(username: String, passwordHash : String): Observable<User>
     fun getUserDetails(userId : String): Observable<User>
     fun getMenus(): Observable<ArrayList<Menu>>
+    fun getAuthorizationRoles(): Observable<ArrayList<Role>>
 
 }
