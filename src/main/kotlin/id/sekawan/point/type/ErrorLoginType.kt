@@ -7,7 +7,8 @@ enum class ErrorLoginType (val errorCode : Int, val errorMessage : String, val d
     INVALID_AUTHENTICATION_102(102, "invalid authentication", "session null"),
     INVALID_AUTHENTICATION_103(103, "invalid authentication", "token jwt invalid"),
     INVALID_REQUEST_ID_104(104, "invalid request header", "invalid request in header"),
-    INVALID_REQUEST_ID_105(105, "invalid request id", "invalid request id header vs body");
+    INVALID_REQUEST_ID_105(105, "invalid request id", "invalid request id header vs body"),
+    INVALID_AUTHENTICATION_106(106, "invalid authentication", "authorization not allow");
 
     companion object {
         private val errorMessageMap = values().associateBy { it.errorMessage }

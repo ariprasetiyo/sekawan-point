@@ -9,7 +9,6 @@ import id.sekawan.point.database.MasterDataStoreImpl
 import id.sekawan.point.database.MasterTransactionDataStore
 import id.sekawan.point.handler.*
 import id.sekawan.point.handler.test.*
-import id.sekawan.point.middleware.AuthRequiredHandler
 import id.sekawan.point.middleware.AuthValidateRequestHandler
 import id.sekawan.point.type.RoleType
 import id.sekawan.point.util.*
@@ -355,9 +354,7 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
         get("/logout").handler(LogoutHandler(ArrayList(), gson, vertxScheduler, ioScheduler, renderHandler))
         get("/clear-cache").handler(ClearCachelHandler(ArrayList(), freeMakerEngine, gson, vertxScheduler, ioScheduler))
 
-        val authAdmin =
-            AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, authorizationRoleMap, arrayListOf(RoleType.SUPER_ADMIN, RoleType.ADMIN, RoleType.BASIC_USER, RoleType.APPROVAL, RoleType.READ_ONLY))
-        route().handler(AuthValidateRequestHandler(authAdmin, false, listOf("/v1/admin/", "/backoffice/", "/js", "/vendor", "/css")))
+        route().handler(AuthValidateRequestHandler(freeMakerEngine, gson, jwtAuth, authorizationRoleMap, listOf("/v1/admin", "/backoffice", "/js", "/vendor", "/css", "/img", "/internal"), listOf("/api/v1/subscribe", "/api/v1/registration/role", "/api/v1/registration/user", "/internal")))
 
         route("/css/*").handler(staticHandler.exec("resources/templates/css"))
         route("/img/*").handler(staticHandler.exec("resources/templates/img"))
@@ -370,8 +367,6 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
         post("/backoffice/v1").handler(DashboardHandler(masterDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
         get("/backoffice/v1/v-main").handler(RouteWebHandler(renderHandler, "v-main.html"))
 
-        val authSuperAdminHandler = AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, authorizationRoleMap, arrayListOf(RoleType.SUPER_ADMIN, RoleType.ADMIN))
-        route().handler(AuthValidateRequestHandler(authSuperAdminHandler, true, listOf("/api/v1/subscribe", "/api/v1/registration/role", "/api/v1/registration/user")))
         post("/api/v1/registration/user/save").handler(RegistrationUserHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, myHash, ArrayList()))
         post("/api/v1/registration/user/delete").handler(RegistrationUserDeleteHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
         post("/api/v1/registration/user/list").handler(RegistrationUserListHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
@@ -380,8 +375,6 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
         get("/api/v1/registration/role/list").handler(RegistrationRoleListHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
         post("/api/v1/subscribe").handler(SatuTestHandler(masterDatastore, gson, vertxScheduler, ioScheduler, ArrayList()))
 
-        val authAPIInternal = AuthRequiredHandler(jwtAuth, gson, freeMakerEngine, authorizationRoleMap, arrayListOf(RoleType.SUPER_ADMIN))
-        route().handler(AuthValidateRequestHandler(authAPIInternal, false, listOf("/internal/*")))
         get("/internal/v1/health/ready").handler(healthCheckReadiness)
         get("/internal/v1/health/live").handler(healthCheckLiveness)
 
