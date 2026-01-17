@@ -61,18 +61,41 @@ FOR EACH ROW EXECUTE PROCEDURE updated_at_automatically();
 
 create table ms_roles_menu
 (
+	id bigserial primary key,
     role_id varchar(255),
-    menu_id varchar,
+    menu_id int,
     created_at timestamp with time zone not null,
-    updated_at timestamp with time zone not null
+    updated_at timestamp with time zone default null
 );
 
-create index concurrently ms_mrm_role_id_idx on ms_roles_menu using btree(role_id)
-create index concurrently ms_mrm_menu_id_idx on ms_roles_menu using btree(menu_id)
+create index ms_roles_menu_role_id_idx on ms_roles_menu using btree(role_id)
+create index ms_roles_menu_menu_id_idx on ms_roles_menu using btree(menu_id)
 
 CREATE TRIGGER updated_at_ms_roles_menu
 BEFORE UPDATE ON ms_roles_menu
 FOR EACH ROW EXECUTE PROCEDURE updated_at_automatically();
+
+insert into ms_roles_menu (role_id, menu_id, created_at) values
+   ('super_admin', 1, now()),
+   ('super_admin', 2, now() ),
+   ('super_admin', 3, now() ),
+   ('super_admin', 4, now() ),
+   ('super_admin', 5, now() ),
+   ('super_admin', 6, now() ),
+   ('super_admin', 8, now() ),
+   ('super_admin', 9, now() ),
+   ('super_admin', 10, now() )
+
+insert into ms_roles_menu (role_id, menu_id, created_at) values
+   ('admin', 1, now()),
+   ('admin', 2, now() ),
+   ('admin', 3, now() ),
+   ('admin', 4, now() ),
+   ('admin', 6, now() )
+
+ GRANT ALL PRIVILEGES ON TABLE ms_roles_menu TO sekawan;
+ GRANT ALL PRIVILEGES ON TABLE ms_roles_menu TO postgres;
+-------------------------------------
 
 create table ms_menu
 (

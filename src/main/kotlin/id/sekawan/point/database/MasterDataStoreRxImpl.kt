@@ -51,7 +51,11 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
     """.trimIndent()
 
     private val getMenus = """
-       select id, name, parent, description, icon, url, is_active from ms_menu where is_active = true order by seq asc
+       select mm.id, mm.name, mm.parent, mm.description, mm.icon, mm.url, mm.is_active 
+       from ms_menu mm 
+       inner join ms_roles_menu mrm on mm.id = mrm.menu_id
+       inner join ms_roles mr on mr.id = mrm.role_id
+       where mm.is_active = true and mr.is_active = true and mr.id = $1 order by seq asc
     """.trimIndent()
 
     private val getRoles = """
@@ -206,9 +210,10 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
             }.toObservable()
     }
 
-    override fun getMenus(): Observable<ArrayList<Menu>> {
+    override fun getMenus(roleId : String): Observable<ArrayList<Menu>> {
+        val tuples = Tuple.tuple().addString(roleId)
         return sqlClient.preparedQuery(getMenus)
-            .execute()
+            .execute(tuples)
             .map { rows ->
                 val menus = ArrayList<Menu>()
                 for (row in rows) {

@@ -2,12 +2,12 @@ package id.sekawan.point.handler
 
 import com.google.gson.Gson
 import id.sekawan.point.database.MasterDataStoreRx
-import id.sekawan.point.util.CONFIG_IS_ACTIVE_WEB_LOCAL_CACHE
-import id.sekawan.point.util.DefaultSubscriber
-import id.sekawan.point.util.HttpException
-import id.sekawan.point.util.SESSION_USERNAME
+import id.sekawan.point.type.RequestType
+import id.sekawan.point.type.RoleType
+import id.sekawan.point.util.*
 import id.sekawan.point.util.mylog.LoggerFactory
 import id.sekawan.point.util.mymodel.Menu
+import id.sekawan.point.util.mymodel.UserRequest
 import io.netty.handler.codec.http.HttpResponseStatus
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
@@ -15,6 +15,7 @@ import io.vertx.core.Handler
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.templ.freemarker.FreeMarkerTemplateEngine
+import org.apache.commons.lang3.StringUtils
 
 class MainBackofficeHandler(
     private val vertxScheduler: Scheduler,
@@ -29,10 +30,18 @@ class MainBackofficeHandler(
 
     override fun handle(ctx: RoutingContext) {
 
-        val username = ctx.session().get<String>(SESSION_USERNAME)
+        val username = ctx.session().get<String?>(SESSION_USERNAME)
+        val roles = ctx.session().get<String>(SESSION_ROLE)
+
         Observable.just(1)
             .observeOn(ioScheduler)
-            .flatMap { masterDateStoreRx.getMenus() }
+            .map { isValidRequest(username, roles) }
+            .flatMap { isValid ->
+                if (isValid) {
+                    return@flatMap masterDateStoreRx.getMenus(roles)
+                }
+                return@flatMap Observable.error(Throwable("haven't username $username or roles ${gson.toJson(roles)}"))
+            }
             .map {
                 return@map buildMenuTree(it)
             }
@@ -116,5 +125,10 @@ class MainBackofficeHandler(
             println("${"    ".repeat(level)}- ${menu.name}")
             printMenuTree(menu.children, level + 1)
         }
+    }
+
+    private fun isValidRequest(username: String, role: String): Boolean {
+        return (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(role))
+
     }
 }

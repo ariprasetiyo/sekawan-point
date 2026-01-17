@@ -354,7 +354,9 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
         get("/logout").handler(LogoutHandler(ArrayList(), gson, vertxScheduler, ioScheduler, renderHandler))
         get("/clear-cache").handler(ClearCachelHandler(ArrayList(), freeMakerEngine, gson, vertxScheduler, ioScheduler))
 
-        route().handler(AuthValidateRequestHandler(freeMakerEngine, gson, jwtAuth, authorizationRoleMap, listOf("/v1/admin", "/backoffice", "/js", "/vendor", "/css", "/img", "/internal"), listOf("/api/v1/subscribe", "/api/v1/registration/role", "/api/v1/registration/user", "/internal")))
+        val authorizationNonAPI = listOf("/v1/admin", "/backoffice", "/js", "/vendor", "/css", "/img", "/internal", "/favicon.ico")
+        val authorizationAPI = listOf("/api/v1/subscribe", "/api/v1/registration/role", "/api/v1/registration/user", "/internal", "/test/vertx/")
+        route().handler(AuthValidateRequestHandler(freeMakerEngine, gson, jwtAuth, authorizationRoleMap,authorizationNonAPI , authorizationAPI))
 
         route("/css/*").handler(staticHandler.exec("resources/templates/css"))
         route("/img/*").handler(staticHandler.exec("resources/templates/img"))
@@ -362,7 +364,6 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
         route("/scss/*").handler(staticHandler.exec("resources/templates/scss"))
         route("/vendor/*").handler(staticHandler.exec("resources/templates/vendor"))
         route("/backoffice/v1/*").handler(StaticHandler.create(pathResource))
-//        get("/backoffice/v1").handler(RouteWebHandler(renderHandler, "v-main.html"))
         get("/backoffice/v1").handler(MainBackofficeHandler(vertxScheduler, ioScheduler, gson, masterDatastoreRx, freeMakerEngine, config()))
         post("/backoffice/v1").handler(DashboardHandler(masterDatastore, gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
         get("/backoffice/v1/v-main").handler(RouteWebHandler(renderHandler, "v-main.html"))

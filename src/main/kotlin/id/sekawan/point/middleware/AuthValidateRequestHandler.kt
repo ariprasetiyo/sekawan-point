@@ -3,10 +3,7 @@ package id.sekawan.point.middleware
 import com.google.gson.Gson
 import id.sekawan.point.type.ErrorLoginType
 import id.sekawan.point.type.RoleType
-import id.sekawan.point.util.HEADER_REQUEST_ID
-import id.sekawan.point.util.HEADER_USER_AGENT
-import id.sekawan.point.util.SESSION_LOGIN
-import id.sekawan.point.util.SESSION_USERNAME
+import id.sekawan.point.util.*
 import id.sekawan.point.util.mylog.LoggerFactory
 import id.sekawan.point.util.mymodel.AuthorizationUrls
 import id.sekawan.point.util.mymodel.UserSessionDTO
@@ -51,6 +48,8 @@ class AuthValidateRequestHandler(
             .onSuccess { user ->
                 logger.warn("login success ${dataSession.user} = ${gson.toJson(user)}")
                 ctx.session().put(SESSION_USERNAME, dataSession.user)
+                ctx.session().put(SESSION_ROLE, dataSession.roles!![0].id)
+
 
                 // Perubahan ini dilakukan agar atribut `http.route` di OpenTelemetry (OTEL)
                 // menampilkan nilai endpoint yang sesuai (misalnya: "/api/merchant/qr/product/create"),
@@ -123,11 +122,11 @@ class AuthValidateRequestHandler(
 
             val path = ctx.request().path().removeSuffix("/")
             if (ctx.request().method() == HttpMethod.POST && authorizationRole.urlsPost != null && !authorizationRole.urlsPost!!.any { path.startsWith(it) }) {
-                logger.warn("invalid authorization / forbidden 102. authorization roles null ${dataSession.user} = ${role.id},  dataSession $dataSession")
+                logger.warn("invalid authorization / forbidden 102. authorization roles null $path ${dataSession.user} = ${role.id},  dataSession ${gson.toJson(dataSession)}")
                 renderForbidden(ctx, ErrorLoginType.FORBIDDEN)
                 return
             } else if (ctx.request().method() == HttpMethod.GET && authorizationRole.urlsGet != null && !authorizationRole.urlsGet!!.any { path.startsWith(it) }) {
-                logger.warn("invalid authorization / forbidden 103. authorization roles null ${dataSession.user} = ${role.id},  dataSession $dataSession")
+                logger.warn("invalid authorization / forbidden 103. authorization roles null $path ${dataSession.user} = ${role.id},  dataSession ${gson.toJson(dataSession)}")
                 renderForbidden(ctx, ErrorLoginType.FORBIDDEN)
                 return
             }
