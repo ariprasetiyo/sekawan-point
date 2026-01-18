@@ -23,8 +23,8 @@
     <link rel="stylesheet"  href="../../css/sb-admin-2.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../../vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../../css/sb-admin-2-materialized.css" rel="stylesheet">
-    <link rel="stylesheet" href="../../css/customize.css" rel="stylesheet">
     <link rel="stylesheet" href="../../css/flatpickr-lib.css">
+    <link rel="stylesheet" href="../../css/customize.css" rel="stylesheet">
 
 </head>
 
@@ -372,9 +372,24 @@
 
             </nav>
             <!-- End of Topbar -->
+
             <!-- main SPA -->
             <div id="app-main" class="container-fluid">
+                <!-- Loading overlay -->
+        <!--        <div v-if="loadingState.loading" class="route-loading">
+                    <div class="spinner-border text-primary"></div>
+                    <p class="mt-2">Loading...</p>
+                </div>
 
+                &lt;!&ndash; Router view &ndash;&gt;
+                <router-view />-->
+
+          <!--      <div>
+                    <div v-if="loadingState.loading" class="page-loader">
+                        Loading...
+                    </div>
+                    <router-view />
+                </div>-->
              <!-- End of main SPA -->
             </div>
         </div>

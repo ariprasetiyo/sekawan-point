@@ -9,6 +9,7 @@ import id.sekawan.point.database.MasterDataStoreImpl
 import id.sekawan.point.database.MasterTransactionDataStore
 import id.sekawan.point.handler.*
 import id.sekawan.point.handler.test.*
+import id.sekawan.point.middleware.AuthValidateRequestAsyncHandler
 import id.sekawan.point.middleware.AuthValidateRequestHandler
 import id.sekawan.point.type.RoleType
 import id.sekawan.point.util.*
@@ -356,7 +357,8 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
 
         val authorizationNonAPI = listOf("/v1/admin", "/backoffice", "/js", "/vendor", "/css", "/img", "/internal", "/favicon.ico")
         val authorizationAPI = listOf("/api/v1/subscribe", "/api/v1/registration/role", "/api/v1/registration/user", "/internal", "/test/vertx/")
-        route().handler(AuthValidateRequestHandler(freeMakerEngine, gson, jwtAuth, authorizationRoleMap,authorizationNonAPI , authorizationAPI))
+//        route().handler(AuthValidateRequestHandler(freeMakerEngine, gson, jwtAuth, authorizationRoleMap,authorizationNonAPI , authorizationAPI))
+        route().handler(AuthValidateRequestAsyncHandler(vertxScheduler, ioScheduler,freeMakerEngine, gson, jwtAuth, authorizationRoleMap,authorizationNonAPI , authorizationAPI))
 
         route("/css/*").handler(staticHandler.exec("resources/templates/css"))
         route("/img/*").handler(staticHandler.exec("resources/templates/img"))

@@ -99,7 +99,7 @@ insert into ms_roles_menu (role_id, menu_id, created_at) values
 
 create table ms_menu
 (
-    id int primary key,
+    id bigserial primary key,
     seq int not null,
     name varchar,
     parent int,
@@ -139,9 +139,3 @@ values
 (gen_random_uuid(), 'super_admin','/v1/admin/', now(), now() ),
 (gen_random_uuid(), 'super_admin','/vendor', now(), now() ),
 (gen_random_uuid(), 'super_admin','/css', now(), now() )
-
-INSERT INTO ms_menu ( id, name, is_active, created_at, updated_at)
-values
-( gen_random_uuid(), 'dashboard', true, now(), now() ),
-( gen_random_uuid(), 'registration user', true, now(), now() ),
-( gen_random_uuid(), 'registration role', true, now(), now() )

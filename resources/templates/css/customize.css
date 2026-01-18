@@ -14,6 +14,29 @@
     --shadow-2: 0 4px 6px rgba(0, 0, 0, .16), 0 2px 4px rgba(0, 0, 0, .23);
 }
 
+/*.page-loader {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  font-size: 18px;
+}*/
+
+/* loading */
+.page-loader {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.85);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Header */
 table.dataTable thead th {
     background-color: #26a69a; /* Materialize teal */
@@ -24,8 +47,20 @@ table.dataTable thead th {
 .table td,
 .table th {
   /*padding: 0.55rem; */
+   padding: .55rem;
   line-height: 2;
+   vertical-align: middle;
 /*  padding-bottom:0.1rem;*/
+}
+
+/* make table overlay */
+#dataTable {
+    min-width: 1800px;
+}
+
+#dataTable thead th {
+  text-align: center;
+  font-weight: 600;
 }
 
 .table tbody tr:nth-child(odd) {

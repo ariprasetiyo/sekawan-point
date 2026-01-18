@@ -17,14 +17,14 @@ import {
 export default {
     template: `
       <div class="d-sm-flex align-items-center justify-content-between mb-4">
-         <h1 class="h3 mb-0 text-gray-800">User Registration</h1>
+         <h1 class="h3 mb-0 text-gray-800">Management Role - Menu</h1>
          <a
             href="#"
             class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"
             data-toggle="modal"
             data-target="#registerNewUserModal"
             @click="resetFormInputUserRegistration(false)"
-            ><i class="fas fa-user-plus"></i> Create user</a
+            ><i class="fas fa-user-plus"></i> Create Menu</a
          >
       </div>
 
@@ -32,7 +32,6 @@ export default {
          <div class="card-body p-0">
             <!-- Nested Row within Card Body -->
             <div class="card-body">
-               <!-- <div class="table-responsive"> -->
                <div class="table-responsive">
                   <table
                      class="table table-bordered"
@@ -241,6 +240,7 @@ export default {
   `,
     data() {
         return {
+            loading: false,
             vResponseStatusRegistrationUser: null,
             listOfUser: [],
             vModalBirthPlace: null,
@@ -276,24 +276,13 @@ export default {
         });
         this.listOfUser = await this.loadListOfUser();
         this.$nextTick(() => {
-            //            $('#dataTable').DataTable();
 
             if ($.fn.DataTable.isDataTable('#dataTable')) {
                 $('#dataTable').DataTable().destroy();
             }
 
             $('#dataTable').DataTable({
-                /*                columnDefs: [
-                                   {
-                                      targets: 6,
-                                      render: function (data, type) {
-                                        if (type === 'display' && data.length > 10) {
-                                          return `<span title="${data}">${data.substring(0,10)}...</span>`;
-                                        }
-                                        return data;
-                                      }
-                                    }
-                                ],*/
+
                 language: {
                     search: "_INPUT_",
                     searchPlaceholder: "Search..."
