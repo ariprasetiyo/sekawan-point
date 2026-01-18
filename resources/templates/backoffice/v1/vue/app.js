@@ -13,7 +13,7 @@ const routes = [
   { path: "/nav-main", component: MainJs },
   { path: "/nav-dashboard", component: Dashboard },
   { path: "/nav-registration", component: RegistrationUsers },
-  { path: "/nav-management-role-and-menu", component: managementRoleAndMenu }
+  { path: "/nav-management-role-and-menu", component: managementRoleAndMenu },
 ];
 
 const router = createRouter({

@@ -374,8 +374,18 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
         post("/api/v1/registration/user/delete").handler(RegistrationUserDeleteHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
         post("/api/v1/registration/user/list").handler(RegistrationUserListHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
         post("/api/v1/registration/user/detail").handler(RegistrationUserDetailHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
-        post("/api/v1/registration/role/save").handler(RegistrationRoleHandler(gson, vertxScheduler, ioScheduler, freeMakerEngine, ArrayList()))
+
+        post("/api/v1/utilities/menu/save").handler(RegistrationUserHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, myHash, ArrayList()))
+        post("/api/v1/utilities/menu/delete").handler(RegistrationUserDeleteHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
+        post("/api/v1/utilities/menu/list").handler(RegistrationUserListHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
+        post("/api/v1/utilities/menu/detail").handler(RegistrationUserDetailHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
+
+        post("/api/v1/utilities/role/save").handler(RegistrationUserHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, myHash, ArrayList()))
+        post("/api/v1/utilities/role/delete").handler(RegistrationUserDeleteHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
+        post("/api/v1/utilities/role/list").handler(RegistrationUserListHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
+        post("/api/v1/utilities/role/detail").handler(RegistrationUserDetailHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
         get("/api/v1/registration/role/list").handler(RegistrationRoleListHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
+
         post("/api/v1/subscribe").handler(SatuTestHandler(masterDatastore, gson, vertxScheduler, ioScheduler, ArrayList()))
 
         get("/internal/v1/health/ready").handler(healthCheckReadiness)
