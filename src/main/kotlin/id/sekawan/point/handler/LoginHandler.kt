@@ -77,13 +77,16 @@ class LoginHandler(
                 userSession.token = tokenDto
 
                 ctx.session().put(SESSION_LOGIN, gson.toJson(userSession))
+                ctx.session().put(SESSION_USERNAME, userSession.user)
+                ctx.session().put(SESSION_ROLE, gson.toJson(userSession.roles))
                 return@map buildResponse(requestId, ResponseStatus.GENERAL_SUCCESS)
             }
             .subscribeOn(ioScheduler)
             .observeOn(vertxScheduler)
             .subscribe(object : DefaultSubscriber<DefaultResponse>(this::class.java.simpleName, ctx) {
                 override fun onNext(t: DefaultResponse) {
-                    logger.info("response: ${gson.toJson(t)}")
+                    val sessionData = ctx.session().get<String>(SESSION_LOGIN)
+                    logger.info("response: $sessionData ${gson.toJson(t)}")
                     if (t.status == ResponseStatus.GENERAL_SUCCESS.code) {
                         ctx.response()
                             .putHeader("Location", "/backoffice/v1?username=$username")

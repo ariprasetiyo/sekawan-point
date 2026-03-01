@@ -43,7 +43,7 @@ You can use https://sdkman.io/ to easily switch between java version
          -Dlogback.configurationFile=conf-local/mylog.xml \
          -jar build/libs/sekawan-point-1.0-SNAPSHOT-fat.jar conf-local/config.json
          ```
-      2. exec without exporter / none
+      2. exec without exporter / none. ( in local use this)
             ```
           java -javaagent:otel/opentelemetry-javaagent.jar \
              -Dotel.service.name=my-app \
@@ -106,6 +106,13 @@ You can use https://sdkman.io/ to easily switch between java version
    ```
    curl -X POST -H 'x-request-id: hallo-uuid' -H 'user-agent: Google chrome' -H 'x-ip: 192.168.100.1' -H 'Cookie: token_xxx' localhost:8080/api/v1/registration/user/list -d '{"requestId":"hallo-uuid","requestTime":"","type":"users","body":{}}'
    ```
+- Health check
+   ```
+    curl -X GET -H 'x-request-id: hallo-uuid' -H 'user-agent: Google chrome' -H 'x-ip: 192.168.100.1' -H 'Cookie: vertx-web.session=EWi3pSWWhHVnMSsDwMR6DoBr3pEc1jBAuWdEAW0F3cnn4gN8QdgyEh7NuWtuuEcpxa9JC7YYxyugzL6iDYBNNOHXKiYcS9Gtkfb8BGWYFSbZowbsyJSKpn-MuFRdzcApXu9nrAAnVRvhchLIM6AqszHPnma2TwzOt_0nlee91iO2Ptl9uCDTabfhW6mxvMYpVD1I7hX67Zw-7T8z3TbGQ6_He1QNFVgd2LyoX4rUMYuPgdlQhK4dh8wNfZolMYbimPPwr8FmtaeVYKmVe1vRCvtzLDhl9MDOpIb5HBZ-GZPhVwIvQi54KaDEN6KZnDbURun9MX0FiGHsVt9g477ZOMDXAsAYprClNtxRZ4Lm4NHBnFhRG4YUJDcjTiNRowEWI5lGT2ewY-XiwgThpSzK83b6mpnXbLKDMoqcbOHMpT827Htkkv41cdi0dDF42vX2On8hG8JVPp1Hvwpt4utcbY8sHCWW5qIisYg93EWs8RukgurQADXYgTjJr3LuGfFQ0ZRFpwH1nHHDBuE4p_w6uXBazi3qop8_Tv-KBomHtQq5lqPQbNd6xyKeCD1KWA1abAlLa9OJsj1eYqTctw75QCB0l4RtV_xjzs3y0fTC_UfUM7K2xYpMwO0H_3YSozzBrPE_v1WQsfj4ih8TLvCQi5p6cMKIL9rfb7M2UvmQGsdZyPEtcKhCkrvDf7yKnPPNJE24j9C0xZUCdGeqe7J1rOQaf5qHZ6Nm0O82ONi3sZ5TS5UVNtrKojW8MXtAzuu4tnRgIRIi2_NS2uIFBrISZwH88vvAQw4mQtRJ0YYkLWfNdwV4-h8dTqfD73eaIwZomsMjxg' 192.168.1.4:8080/internal/v1/health/ready 
+    curl -X GET -H 'x-request-id: hallo-uuid' -H 'user-agent: Google chrome' -H 'x-ip: 192.168.100.1' -H 'Cookie: vertx-web.session=DHLQehLHMzwZdgtfNPO2B44MVZ0lsSmTpimNwTpGhYdk_VVC-fg7tGVAUFCggDxMUo-FOfizo77AWGtq2LEFvVpprT-kWP9FNv9d54DJVXwW0bHwW6Wsz39AroYNehmg4LcTbauo3ABFyOOZDhIPWLqkAxWyFzfTSCvrfrP06VkjbMwEN-2-Aq8ox0ENJp2nu4WaeQd1U1Hfslqan5O7f4lTgTAx2d-ymlpy114lRYkmfxCZ3yS2aJQqqLYALXoweyDSirNH1qqNcn4IDMuNnK8Vyyfd8acgMKqJBrNfvHTB8rGspYWvpS08ijUEqXuwH_jbLR2iRwKbgX5RJ4rfubOe3f_igvmI1jIH7eUBlCLa0Gw2bJX04kofl_2A7wICwoae4Z1eNLUfEuvIvYar12F8gAUEANN0_c3lt2IUa2LpPY-epKr-CX3N9a9HVogqHapcM4tNDPYsnvwi77V8F7LMc3qzvuCMdAQHjzwa4hB_biZO3YGlcJ7eqFR_YWbd-YnAX5Mr6AjtsyxI6saAXYdxpENJ7M98r_lGoHSkT4GUhf441MsnuTiKSX6gFW0EXYXcZPM5cudg6EcsIHVpH76qXwJxcBCFouhMCxM3vwt7RExl2eGtMT4QfPxTTxco9jrM4RlwHrrWcBIO5Yc7mVmHMYN728jg-4447lov5qxwYERaTKCtscr1NcqFJZh2QFXE9G_SrgmfvDGUl9PVNQ5XB3hGGEb0uaj-n7M3JDtCmtXqA3LbNSSLFixwBos4QcJ_cgpbO3sw2kKK29krcdPQYHKtfSl9dgYJ3kCLsLQYuDi4K_AUYxsZBVxMFnhTIQ' 192.168.1.4:8080/internal/v1/health/ready
+   ```
+
+; Max-Age=216000; Expires=Tue, 20 Jan 2026 00:54:53 GMT; Path=/; HTTPOnly
 ### Stress test with k6
 - 1000 users concurrently in 1 minutes : 1756 RPS
   - hardware specifications : laptop MacBook Air (M1, 2020), ram 8 gb, ssd

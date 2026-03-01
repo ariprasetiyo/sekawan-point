@@ -247,7 +247,7 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
         val sessionSetup = SessionHandler.create(sessionStore)
             //in milliseconds
             .setSessionTimeout(1000 * config().getLong(CONFIG_SESSION_TIMEOUT_IN_SECONDS)!!)
-            //in seconds. if not set will session remove when browser closed
+//            //in seconds. if not set will session remove when browser closed
             .setCookieMaxAge(60 * config().getLong(CONFIG_SESSION_COOKIE_MAX_AGE_IN_SECONDS)!!)
             .setNagHttps(config().getBoolean(CONFIG_SESSION_COOKIE_NAG_HTTP)!!)
             .setCookieSecureFlag(config().getBoolean(CONFIG_SESSION_COOKIE_SECURE_FLAG)!!)
