@@ -78,7 +78,7 @@ class LoginHandler(
 
                 ctx.session().put(SESSION_LOGIN, gson.toJson(userSession))
                 ctx.session().put(SESSION_USERNAME, userSession.user)
-                ctx.session().put(SESSION_ROLE, gson.toJson(userSession.roles))
+//                ctx.session().put(SESSION_ROLE, gson.toJson(userSession.roles))
                 return@map buildResponse(requestId, ResponseStatus.GENERAL_SUCCESS)
             }
             .subscribeOn(ioScheduler)

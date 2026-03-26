@@ -47,8 +47,8 @@ class AuthValidateRequestHandler(
         jwtAuth.authenticate(credentials)
             .onSuccess { user ->
 
-                ctx.session().put(SESSION_USERNAME, dataSession.user)
-                ctx.session().put(SESSION_ROLE, dataSession.roles!![0].id)
+//                ctx.session().put(SESSION_USERNAME, dataSession.user)
+//                ctx.session().put(SESSION_ROLE, dataSession.roles!![0].id)
 
                 // Perubahan ini dilakukan agar atribut `http.route` di OpenTelemetry (OTEL)
                 // menampilkan nilai endpoint yang sesuai (misalnya: "/api/merchant/qr/product/create"),

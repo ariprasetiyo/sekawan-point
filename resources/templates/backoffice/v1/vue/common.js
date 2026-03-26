@@ -1,4 +1,4 @@
-export const hostServer = "http://192.168.1.4:8080";
+export const hostServer = "http://localhost:8080";
 
 export function getClientInfo() {
     const uuid = generateUUIDv4();

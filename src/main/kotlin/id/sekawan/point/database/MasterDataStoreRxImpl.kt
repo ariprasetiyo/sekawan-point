@@ -7,15 +7,27 @@ import id.sekawan.point.util.mylog.LoggerFactory
 import id.sekawan.point.util.mymodel.Menu
 import id.sekawan.point.util.mymodel.Role
 import id.sekawan.point.util.mymodel.User
+import id.sekawan.point.util.rootCause
 import io.reactivex.rxjava3.core.Observable
 import io.vertx.rxjava3.sqlclient.SqlClient
 import io.vertx.rxjava3.sqlclient.Tuple
+import java.util.ArrayList
 import java.util.stream.Collectors
 
 
 class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: Gson) : MasterDataStoreRx {
 
     private val logger = LoggerFactory().createLogger(this.javaClass.simpleName)
+
+
+    private val queryMenusByRoles = """
+       select mm.id, mm.name, mm.parent, mm.description, mm.icon, mm.url, mm.is_active 
+       from ms_menu mm 
+       inner join ms_roles_menu mrm on mm.id = mrm.menu_id
+       inner join ms_roles mr on mr.id = mrm.role_id
+       where mm.is_active = true and mr.is_active = true and mr.id = ANY($1) order by seq asc
+    """.trimIndent()
+
 
     private val insertRegistrationUserQuery = """
             insert into ms_users (user_id, username,password_hash, email , email_hash, phone_number, phone_number_hash, role_id, is_active, created_at, updated_at)
@@ -48,14 +60,6 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
 
     private val getUserAuthByUsername = """
         select user_id, username,password_hash, email , email_hash, phone_number, phone_number_hash, role_id from ms_users  where username = $1 and password_hash = $2 and is_active = true and deleted_at is null 
-    """.trimIndent()
-
-    private val getMenus = """
-       select mm.id, mm.name, mm.parent, mm.description, mm.icon, mm.url, mm.is_active 
-       from ms_menu mm 
-       inner join ms_roles_menu mrm on mm.id = mrm.menu_id
-       inner join ms_roles mr on mr.id = mrm.role_id
-       where mm.is_active = true and mr.is_active = true and mr.id = $1 order by seq asc
     """.trimIndent()
 
     private val getRoles = """
@@ -92,7 +96,8 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
          * )
          */
         val tuples = listOf(
-            Tuple.tuple().addString(user.userId).addString(user.username).addString(user.passwordHash).addString(user.email)
+            Tuple.tuple().addString(user.userId).addString(user.username).addString(user.passwordHash)
+                .addString(user.email)
                 .addString(user.emailHash).addString(user.phoneNumber).addString(user.phoneNumberHash)
                 .addString(user.roleId).addBoolean(user.isActive)
         )
@@ -210,9 +215,10 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
             }.toObservable()
     }
 
-    override fun getMenus(roleId : String): Observable<ArrayList<Menu>> {
-        val tuples = Tuple.tuple().addString(roleId)
-        return sqlClient.preparedQuery(getMenus)
+    override fun getMenus(roleId: List<String>): Observable<ArrayList<Menu>> {
+
+        val tuples = Tuple.tuple().addArrayOfString(roleId.toTypedArray())
+        return sqlClient.preparedQuery(queryMenusByRoles)
             .execute(tuples)
             .map { rows ->
                 val menus = ArrayList<Menu>()

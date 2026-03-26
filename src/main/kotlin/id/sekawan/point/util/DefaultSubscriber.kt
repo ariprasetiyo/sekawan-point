@@ -10,8 +10,8 @@ import org.joda.time.DateTime
 import org.joda.time.Duration
 import java.util.concurrent.atomic.AtomicReference
 
-open class DefaultSubscriber<T : Any>(val response: String, private val routingContext: RoutingContext?) : Observer<T>{
-    internal var logger = LoggerFactory().createLogger("DefaultSubscriber")
+open class DefaultSubscriber<T : Any>(val className: String, private val routingContext: RoutingContext?) : Observer<T>{
+    internal var logger = LoggerFactory().createLogger(className)
     private var requestTime = routingContext!!.get<DateTime>(KEY_RESPONSE_START_TIME)!!
     val upstream: AtomicReference<Disposable?> = AtomicReference<Disposable?>()
 
@@ -21,7 +21,7 @@ open class DefaultSubscriber<T : Any>(val response: String, private val routingC
     }
 
     override fun onError(e: Throwable) {
-        logger.info("requestError default", e.rootCause().message, e)
+        logger.error("requestError default", e.rootCause().message, e)
         routingContext?.response()?.setStatusCode(getErrorCode(e))?.end()
     }
 
@@ -32,9 +32,9 @@ open class DefaultSubscriber<T : Any>(val response: String, private val routingC
 
         if (duration > 0) {
             if (duration >= latencyThreshold) {
-                logger.warn("WARNING-LATENCY endpoint $response : $duration milliseconds")
+                logger.warn("WARNING-LATENCY endpoint $className : $duration milliseconds")
             } else {
-                logger.info("LATENCY endpoint $response : $duration milliseconds")
+                logger.info("LATENCY endpoint $className : $duration milliseconds")
             }
         }
     }

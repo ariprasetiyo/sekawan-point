@@ -8,6 +8,7 @@ import id.sekawan.point.util.*
 import id.sekawan.point.util.mylog.LoggerFactory
 import id.sekawan.point.util.mymodel.Menu
 import id.sekawan.point.util.mymodel.UserRequest
+import id.sekawan.point.util.mymodel.UserSessionDTO
 import io.netty.handler.codec.http.HttpResponseStatus
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
@@ -31,16 +32,18 @@ class MainBackofficeHandler(
     override fun handle(ctx: RoutingContext) {
 
         val username = ctx.session().get<String?>(SESSION_USERNAME)
-        val roles = ctx.session().get<String>(SESSION_ROLE)
+        val sessionLogin = ctx.session().get<String?>(SESSION_LOGIN)
 
         Observable.just(1)
             .observeOn(ioScheduler)
-            .map { isValidRequest(username, roles) }
-            .flatMap { isValid ->
-                if (isValid) {
-                    return@flatMap masterDateStoreRx.getMenus(roles)
+            .concatMap {
+                val sessionLoginJson = gson.fromJson(sessionLogin, UserSessionDTO::class.java)
+                val roles = sessionLoginJson.roles!!.map { it.id }
+                val isValid = isValidRequest(username, roles)
+                if (!isValid) {
+                    return@concatMap Observable.error(Throwable("haven't username $username or roles ${gson.toJson(roles)}"))
                 }
-                return@flatMap Observable.error(Throwable("haven't username $username or roles ${gson.toJson(roles)}"))
+                return@concatMap masterDateStoreRx.getMenus(roles)
             }
             .map {
                 return@map buildMenuTree(it)
@@ -127,8 +130,8 @@ class MainBackofficeHandler(
         }
     }
 
-    private fun isValidRequest(username: String, role: String): Boolean {
-        return (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(role))
+    private fun isValidRequest(username: String, roles: List<String>): Boolean {
+        return (StringUtils.isNotBlank(username) && roles.isNotEmpty())
 
     }
 }

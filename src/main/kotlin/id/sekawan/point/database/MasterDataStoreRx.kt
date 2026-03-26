@@ -1,5 +1,6 @@
 package id.sekawan.point.database
 
+import id.sekawan.point.type.RoleType
 import id.sekawan.point.util.mymodel.Menu
 import id.sekawan.point.util.mymodel.Role
 import id.sekawan.point.util.mymodel.User
@@ -13,7 +14,7 @@ interface MasterDataStoreRx {
     fun getUsers(): Observable<ArrayList<User>>
     fun getUserAuthByUsername(username: String, passwordHash : String): Observable<User>
     fun getUserDetails(userId : String): Observable<User>
-    fun getMenus(roleId : String): Observable<ArrayList<Menu>>
+    fun getMenus(roleId: List<String>): Observable<ArrayList<Menu>>
     fun getAuthorizationRoles(): Observable<ArrayList<Role>>
 
 }

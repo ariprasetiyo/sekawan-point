@@ -375,11 +375,13 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
         post("/api/v1/registration/user/list").handler(RegistrationUserListHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
         post("/api/v1/registration/user/detail").handler(RegistrationUserDetailHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
 
+        //TODO change to handle feature management menu
         post("/api/v1/utilities/menu/save").handler(RegistrationUserHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, myHash, ArrayList()))
         post("/api/v1/utilities/menu/delete").handler(RegistrationUserDeleteHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
         post("/api/v1/utilities/menu/list").handler(RegistrationUserListHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
         post("/api/v1/utilities/menu/detail").handler(RegistrationUserDetailHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
 
+        //TODO change to handle feature management roles
         post("/api/v1/utilities/role/save").handler(RegistrationUserHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, myHash, ArrayList()))
         post("/api/v1/utilities/role/delete").handler(RegistrationUserDeleteHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
         post("/api/v1/utilities/role/list").handler(RegistrationUserListHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))

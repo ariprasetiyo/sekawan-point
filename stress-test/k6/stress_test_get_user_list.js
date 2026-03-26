@@ -2,13 +2,13 @@ import http from 'k6/http';
 import { check } from 'k6';
 
 export const options = {
-    vus: 1000,
+    vus: 100,
     duration: '1m',
 };
 
 export default function() {
 
-    const cookie = 'vertx-web.session=B3cndqS6xxlKK7mImNtqMBMp_aw9vkjxM2uiwVLBAduNijDzRxaPLVVogE8K75tR_6sRr3kdp-fQl8L7jRUN32Q-RqxZlqnv2yJmpK5mKIqzE9pCqturCItkw1iFnuCd1dlmrlKjXr7Tqgd_W5NGnqsWCj8n3yq8hYOAtixOREMq608NceNsTorB1-gByk55V2-J_l3onry5UUk9MZEPjH8YJ2yP7_YeBOk5eqh1la7RmgtrhHfp3icmx5iGmgx7qkdYu6ih2pTFS9Aw9iqK9Vkv89KAzX-Y4MOZdHJX-plYv0qVC6cgeaUkPsf98Yr1J6AUkiZhEDht4FfvQBO6_tO-oyauuoKZtFck0gD6qe18EOOF7XiAH9deSV3Aqa_MI56HX8kZnSfijyqFH8EXdGTftg-nzhQzcSg4DedIT2Cn21cnuwBB-h70n4VxksmLJvq9a03NtamjOH_lnQE0gS3T4-c5XX55WdIsaQfLGY27YcZxR2s4BTiPpd34nM8I6F3QGLU0qolgvG8-RBECy3V3zeWabXCn8vjBmyWA6I4wqRnsJnD1ToCbit_W-tliID4SQ920hlSEMeVNR7SX_MbRXnoVF71-4QI86QapJq4As3cdfVEeYage9kz2Y07zWOWlAAbt7E8K2CGoNOycaPWhT7XwPHAX_rn6PZkdxYDYZHcor0MWiexjStUIB28Y3a94pFV_w3Os-iZUOV_HCVr2xkBXwKJkIg1sxZyepRpUoqMrbhMP5Pzdo-HCjUipOXtPX3h6JDTxOfm6OoSa3boDf5mZ6Wm_TPaaqVLmvpwkNQDPw5bhJjqnneStcqwTRgY6o-j526n9_O1JoV1VR-8'
+    const cookie = 'vertx-web.session=vv1dYKcKW2qdaHEHi2fZDrOJLfsYw3Mpch7pCkCK90fuVyrNhOYh8dtw3guT3RA5ifKUt08BazIuIbeLeRQMw-FaT53ciYKDC2DM1JGlDR_h507frh3SdFlWuFChAlRZOpr69uFuckyqCtg1q8tAR6-sEPPbOpe0wdDiVyXBOordqhvHMi--enro3EIqLJeJU21SdNxDnromLf0CsPWxWbOrDd4pIYtEiQUny5pS0nw4xY2o9uWF4fHyPMygE051z9wB4IiWmSQIy8bwKWGv-85l3BhwCvEfxZaXzJWjQ0eXmvn2DClQWDLLcGRTkVCUBWoKteqUiYWPKvilO_xhNmKC8rlxK9AyW-cXdklLJqeMfOyMzTx36_k_MB2XtJVO71sjBJK63XweS_fBuABx7UxenclTINa4KRSxbl0LPHaj_PkrPoWa1kKGgAlGNRFEeAoWcsiMIwJqSfLT4B1xxToFfaASj8ivbRy-0u7u7F74yzI4KRgXNZOEvNG7rFT8cSTlRFWu1TosZGZlMmkZz_YxcclqminriKnPk8EWhw60DznedkjatnMnXayXuHuE0lliUFKtQLKNBFfYQreFq-hFP8xjPj2I8WO_3If7pqLA2mMKi3EvexaZH_7zesIWd1sUMcMvpqY15XePuLurUKT8HTa5SQlD4B8kVXXsNwXURM6N3JTFY3y3cSEKO4-jLU2Wp9Vqc057Cxr0KCXfiA8iUbBzp697CLgLWVUe5IPCZBoAkYeA6W1FcdPggVonzDZ2tQOqqcwFeNURjWyr_7sNCQtR'
     const headerParams = {
         headers: {
             'Content-Type': 'application/json',
@@ -19,7 +19,7 @@ export default function() {
     };
 
     //user list
-    const url = 'http://localhost:8080/api/v1/registration/user/list';
+    const url = 'http://192.168.1.12:8080/api/v1/registration/user/list';
     const requestJson = JSON.stringify({
         requestId: "hallo-uuid",
         requestTime: "",
@@ -28,7 +28,7 @@ export default function() {
     });
 
     //role list
-    const urlRoles = 'http://localhost:8080/api/v1/registration/role/list';
+    const urlRoles = 'http://192.168.1.12:8080/api/v1/registration/role/list';
 
     //    const res = http.post(url, requestJson, headerParams);
     const responses = http.batch([
