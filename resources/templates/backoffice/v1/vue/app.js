@@ -41,8 +41,9 @@ const App = {
              `
 };
 
+//start loading logic
 // 🔵 BEFORE route loads
-router.beforeEach((to, from, next) => {
+/*router.beforeEach((to, from, next) => {
   loadingStartTime = Date.now();
   loadingState.loading = true;
   next();
@@ -56,7 +57,8 @@ router.afterEach(() => {
   setTimeout(() => {
     loadingState.loading = false;
   }, remaining); // small delay for UX
-});
+});*/
+//start loading logic
 
 // ❗ ROOT COMPONENT MUST HAVE router-view
 createApp(App)
