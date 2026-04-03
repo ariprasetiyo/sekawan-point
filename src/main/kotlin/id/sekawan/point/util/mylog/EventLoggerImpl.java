@@ -86,7 +86,7 @@ public class EventLoggerImpl implements EventLogger {
     }
 
     public void info(String eventName, Object message, Throwable e) {
-        this.logger.info(Markers.appendEntries(this.getMarkerWithMessage(eventName, message)), "", e);
+        this.logger.info(Markers.appendEntries(this.getMarkerWithMessage(eventName, message, e)), "", e);
     }
 
     public void warn(String message) {
@@ -98,17 +98,36 @@ public class EventLoggerImpl implements EventLogger {
     }
 
     public void warn(String eventName, Object message, Throwable e) {
-        this.logger.warn(Markers.appendEntries(this.getMarkerWithMessage(eventName, message)), "", e);
+        this.logger.warn(Markers.appendEntries(this.getMarkerWithMessage(eventName, message, e)), "", e);
     }
 
     public void error(String eventName, Object message, Throwable e) {
-        this.logger.error(Markers.appendEntries(this.getMarkerWithMessage(eventName, message)), "", e);
+        this.logger.error("{}",Markers.appendEntries(this.getMarkerWithMessage(eventName, message, e)), e);
     }
 
-    private Map<String, Object> getMarkerWithMessage(String eventName, Object message) {
+    private Map<String, Object> getMarkerWithMessage(String eventName, Object message, Throwable e) {
         Map<String, Object> marker = this.getMarker(eventName);
         marker.put("message", message);
+//        marker.put("traceId", this.getCurrentTraceId());
+        Throwable root = getRootCause(e);
+        if (root != null) {
+            marker.put("rootMessage", root.getMessage());
+            marker.put("rootException", root.getClass().getName());
+        }
+
         return marker;
+    }
+
+    private static Throwable getRootCause(Throwable throwable) {
+        if (throwable == null) {
+            return null;
+        } else {
+            Throwable cause;
+            for(cause = throwable; cause.getCause() != null; cause = cause.getCause()) {
+            }
+
+            return cause;
+        }
     }
 
     public LogContext startLogContext(String eventName) {

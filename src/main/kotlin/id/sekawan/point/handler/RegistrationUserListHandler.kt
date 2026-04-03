@@ -7,13 +7,13 @@ import id.sekawan.point.util.AdminHandler
 import id.sekawan.point.util.DefaultSubscriber
 import id.sekawan.point.util.HEADER_REQUEST_ID
 import id.sekawan.point.util.HttpException
+import id.sekawan.point.util.getTotalRecords
 import id.sekawan.point.util.mylog.LoggerFactory
 import id.sekawan.point.util.mymodel.*
 import io.netty.handler.codec.http.HttpResponseStatus
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
 import io.vertx.ext.web.RoutingContext
-import org.apache.commons.lang3.StringUtils
 
 class RegistrationUserListHandler(
     private val masterDataStoreRx: MasterDataStoreRx,
@@ -33,10 +33,20 @@ class RegistrationUserListHandler(
             .map { gson.fromJson(it!!, UserRequest::class.java) }
             .concatMap { request ->
                 if (isValidRequest(request)) {
-                    return@concatMap masterDataStoreRx.getUsers()
-                        .map { buildResponse(requestId, ResponseStatus.GENERAL_SUCCESS, it) }
+
+                    val limit =  request.body.size
+                    val offset =  ( request.body.page - 1 ) *  request.body.size
+                    val searchText = request.body.searchText
+                    val searchType = request.body.searchType
+                    val reqToDB = UserRequestDB(offset,limit , searchText, searchType)
+
+                    return@concatMap masterDataStoreRx.getUsers(reqToDB)
+                        .map {
+                            val totalRecords = getTotalRecords(request.body.page, limit, it.size )
+                            buildResponse(requestId, ResponseStatus.GENERAL_SUCCESS, totalRecords, it)
+                        }
                 }
-                return@concatMap Observable.just(buildResponse(requestId, ResponseStatus.GENERAL_FAILED, emptyList()))
+                return@concatMap Observable.just(buildResponse(requestId, ResponseStatus.GENERAL_FAILED, 0,emptyList()))
             }
             .map { gson.toJson(it) }
             .observeOn(vertxScheduler)
@@ -58,16 +68,17 @@ class RegistrationUserListHandler(
     }
 
     private fun isValidRequest(request: UserRequest): Boolean {
-        return (request.type == RequestType.TYPE_USERS)
+        return (request.type == RequestType.TYPE_USERS && request.body != null && request.body.page >= 0  && request.body.size >= 0 )
     }
 
-    private fun buildResponse(requestId: String, status: ResponseStatus, roles: List<User>): DefaultResponseT<UsersResponseBody> {
+    private fun buildResponse(requestId: String, status: ResponseStatus, totalRecords : Int, roles: List<User>): DefaultResponseT<UsersResponseBody> {
 
         val response = DefaultResponseT<UsersResponseBody>()
         response.requestId = requestId
         response.type = RequestType.TYPE_USERS
         response.status = status.code
         response.statusMessage = status.message
+        response.totalRecords = totalRecords
         response.body = UsersResponseBody(roles)
 
         return response

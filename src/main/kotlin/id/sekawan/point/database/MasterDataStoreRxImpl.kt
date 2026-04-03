@@ -2,15 +2,18 @@ package id.sekawan.point.database
 
 import com.google.gson.Gson
 import id.sekawan.point.type.RoleType
+import id.sekawan.point.type.SearchType
 import id.sekawan.point.util.DateTimeHelper.Companion.offsetDateTimeJakarta
 import id.sekawan.point.util.mylog.LoggerFactory
 import id.sekawan.point.util.mymodel.Menu
 import id.sekawan.point.util.mymodel.Role
 import id.sekawan.point.util.mymodel.User
+import id.sekawan.point.util.mymodel.UserRequestDB
 import id.sekawan.point.util.rootCause
 import io.reactivex.rxjava3.core.Observable
 import io.vertx.rxjava3.sqlclient.SqlClient
 import io.vertx.rxjava3.sqlclient.Tuple
+import org.apache.commons.lang3.StringUtils
 import java.util.ArrayList
 import java.util.stream.Collectors
 
@@ -18,7 +21,6 @@ import java.util.stream.Collectors
 class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: Gson) : MasterDataStoreRx {
 
     private val logger = LoggerFactory().createLogger(this.javaClass.simpleName)
-
 
     private val queryMenusByRoles = """
        select mm.id, mm.name, mm.parent, mm.description, mm.icon, mm.url, mm.is_active 
@@ -50,8 +52,16 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
         select id, name, description, authorizations, is_active , created_at, updated_at from ms_roles
     """.trimIndent()
 
-    private val getUsersQuery = """
-        select user_id, username,password_hash, email , email_hash, phone_number, phone_number_hash, role_id, is_active, created_at, updated_at from ms_users where deleted_at is null 
+    private val getUsersQueryByOld = """
+        select user_id, username,password_hash, email , email_hash, phone_number, phone_number_hash, role_id, is_active, created_at, updated_at from ms_users where deleted_at is null
+    """.trimIndent()
+
+    private val getUsersQueryByAll = """
+        select user_id, username,password_hash, email , email_hash, phone_number, phone_number_hash, role_id, is_active, created_at, updated_at from ms_users where deleted_at is null limit $1 offset $2
+    """.trimIndent()
+
+    private val getUsersQueryByName = """
+        select user_id, username,password_hash, email , email_hash, phone_number, phone_number_hash, role_id, is_active, created_at, updated_at from ms_users where deleted_at is null and username = $1 limit $2 offset $3 
     """.trimIndent()
 
     private val getUserDetailQuery = """
@@ -191,8 +201,51 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
             }.toObservable()
     }
 
-    override fun getUsers(): Observable<ArrayList<User>> {
-        return sqlClient.preparedQuery(getUsersQuery)
+    override fun getUsers(userRequestDB: UserRequestDB): Observable<ArrayList<User>> {
+
+        var query: String? = null
+        var tuples: Tuple? = null
+        if(StringUtils.isBlank(userRequestDB.searchText) || userRequestDB.searchType == null){
+            query = getUsersQueryByAll
+            tuples = Tuple.tuple().addInteger(userRequestDB.limit).addInteger(userRequestDB.offset)
+        }else if (userRequestDB.searchType == SearchType.NAME && StringUtils.isNotBlank(userRequestDB.searchText)){
+            query = getUsersQueryByName
+            tuples = Tuple.tuple().addString(userRequestDB.searchText).addInteger(userRequestDB.limit).addInteger(userRequestDB.offset)
+        } else {
+            logger.info("not found correct filter will return empty. check check request parameters")
+            return Observable.just(ArrayList<User>())
+        }
+
+        return sqlClient.preparedQuery(query)
+            .execute(tuples)
+            .map { rows ->
+                val roles = ArrayList<User>()
+                for (row in rows) {
+                    roles.add(
+                        User(
+                            userId = row.getString("user_id"),
+                            username = row.getString("username"),
+                            passwordHash = row.getString("password_hash"),
+                            email = row.getString("email"),
+                            phoneNumber = row.getString("phone_number"),
+                            roleId = row.getString("role_id"),
+                            isActive = row.getBoolean("is_active"),
+                            createdAt = offsetDateTimeJakarta(row.getOffsetDateTime("created_at")),
+                            updatedAt = offsetDateTimeJakarta(row.getOffsetDateTime("updated_at"))
+                        )
+                    )
+                }
+                return@map roles
+            }.onErrorReturn {
+                logger.error("Query failed. SQL: $query", gson.toJson(userRequestDB), it);
+                return@onErrorReturn ArrayList<User>()
+            }
+            .toObservable()
+    }
+
+    override fun getUsersOld(): Observable<ArrayList<User>> {
+
+        return sqlClient.preparedQuery(getUsersQueryByOld)
             .execute()
             .map { rows ->
                 val roles = ArrayList<User>()

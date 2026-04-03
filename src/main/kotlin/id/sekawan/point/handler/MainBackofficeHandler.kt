@@ -2,12 +2,9 @@ package id.sekawan.point.handler
 
 import com.google.gson.Gson
 import id.sekawan.point.database.MasterDataStoreRx
-import id.sekawan.point.type.RequestType
-import id.sekawan.point.type.RoleType
 import id.sekawan.point.util.*
 import id.sekawan.point.util.mylog.LoggerFactory
 import id.sekawan.point.util.mymodel.Menu
-import id.sekawan.point.util.mymodel.UserRequest
 import id.sekawan.point.util.mymodel.UserSessionDTO
 import io.netty.handler.codec.http.HttpResponseStatus
 import io.reactivex.rxjava3.core.Observable

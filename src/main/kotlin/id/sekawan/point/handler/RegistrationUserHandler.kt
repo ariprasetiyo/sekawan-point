@@ -30,7 +30,7 @@ class RegistrationUserHandler(
 
         Observable.just(ctx.body().asString())
             .observeOn(ioScheduler)
-            .map { gson.fromJson(it!!, UserRequest::class.java) }
+            .map { gson.fromJson(it!!, UserRequestOld::class.java) }
             .concatMap { request ->
                 if (isValidRequest(request)) {
 
@@ -86,7 +86,7 @@ class RegistrationUserHandler(
             })
     }
 
-    private fun buildResponse(request: UserRequest, status: ResponseStatus): DefaultResponse {
+    private fun buildResponse(request: UserRequestOld, status: ResponseStatus): DefaultResponse {
         val response = DefaultResponse()
         response.requestId = request.requestId
         response.type = RequestType.TYPE_REGISTRATION_USER
@@ -96,7 +96,7 @@ class RegistrationUserHandler(
         return response
     }
 
-    private fun isValidRequest(request: UserRequest): Boolean {
+    private fun isValidRequest(request: UserRequestOld): Boolean {
         return (
                 request.type == RequestType.TYPE_REGISTRATION_USER
                         && !StringUtils.isBlank(request.body.username)

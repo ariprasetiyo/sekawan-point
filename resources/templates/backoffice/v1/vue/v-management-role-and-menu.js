@@ -95,10 +95,10 @@ export default {
         /*  roleTab: () => import('./v-management-role-tab.js'),
           menuTab: () => import('./v-management-menu-tab.js'),*/
           roleTab: Vue.defineAsyncComponent(() =>
-                import('./v-management-role-and-menu-roletab.js')
+                import('./v-management-role-tab.js')
               ),
           menuTab: Vue.defineAsyncComponent(() =>
-                import('./v-management-role-and-menu-menutab.js')
+                import('./v-management-menu-tab.js')
               )
       },
     data() {

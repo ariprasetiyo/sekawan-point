@@ -10,15 +10,11 @@ import id.sekawan.point.database.MasterTransactionDataStore
 import id.sekawan.point.handler.*
 import id.sekawan.point.handler.test.*
 import id.sekawan.point.middleware.AuthValidateRequestAsyncHandler
-import id.sekawan.point.middleware.AuthValidateRequestHandler
-import id.sekawan.point.type.RoleType
 import id.sekawan.point.util.*
 import id.sekawan.point.util.mylib.GsonHelper
 import id.sekawan.point.util.mylib.MyHash
 import id.sekawan.point.util.mylog.LoggerFactory
 import id.sekawan.point.util.mymodel.AuthorizationUrls
-import id.sekawan.point.util.mymodel.Role
-import id.sekawan.point.util.mymodel.RoleAuthorization
 import io.reactivex.rxjava3.schedulers.Schedulers
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Promise
@@ -356,7 +352,14 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
         get("/clear-cache").handler(ClearCachelHandler(ArrayList(), freeMakerEngine, gson, vertxScheduler, ioScheduler))
 
         val authorizationNonAPI = listOf("/v1/admin", "/backoffice", "/js", "/vendor", "/css", "/img", "/internal", "/favicon.ico")
-        val authorizationAPI = listOf("/api/v1/subscribe", "/api/v1/registration/role", "/api/v1/registration/user", "/internal", "/test/vertx/")
+        val authorizationAPI = listOf(
+            "/api/v1/subscribe",
+            "/api/v1/registration/role",
+            "/api/v1/registration/user",
+            "/api/v2/registration/user",
+            "/internal",
+            "/test/vertx/"
+        )
 
 //        route().handler(AuthValidateRequestHandler(freeMakerEngine, gson, jwtAuth, authorizationRoleMap,authorizationNonAPI , authorizationAPI))
         route().handler(AuthValidateRequestAsyncHandler(vertxScheduler, ioScheduler,freeMakerEngine, gson, jwtAuth, authorizationRoleMap,authorizationNonAPI , authorizationAPI, config()))
@@ -373,21 +376,23 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
 
         post("/api/v1/registration/user/save").handler(RegistrationUserHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, myHash, ArrayList()))
         post("/api/v1/registration/user/delete").handler(RegistrationUserDeleteHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
-        post("/api/v1/registration/user/list").handler(RegistrationUserListHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
+        // TODO Deprecated
+        post("/api/v1/registration/user/list").handler(RegistrationUserListHandlerOld(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
+        post("/api/v2/registration/user/list").handler(RegistrationUserListHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
         post("/api/v1/registration/user/detail").handler(RegistrationUserDetailHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
-
-        //TODO change to handle feature management menu
-        post("/api/v1/utilities/menu/save").handler(RegistrationUserHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, myHash, ArrayList()))
-        post("/api/v1/utilities/menu/delete").handler(RegistrationUserDeleteHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
-        post("/api/v1/utilities/menu/list").handler(RegistrationUserListHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
-        post("/api/v1/utilities/menu/detail").handler(RegistrationUserDetailHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
-
-        //TODO change to handle feature management roles
-        post("/api/v1/utilities/role/save").handler(RegistrationUserHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, myHash, ArrayList()))
-        post("/api/v1/utilities/role/delete").handler(RegistrationUserDeleteHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
-        post("/api/v1/utilities/role/list").handler(RegistrationUserListHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
-        post("/api/v1/utilities/role/detail").handler(RegistrationUserDetailHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
         get("/api/v1/registration/role/list").handler(RegistrationRoleListHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
+
+//        //TODO change to handle feature management roles
+//        post("/api/v1/utilities/role/save").handler(RegistrationUserHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, myHash, ArrayList()))
+//        post("/api/v1/utilities/role/delete").handler(RegistrationUserDeleteHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
+//        post("/api/v1/utilities/role/list").handler(RegistrationUserListHandlerOld(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
+//        post("/api/v1/utilities/role/detail").handler(RegistrationUserDetailHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
+//
+//        //TODO change to handle feature management menu
+//        post("/api/v1/utilities/menu/save").handler(RegistrationUserHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, myHash, ArrayList()))
+//        post("/api/v1/utilities/menu/delete").handler(RegistrationUserDeleteHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
+//        post("/api/v1/utilities/menu/list").handler(RegistrationUserListHandlerOld(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
+//        post("/api/v1/utilities/menu/detail").handler(RegistrationUserDetailHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
 
         post("/api/v1/subscribe").handler(SatuTestHandler(masterDatastore, gson, vertxScheduler, ioScheduler, ArrayList()))
 

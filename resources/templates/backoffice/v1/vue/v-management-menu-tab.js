@@ -455,7 +455,6 @@ export default {
             this.vmodalInputPhoneNumber = dataJson.body.phoneNumber;
             console.info(dataJson);
 
-
         },
         //dropdown search text
         selectItem(item) {
@@ -464,6 +463,8 @@ export default {
             this.selectedItem = item;
             this.showDropdown = false;
         },
+
+        //todo change to get menus
         async loadListOfUser() {
 
             var clientInfo = getClientInfo()

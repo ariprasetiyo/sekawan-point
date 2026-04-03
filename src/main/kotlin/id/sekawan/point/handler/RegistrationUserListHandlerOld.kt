@@ -3,7 +3,6 @@ package id.sekawan.point.handler
 import com.google.gson.Gson
 import id.sekawan.point.database.MasterDataStoreRx
 import id.sekawan.point.type.RequestType
-import id.sekawan.point.type.RoleType
 import id.sekawan.point.util.AdminHandler
 import id.sekawan.point.util.DefaultSubscriber
 import id.sekawan.point.util.HEADER_REQUEST_ID
@@ -15,7 +14,7 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
 import io.vertx.ext.web.RoutingContext
 
-class RegistrationUserDetailHandler(
+class RegistrationUserListHandlerOld(
     private val masterDataStoreRx: MasterDataStoreRx,
     private val gson: Gson,
     private val vertxScheduler: Scheduler,
@@ -33,14 +32,10 @@ class RegistrationUserDetailHandler(
             .map { gson.fromJson(it!!, UserRequestOld::class.java) }
             .concatMap { request ->
                 if (isValidRequest(request)) {
-                    return@concatMap masterDataStoreRx.getUserDetails(request.body.userId!!)
-                        .map {
-                            it.roleName  = RoleType.fromId(it.roleId)?.alias
-                            return@map it
-                        }
+                    return@concatMap masterDataStoreRx.getUsersOld()
                         .map { buildResponse(requestId, ResponseStatus.GENERAL_SUCCESS, it) }
                 }
-                return@concatMap Observable.just(buildResponse(requestId, ResponseStatus.GENERAL_FAILED, User(userId = request.body.userId!! )))
+                return@concatMap Observable.just(buildResponse(requestId, ResponseStatus.GENERAL_FAILED, emptyList()))
             }
             .map { gson.toJson(it) }
             .observeOn(vertxScheduler)
@@ -65,14 +60,14 @@ class RegistrationUserDetailHandler(
         return (request.type == RequestType.TYPE_USERS)
     }
 
-    private fun buildResponse(requestId: String, status: ResponseStatus, user: User): DefaultResponseT<User> {
+    private fun buildResponse(requestId: String, status: ResponseStatus, roles: List<User>): DefaultResponseT<UsersResponseBody> {
 
-        val response = DefaultResponseT<User>()
+        val response = DefaultResponseT<UsersResponseBody>()
         response.requestId = requestId
         response.type = RequestType.TYPE_USERS
         response.status = status.code
         response.statusMessage = status.message
-        response.body = user
+        response.body = UsersResponseBody(roles)
 
         return response
     }

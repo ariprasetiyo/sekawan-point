@@ -67,17 +67,7 @@ export default {
                         </tr>
                      </tfoot>
                      <tbody>
-                        <tr v-for="user in listOfUser" :key="user.id">
-                           <td>{{ user.userId }}</td>
-                           <td>{{ user.username }}</td>
-                           <td>{{ user.phoneNumber }}</td>
-                           <td>{{ user.email }}</td>
-                           <td>{{ user.roleId }}</td>
-                           <td>{{ user.isActive }}</td>
-                           <td>{{ user.createdAt }}</td>
-                           <td>{{ user.updatedAt }}</td>
-                           <td><a class="btn btn-primary btn-user" id="{{user.userId}}" @click="submitEditUser(user.userId, user.username)" >edit</a> <button class="btn btn-primary btn-user"  @click="submitDeleteUser(user.userId, user.username)" >delete</button></td>
-                        </tr>
+                       
                      </tbody>
                   </table>
                </div>
@@ -283,39 +273,86 @@ export default {
             }
 
             $('#dataTable').DataTable({
-                /*                columnDefs: [
-                                   {
-                                      targets: 6,
-                                      render: function (data, type) {
-                                        if (type === 'display' && data.length > 10) {
-                                          return `<span title="${data}">${data.substring(0,10)}...</span>`;
-                                        }
-                                        return data;
-                                      }
-                                    }
-                                ],*/
-                language: {
-                    search: "_INPUT_",
-                    searchPlaceholder: "Search..."
-                },
-                scrollY: '500px',
-                scrollX: true,
-                scrollCollapse: true,
+                processing: true,
+                serverSide: true,
                 paging: true,
-                responsive: false,
-                autoWidth: false,
-                pageLength: 25,
-                initComplete: function() {
-                    // pindahkan UI ke container custom
-                    $('#dataTable_length').appendTo('#datatable-length');
-                    $('#dataTable_filter').appendTo('#datatable-search');
-                    $('#dataTable_info').appendTo('#datatable-info');
-                    $('#dataTable_paginate').appendTo('#datatable-pagination');
-                }
+                searching: true,
+                scrollX: true,
+                scrollY: '500px',
+                pageLength: 10,
+
+                ajax: async (data, callback) => {
+
+                    const page = (data.start / data.length) + 1;
+                    const size = data.length;
+                    const search = data.search.value;
+
+                    const clientInfo = getClientInfo();
+
+                    const requestJson = {
+                        requestId: clientInfo.uuid,
+                        type: "users",
+                        body: {
+                            page: page,
+                            size: size,
+                            searchText: search,
+                            searchType: "name"
+                        }
+                    };
+
+                    const res = await fetchPOSTFull(
+                        "/api/v2/registration/user/list",
+                        clientInfo,
+                        JSON.stringify(requestJson)
+                    );
+
+                    //use this after save / delete $('#dataTable').DataTable().ajax.reload();
+
+                    //Showing 1 to 10 of 60 entries (filtered from 120 total entries) -> recordsTotal: 120, recordsFiltered: 60,
+                    //Showing 1 to 10 of 60 entries -> recordsTotal: 60,  recordsFiltered: 60,
+                    callback({
+                        draw: data.draw,
+                        recordsTotal: res.totalRecords,
+                        recordsFiltered: res.totalRecords,
+                        data: res.body.list
+                    });
+                },
+
+                columns: [
+                    { data: "userId" },
+                    { data: "username" },
+                    { data: "phoneNumber" },
+                    { data: "email" },
+                    { data: "roleId" },
+                    { data: "isActive" },
+                    { data: "createdAt" },
+                    { data: "updatedAt" },
+                    {
+                        data: null,
+                        render: (data) => {
+                            return `
+                  <button class="btn btn-primary btn-sm edit-btn" data-id="${data.userId}" data-name="${data.username}">edit</button>
+                  <button class="btn btn-danger btn-sm delete-btn" data-id="${data.userId}" data-name="${data.username}">delete</button>
+                `;
+                        }
+                    }
+                ]
             });
         });
 
-        this.loadUsers(); // fetch data on load
+        $('#dataTable tbody').on('click', '.edit-btn', (e) => {
+            const userId = e.target.dataset.id;
+            const username = e.target.dataset.name;
+            this.submitEditUser(userId, username);
+        });
+
+        $('#dataTable tbody').on('click', '.delete-btn', (e) => {
+            const userId = e.target.dataset.id;
+            const username = e.target.dataset.name;
+            this.submitDeleteUser(userId, username);
+        });
+
+        // this.loadUsers(); // fetch data on load
     },
     computed: {
         //dropdown search text

@@ -29,28 +29,26 @@ export default {
                   >
                      <thead>
                         <tr>
-                           <th>User Id</th>
-                           <th>Username</th>
-                           <th>Phone Number</th>
-                           <th>Email</th>
-                           <th>Role Id</th>
+                           <th>Id</th>
+                           <th>Name</th>
+                           <th>Description</th>
                            <th>Is Active</th>
                            <th>Created</th>
                            <th>Updated</th>
                            <th>action</th>
+                           <th>Conf Authorization</th>
                         </tr>
                      </thead>
                      <tfoot>
                         <tr>
-                           <th>User Id</th>
-                           <th>Username</th>
-                           <th>Phone Number</th>
-                           <th>Email</th>
-                           <th>Role Id</th>
+                           <th>Id</th>
+                           <th>Name</th>
+                           <th>Description</th>
                            <th>Is Active</th>
                            <th>Created</th>
                            <th>Updated</th>
                            <th>action</th>
+                            <th>Conf Authorization</th>
                         </tr>
                      </tfoot>
                      <tbody>
@@ -58,7 +56,6 @@ export default {
                            <td>{{ user.userId }}</td>
                            <td>{{ user.username }}</td>
                            <td>{{ user.phoneNumber }}</td>
-                           <td>{{ user.email }}</td>
                            <td>{{ user.roleId }}</td>
                            <td>{{ user.isActive }}</td>
                            <td>{{ user.createdAt }}</td>
@@ -454,7 +451,6 @@ export default {
             this.vmodalInputPhoneNumber = dataJson.body.phoneNumber;
             console.info(dataJson);
 
-
         },
         //dropdown search text
         selectItem(item) {
@@ -463,6 +459,7 @@ export default {
             this.selectedItem = item;
             this.showDropdown = false;
         },
+        //todo change to list of role
         async loadListOfUser() {
 
             var clientInfo = getClientInfo()
@@ -478,7 +475,6 @@ export default {
                 userId: item.userId,
                 username: item.username,
                 passwordHash: item.passwordHash,
-                email: item.email,
                 roleId: item.roleId,
                 isActive: item.isActive,
                 phoneNumber: item.phoneNumber,

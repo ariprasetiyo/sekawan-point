@@ -11,7 +11,7 @@ import id.sekawan.point.util.mylog.LoggerFactory
 import id.sekawan.point.util.mymodel.DefaultResponse
 import id.sekawan.point.util.mymodel.ResponseStatus
 import id.sekawan.point.util.mymodel.User
-import id.sekawan.point.util.mymodel.UserRequest
+import id.sekawan.point.util.mymodel.UserRequestOld
 import io.netty.handler.codec.http.HttpResponseStatus
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
@@ -34,7 +34,7 @@ class RegistrationUserDeleteHandler(
 
         Observable.just(ctx.body().asString())
             .observeOn(ioScheduler)
-            .map { gson.fromJson(it!!, UserRequest::class.java) }
+            .map { gson.fromJson(it!!, UserRequestOld::class.java) }
             .concatMap { request ->
                 if (isValidRequest(request)) {
 
@@ -74,7 +74,7 @@ class RegistrationUserDeleteHandler(
             })
     }
 
-    private fun buildResponse(request: UserRequest, status: ResponseStatus): DefaultResponse {
+    private fun buildResponse(request: UserRequestOld, status: ResponseStatus): DefaultResponse {
         val response = DefaultResponse()
         response.requestId = request.requestId
         response.type = RequestType.TYPE_DELETE_USER
@@ -84,7 +84,7 @@ class RegistrationUserDeleteHandler(
         return response
     }
 
-    private fun isValidRequest(request: UserRequest): Boolean {
+    private fun isValidRequest(request: UserRequestOld): Boolean {
         return (
                 request.type == RequestType.TYPE_DELETE_USER
                         && !StringUtils.isBlank(request.body.username)

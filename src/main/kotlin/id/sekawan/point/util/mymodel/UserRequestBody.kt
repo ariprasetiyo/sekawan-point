@@ -1,11 +1,10 @@
 package id.sekawan.point.util.mymodel
 
+import id.sekawan.point.type.SearchType
+
 class UserRequestBody {
-    var userId : String? = null
-    var username: String? = null
-    var password: String? = null
-    var email: String? = null
-    var phoneNumber: String? = null
-    var roleId: String? = null
-    var isActive: Boolean? = null
+    var page : Int = 0
+    var size : Int = 0
+    var searchText : String? = null
+    var searchType : SearchType? = null
 }

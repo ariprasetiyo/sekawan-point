@@ -10,6 +10,7 @@ public class Response<T> {
     private String statusMessage;
     private String statusDisplayMessage;
     private String ts;
+    private int totalRecords;
     private T body;
 
     public Response() {
@@ -70,5 +71,13 @@ public class Response<T> {
 
     public void setStatusDisplayMessage(String statusDisplayMessage) {
         this.statusDisplayMessage = statusDisplayMessage;
+    }
+
+    public int getTotalRecords() {
+        return totalRecords;
+    }
+
+    public void setTotalRecords(int totalRecords) {
+        this.totalRecords = totalRecords;
     }
 }

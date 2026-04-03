@@ -20,3 +20,13 @@ fun Throwable.rootCause(): Throwable {
     }
     return cause ?: this
 }
+
+fun getTotalRecords(page: Int, size : Int, recordsSizeFromDb : Int): Int {
+    var totalRecords = 100
+    if(recordsSizeFromDb == 0){
+        totalRecords = page * size
+    } else if(recordsSizeFromDb <= size  ){
+        totalRecords = (page + 1 ) * size
+    }
+    return totalRecords
+}
