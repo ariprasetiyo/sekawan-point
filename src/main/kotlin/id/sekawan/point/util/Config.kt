@@ -29,4 +29,7 @@ const val CONFIG_SESSION_COOKIE_NAG_HTTP = "security.session.NagHttps"
 const val CONFIG_SESSION_COOKIE_SECURE_FLAG = "security.session.CookieSecureFlag"
 const val CONFIG_SESSION_COOKIE_HTTP_ONLY_FLAG = "security.session.CookieHttpOnlyFlag"
 
+const val CONFIG_TOGGLE_INSPECT_ELEMENT_IS_ACTIVE = "toggle.inspect_element.is_active"
+const val CONFIG_TOGGLE_INSPECT_ELEMENT_ALLOWED_URLS = "toggle.inspect_element.allowed_urls"
+
 

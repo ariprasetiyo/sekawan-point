@@ -11,6 +11,7 @@ import io.reactivex.rxjava3.core.Scheduler
 import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.http.HttpMethod
+import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.auth.authentication.TokenCredentials
 import io.vertx.ext.auth.jwt.JWTAuth
@@ -18,6 +19,7 @@ import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.templ.freemarker.FreeMarkerTemplateEngine
 import org.apache.commons.lang3.StringUtils
 
+@Suppress("MISSING_DEPENDENCY_IN_INFERRED_TYPE_ANNOTATION_WARNING")
 class AuthValidateRequestAsyncHandler(
     private val vertxScheduler: Scheduler,
     private val ioScheduler: Scheduler,
@@ -26,10 +28,13 @@ class AuthValidateRequestAsyncHandler(
     private val jwtAuth: JWTAuth,
     private val authorizationRolesMap: Map<String, AuthorizationUrls>,
     private val prefixUrlsNonAPI: List<String>,
-    private val prefixUrlsAPI: List<String>
+    private val prefixUrlsAPI: List<String>,
+    private val config : JsonObject
 ) : Handler<RoutingContext> {
 
     private val logger = LoggerFactory().createLogger(this.javaClass.name)
+    val allowedInspectElementUrls= config.getJsonArray(CONFIG_TOGGLE_INSPECT_ELEMENT_ALLOWED_URLS).list as List<String>
+    val isAllowedInspectElement = config.getBoolean(CONFIG_TOGGLE_INSPECT_ELEMENT_IS_ACTIVE)!!
 
     override fun handle(ctx: RoutingContext) {
 
@@ -61,6 +66,9 @@ class AuthValidateRequestAsyncHandler(
                         return@map when {
                             prefixUrlsNonAPI.any { path.startsWith(it) } -> authenticationNonApi(ctx, roles, dataSession)
                             prefixUrlsAPI.any { path.startsWith(it) } -> authenticationApi(ctx, roles, dataSession)
+                            isAllowedInspectElement && allowedInspectElementUrls.any { path.startsWith(it) } ->{
+                                return@map ErrorLoginType.AUTHENTICATION_SUCCESS
+                            }
                             else -> {
                                 val errorLog = ErrorLoginType.INVALID_AUTHENTICATION_106
                                 logger.warn("not allow url to access ${errorLog.errorCode} ${errorLog.errorMessage} ${dataSession.user}  $path")
