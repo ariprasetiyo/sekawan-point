@@ -13,6 +13,43 @@
     --shadow-1: 0 1px 3px rgba(0, 0, 0, .12), 0 1px 2px rgba(0, 0, 0, .24);
     --shadow-2: 0 4px 6px rgba(0, 0, 0, .16), 0 2px 4px rgba(0, 0, 0, .23);
 }
+.dataTables_length label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0;
+}
+
+.dataTables_length select {
+    width: auto;
+    display: inline-block;
+}
+
+.dataTables_filter label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0;
+}
+
+.dataTables_filter input {
+    width: auto;
+    display: inline-block;
+}
+
+.dataTables_filter{
+    border-radius: 20px;
+    border: 1px solid #d1d3e2;
+    height: 38px;
+    padding: 0 12px;
+}
+
+.dataTables_length{
+    border-radius: 20px;
+    border: 1px solid #d1d3e2;
+    height: 38px;
+    padding: 0 12px;
+}
 
 /*.page-loader {
   position: fixed;

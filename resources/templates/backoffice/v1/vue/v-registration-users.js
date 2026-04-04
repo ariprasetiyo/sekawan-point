@@ -34,6 +34,26 @@ export default {
             <div class="card-body">
                <!-- <div class="table-responsive"> -->
                <div class="table-responsive">
+                    <div class="d-flex  justify-content-between ">
+                        <!-- Show entries -->
+                        <div id="datatable-default-length"></div>
+                        <!-- LEFT GROUP -->
+                        <div class="d-flex align-items-center gap-2">
+                            <!-- Role dropdown -->
+                            <div id="filter-column-container" style="min-width:200px;">
+                            <select id="datatable-default-search-type" class="form-control">
+                              <option value="">Select column</option>
+                              <option value="UserId">User id</option>
+                              <option value="Username">Username</option>
+                              <option value="Email">Email</option>
+                              <option value="RoleId">Role id</option>
+                              <option value="IsActive">Is Active</option>
+                            </select>
+                            </div>
+                            <!-- RIGHT SEARCH -->
+                            <div id="datatable-default-search"></div>
+                        </div>
+                    </div>
                   <table
                      class="table table-bordered"
                      id="dataTable"
@@ -272,7 +292,18 @@ export default {
                 $('#dataTable').DataTable().destroy();
             }
 
+            $('#datatable-default-search-type').on('change', function() {
+                table.draw();
+            });
+
             $('#dataTable').DataTable({
+                initComplete: function() {
+                    const api = this.api();
+
+                    $('#dataTable_filter').appendTo('#datatable-default-search');
+                    $('#dataTable_length').appendTo('#datatable-default-length');
+
+                },
                 processing: true,
                 serverSide: true,
                 paging: true,
@@ -283,6 +314,7 @@ export default {
 
                 ajax: async (data, callback) => {
 
+                    const searchType = $('#datatable-default-search-type').val();
                     const page = (data.start / data.length) + 1;
                     const size = data.length;
                     const search = data.search.value;
@@ -296,7 +328,7 @@ export default {
                             page: page,
                             size: size,
                             searchText: search,
-                            searchType: "name"
+                            searchType: searchType
                         }
                     };
 
