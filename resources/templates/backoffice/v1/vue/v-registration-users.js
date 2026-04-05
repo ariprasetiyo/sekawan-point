@@ -406,8 +406,8 @@ export default {
             vm.table.ajax.reload(null, true);
         });
 
-
-        // this.loadUsers(); // fetch data on load
+        // fetch data on load
+        this.loadUsers();
     },
     computed: {
         //dropdown search text
