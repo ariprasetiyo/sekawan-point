@@ -42,16 +42,25 @@ export default {
                             <!-- Role dropdown -->
                             <div id="filter-column-container" style="min-width:200px;">
                             <select id="datatable-default-search-type" class="form-control">
-                              <option value="">Select column</option>
-                              <option value="UserId">User id</option>
-                              <option value="Username">Username</option>
-                              <option value="Email">Email</option>
-                              <option value="RoleId">Role id</option>
-                              <option value="IsActive">Is Active</option>
+                              <option value="all">All</option>
+                              <option value="user_id">User id</option>
+                              <option value="username">Username</option>
+                              <option value="emai">Email</option>
+                              <option value="role_id">Role id</option>
+                              <option value="is_active">Is Active</option>
                             </select>
                             </div>
                             <!-- RIGHT SEARCH -->
-                            <div id="datatable-default-search"></div>
+                            <div class="input-group">
+                                <input id="datatable-default-search-input" type="text" class="form-control bg-light border-0 small" placeholder="Search for..." aria-label="Search" aria-describedby="basic-addon2">
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary" type="button" id="datatable-default-search-button">
+                                        <i class="fas fa-search fa-sm"></i>
+                                    </button>
+                                </div>
+                            </div>
+<!--                            <div id="datatable-default-search"></div>-->
+<!--                            <button id="datatable-default-search-button" class="btn btn-primary btn-sm edit-btn">Submit</button>-->
                         </div>
                     </div>
                   <table
@@ -285,6 +294,7 @@ export default {
             dateFormat: "Y-m-d"
         });
         this.listOfUser = await this.loadListOfUser();
+        const vm = this; // 🔥 simpan Vue instance
         this.$nextTick(() => {
             //            $('#dataTable').DataTable();
 
@@ -296,28 +306,31 @@ export default {
                 table.draw();
             });
 
-            $('#dataTable').DataTable({
+            vm.table  = $('#dataTable').DataTable({
                 initComplete: function() {
                     const api = this.api();
-
-                    $('#dataTable_filter').appendTo('#datatable-default-search');
+                    // $('#dataTable_filter').appendTo('#datatable-default-search');
                     $('#dataTable_length').appendTo('#datatable-default-length');
+                    $('#dataTable_filter input').off(); // 🔥 hapus auto trigger search
 
                 },
                 processing: true,
                 serverSide: true,
                 paging: true,
-                searching: true,
+                searching: false,
                 scrollX: true,
                 scrollY: '500px',
                 pageLength: 10,
+                deferLoading: 0, // 🔥 IMPORTANT → tidak load saat init
 
                 ajax: async (data, callback) => {
 
+                    //use this if every event key up will trigger
+                    // const search = data.search.value;
+                    const searchInput = $('#datatable-default-search-input').val();
                     const searchType = $('#datatable-default-search-type').val();
                     const page = (data.start / data.length) + 1;
                     const size = data.length;
-                    const search = data.search.value;
 
                     const clientInfo = getClientInfo();
 
@@ -327,7 +340,7 @@ export default {
                         body: {
                             page: page,
                             size: size,
-                            searchText: search,
+                            searchText: searchInput,
                             searchType: searchType
                         }
                     };
@@ -370,6 +383,7 @@ export default {
                     }
                 ]
             });
+
         });
 
         $('#dataTable tbody').on('click', '.edit-btn', (e) => {
@@ -383,6 +397,15 @@ export default {
             const username = e.target.dataset.name;
             this.submitDeleteUser(userId, username);
         });
+
+        $(document).on('click', '#datatable-default-search-button', function () {
+            if (!vm.table) {
+                console.error("DataTable not initialized yet");
+                return;
+            }
+            vm.table.ajax.reload(null, true);
+        });
+
 
         // this.loadUsers(); // fetch data on load
     },

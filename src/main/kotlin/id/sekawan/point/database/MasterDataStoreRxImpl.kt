@@ -61,7 +61,7 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
     """.trimIndent()
 
     private val getUsersQueryByName = """
-        select user_id, username,password_hash, email , email_hash, phone_number, phone_number_hash, role_id, is_active, created_at, updated_at from ms_users where deleted_at is null and username = $1 limit $2 offset $3 
+        select user_id, username,password_hash, email , email_hash, phone_number, phone_number_hash, role_id, is_active, created_at, updated_at from ms_users where deleted_at is null and username ilike $1 limit $2 offset $3 
     """.trimIndent()
 
     private val getUserDetailQuery = """
@@ -205,12 +205,12 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
 
         var query: String? = null
         var tuples: Tuple? = null
-        if(StringUtils.isBlank(userRequestDB.searchText) || userRequestDB.searchType == null){
+        if(StringUtils.isBlank(userRequestDB.searchText) || userRequestDB.searchType == SearchType.ALL){
             query = getUsersQueryByAll
             tuples = Tuple.tuple().addInteger(userRequestDB.limit).addInteger(userRequestDB.offset)
-        }else if (userRequestDB.searchType == SearchType.NAME && StringUtils.isNotBlank(userRequestDB.searchText)){
+        }else if (userRequestDB.searchType == SearchType.USERNAME && StringUtils.isNotBlank(userRequestDB.searchText)){
             query = getUsersQueryByName
-            tuples = Tuple.tuple().addString(userRequestDB.searchText).addInteger(userRequestDB.limit).addInteger(userRequestDB.offset)
+            tuples = Tuple.tuple().addString("%${userRequestDB.searchText}%").addInteger(userRequestDB.limit).addInteger(userRequestDB.offset)
         } else {
             logger.info("not found correct filter will return empty. check check request parameters")
             return Observable.just(ArrayList<User>())

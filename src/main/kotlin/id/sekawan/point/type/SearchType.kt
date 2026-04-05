@@ -1,13 +1,26 @@
 package id.sekawan.point.type
 
+import com.google.gson.annotations.SerializedName
+
 enum class SearchType (val id : String, val alias: String?){
 
+    @SerializedName("name")
     NAME( "name", "name"),
+    @SerializedName("username")
+    USERNAME( "username", "username"),
+    @SerializedName("phone_number")
     PHONE_NUMBER( "phone_number", "phone number"),
+    @SerializedName("user_id")
     USER_ID( "user_id", "user id"),
+    @SerializedName("emai")
     EMAIL( "emai", "email"),
+    @SerializedName("role_id")
     ROLE_ID( "role_id", "role id"),
+    @SerializedName("is_active")
     IS_ACTIVE("is_active", "is active"),
+    @SerializedName("all")
+    ALL("all", "all"),
+    @SerializedName("none")
     NONE("none", "none");
 
     companion object {

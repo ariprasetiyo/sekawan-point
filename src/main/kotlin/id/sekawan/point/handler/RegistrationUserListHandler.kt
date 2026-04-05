@@ -3,6 +3,7 @@ package id.sekawan.point.handler
 import com.google.gson.Gson
 import id.sekawan.point.database.MasterDataStoreRx
 import id.sekawan.point.type.RequestType
+import id.sekawan.point.type.SearchType
 import id.sekawan.point.util.AdminHandler
 import id.sekawan.point.util.DefaultSubscriber
 import id.sekawan.point.util.HEADER_REQUEST_ID
@@ -68,7 +69,13 @@ class RegistrationUserListHandler(
     }
 
     private fun isValidRequest(request: UserRequest): Boolean {
-        return (request.type == RequestType.TYPE_USERS && request.body != null && request.body.page >= 0  && request.body.size >= 0 )
+        return (request.type == RequestType.TYPE_USERS
+                && request.body != null
+                && request.body.page >= 0
+                && request.body.size >= 0
+                && request.body.searchType != null
+                && SearchType.fromId(request.body.searchType!!.id) != null
+                )
     }
 
     private fun buildResponse(requestId: String, status: ResponseStatus, totalRecords : Int, roles: List<User>): DefaultResponseT<UsersResponseBody> {
