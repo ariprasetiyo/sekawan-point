@@ -20,7 +20,37 @@ export default {
          <div class="card-body p-0">
             <!-- Nested Row within Card Body -->
             <div class="card-body">
+               <!-- <div class="table-responsive"> -->
                <div class="table-responsive">
+                    <div class="d-flex  justify-content-between ">
+                        <!-- Show entries -->
+                        <div id="datatable-default-length"></div>
+                        <!-- LEFT GROUP -->
+                        <div class="d-flex align-items-center gap-2">
+                            <!-- Role dropdown -->
+                            <div id="filter-column-container" style="min-width:200px;">
+                            <select id="datatable-default-search-type" class="form-control">
+                              <option value="all">All</option>
+                              <option value="user_id">User id</option>
+                              <option value="username">Username</option>
+                              <option value="emai">Email</option>
+                              <option value="role_id">Role id</option>
+                              <option value="is_active">Is Active</option>
+                            </select>
+                            </div>
+                            <!-- RIGHT SEARCH -->
+                            <div class="input-group">
+                                <input id="datatable-default-search-input" type="text" class="form-control bg-light border-0 small" placeholder="Search for..." aria-label="Search" aria-describedby="basic-addon2">
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary" type="button" id="datatable-default-search-button">
+                                        <i class="fas fa-search fa-sm"></i>
+                                    </button>
+                                </div>
+                            </div>
+<!--                            <div id="datatable-default-search"></div>-->
+<!--                            <button id="datatable-default-search-button" class="btn btn-primary btn-sm edit-btn">Submit</button>-->
+                        </div>
+                    </div>
                   <table
                      class="table table-bordered"
                      id="dataTable"
@@ -29,39 +59,32 @@ export default {
                   >
                      <thead>
                         <tr>
-                           <th>Id</th>
-                           <th>Name</th>
-                           <th>Description</th>
+                           <th>User Id</th>
+                           <th>Username</th>
+                           <th>Phone Number</th>
+                           <th>Email</th>
+                           <th>Role Id</th>
                            <th>Is Active</th>
                            <th>Created</th>
                            <th>Updated</th>
                            <th>action</th>
-                           <th>Conf Authorization</th>
                         </tr>
                      </thead>
                      <tfoot>
                         <tr>
-                           <th>Id</th>
-                           <th>Name</th>
-                           <th>Description</th>
+                           <th>User Id</th>
+                           <th>Username</th>
+                           <th>Phone Number</th>
+                           <th>Email</th>
+                           <th>Role Id</th>
                            <th>Is Active</th>
                            <th>Created</th>
                            <th>Updated</th>
                            <th>action</th>
-                            <th>Conf Authorization</th>
                         </tr>
                      </tfoot>
                      <tbody>
-                        <tr v-for="user in listOfUser" :key="user.id">
-                           <td>{{ user.userId }}</td>
-                           <td>{{ user.username }}</td>
-                           <td>{{ user.phoneNumber }}</td>
-                           <td>{{ user.roleId }}</td>
-                           <td>{{ user.isActive }}</td>
-                           <td>{{ user.createdAt }}</td>
-                           <td>{{ user.updatedAt }}</td>
-                           <td><a class="btn btn-primary btn-user" id="{{user.userId}}" @click="submitEditUser(user.userId, user.username)" >edit</a> <button class="btn btn-primary btn-user"  @click="submitDeleteUser(user.userId, user.username)" >delete</button></td>
-                        </tr>
+                       
                      </tbody>
                   </table>
                </div>
@@ -79,13 +102,6 @@ export default {
       >
          <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
-               <!-- Modal Header -->
-               <div class="modal-header">
-                  <h5 class="modal-title" id="registerModalLabel">Create New User</h5>
-                  <button type="button" class="close" data-dismiss="modal">
-                     <span>&times;</span>
-                  </button>
-               </div>
 
                <!-- Modal Body -->
                <div class="modal-body">
@@ -225,7 +241,6 @@ export default {
   `,
     data() {
         return {
-            loading: false,
             vResponseStatusRegistrationUser: null,
             listOfUser: [],
             vModalBirthPlace: null,
@@ -260,36 +275,120 @@ export default {
             dateFormat: "Y-m-d"
         });
         this.listOfUser = await this.loadListOfUser();
+        const vm = this; // 🔥 simpan Vue instance
         this.$nextTick(() => {
+            //            $('#dataTable').DataTable();
 
             if ($.fn.DataTable.isDataTable('#dataTable')) {
                 $('#dataTable').DataTable().destroy();
             }
 
-            $('#dataTable').DataTable({
-
-                language: {
-                    search: "_INPUT_",
-                    searchPlaceholder: "Search..."
-                },
-                scrollY: '500px',
-                scrollX: true,
-                scrollCollapse: true,
-                paging: true,
-                responsive: false,
-                autoWidth: false,
-                pageLength: 25,
-                initComplete: function() {
-                    // pindahkan UI ke container custom
-                    $('#dataTable_length').appendTo('#datatable-length');
-                    $('#dataTable_filter').appendTo('#datatable-search');
-                    $('#dataTable_info').appendTo('#datatable-info');
-                    $('#dataTable_paginate').appendTo('#datatable-pagination');
-                }
+            $('#datatable-default-search-type').on('change', function() {
+                table.draw();
             });
+
+            vm.table  = $('#dataTable').DataTable({
+                initComplete: function() {
+                    const api = this.api();
+                    // $('#dataTable_filter').appendTo('#datatable-default-search');
+                    $('#dataTable_length').appendTo('#datatable-default-length');
+                    $('#dataTable_filter input').off(); // 🔥 hapus auto trigger search
+
+                },
+                processing: true,
+                serverSide: true,
+                paging: true,
+                searching: false,
+                scrollX: true,
+                scrollY: '500px',
+                pageLength: 10,
+                deferLoading: 0, // 🔥 IMPORTANT → tidak load saat init
+
+                ajax: async (data, callback) => {
+
+                    //use this if every event key up will trigger
+                    // const search = data.search.value;
+                    const searchInput = $('#datatable-default-search-input').val();
+                    const searchType = $('#datatable-default-search-type').val();
+                    const page = (data.start / data.length) + 1;
+                    const size = data.length;
+
+                    const clientInfo = getClientInfo();
+
+                    const requestJson = {
+                        requestId: clientInfo.uuid,
+                        type: "users",
+                        body: {
+                            page: page,
+                            size: size,
+                            searchText: searchInput,
+                            searchType: searchType
+                        }
+                    };
+
+                    const res = await fetchPOSTFull(
+                        "/api/v2/registration/user/list",
+                        clientInfo,
+                        JSON.stringify(requestJson)
+                    );
+
+                    //use this after save / delete $('#dataTable').DataTable().ajax.reload();
+
+                    //Showing 1 to 10 of 60 entries (filtered from 120 total entries) -> recordsTotal: 120, recordsFiltered: 60,
+                    //Showing 1 to 10 of 60 entries -> recordsTotal: 60,  recordsFiltered: 60,
+                    callback({
+                        draw: data.draw,
+                        recordsTotal: res.totalRecords,
+                        recordsFiltered: res.totalRecords,
+                        data: res.body.list
+                    });
+                },
+
+                columns: [
+                    { data: "userId" },
+                    { data: "username" },
+                    { data: "phoneNumber" },
+                    { data: "email" },
+                    { data: "roleId" },
+                    { data: "isActive" },
+                    { data: "createdAt" },
+                    { data: "updatedAt" },
+                    {
+                        data: null,
+                        render: (data) => {
+                            return `
+                  <button class="btn btn-primary btn-sm edit-btn" data-id="${data.userId}" data-name="${data.username}">edit</button>
+                  <button class="btn btn-danger btn-sm delete-btn" data-id="${data.userId}" data-name="${data.username}">delete</button>
+                `;
+                        }
+                    }
+                ]
+            });
+
         });
 
-        this.loadUsers(); // fetch data on load
+        $('#dataTable tbody').on('click', '.edit-btn', (e) => {
+            const userId = e.target.dataset.id;
+            const username = e.target.dataset.name;
+            this.submitEditUser(userId, username);
+        });
+
+        $('#dataTable tbody').on('click', '.delete-btn', (e) => {
+            const userId = e.target.dataset.id;
+            const username = e.target.dataset.name;
+            this.submitDeleteUser(userId, username);
+        });
+
+        $(document).on('click', '#datatable-default-search-button', function () {
+            if (!vm.table) {
+                console.error("DataTable not initialized yet");
+                return;
+            }
+            vm.table.ajax.reload(null, true);
+        });
+
+        // fetch data on load
+        this.loadUsers();
     },
     computed: {
         //dropdown search text
@@ -451,6 +550,7 @@ export default {
             this.vmodalInputPhoneNumber = dataJson.body.phoneNumber;
             console.info(dataJson);
 
+
         },
         //dropdown search text
         selectItem(item) {
@@ -459,7 +559,6 @@ export default {
             this.selectedItem = item;
             this.showDropdown = false;
         },
-        //todo change to list of role
         async loadListOfUser() {
 
             var clientInfo = getClientInfo()
@@ -475,6 +574,7 @@ export default {
                 userId: item.userId,
                 username: item.username,
                 passwordHash: item.passwordHash,
+                email: item.email,
                 roleId: item.roleId,
                 isActive: item.isActive,
                 phoneNumber: item.phoneNumber,

@@ -16,7 +16,7 @@ import {
 
 export default {
     template: `
-      <div class="d-sm-flex align-items-center justify-content-between mb-4">
+      <div class="d-sm-flex align-items-center justify-content-between mb-1">
          <h1 class="h3 mb-0 text-gray-800">User Registration</h1>
          <a
             href="#"

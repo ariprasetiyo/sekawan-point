@@ -16,7 +16,7 @@ import {
 
 export default {
     template: `
-      <div class="d-sm-flex align-items-center justify-content-between mb-4">
+      <div class="d-sm-flex align-items-center justify-content-between mb-1">
          <h1 class="h3 mb-0 text-gray-800">Management Role - Menu</h1>
          <a
             href="#"
@@ -27,10 +27,8 @@ export default {
             ><i class="fas fa-user-plus"></i> Create Menu</a
          >
       </div>
-      <hr class="border-top-success">
-
-    <div class="card shadow mb-4">
-      <div class="card-header py-3">
+    <div class="card shadow mb-1">
+      <div class="card-header py-2">
         <ul class="nav nav-tabs card-header-tabs">
           <li class="nav-item">
             <a
@@ -56,7 +54,7 @@ export default {
         </ul>
       </div>
 
-     <div class="tab-content mt-3">
+     <div class="tab-content mb-1">
        <div v-if="activeTab === 'role'">
          <roleTab />
        </div>
