@@ -7,6 +7,7 @@ import id.sekawan.point.util.DateTimeHelper.Companion.offsetDateTimeJakarta
 import id.sekawan.point.util.mylog.LoggerFactory
 import id.sekawan.point.util.mymodel.Menu
 import id.sekawan.point.util.mymodel.Role
+import id.sekawan.point.util.mymodel.RoleRequestDB
 import id.sekawan.point.util.mymodel.User
 import id.sekawan.point.util.mymodel.UserRequestDB
 import id.sekawan.point.util.rootCause
@@ -66,6 +67,10 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
 
     private val getUserDetailQuery = """
         select user_id, username,password_hash, email , email_hash, phone_number, phone_number_hash, role_id, is_active, created_at, updated_at from ms_users where user_id = $1 and deleted_at is null 
+    """.trimIndent()
+
+    private val getRoleQueryByAll = """
+        select  id, name, description, authorizations, is_active, created_at, updated_at from ms_roles where deleted_at is null limit $1 offset $2
     """.trimIndent()
 
     private val getUserAuthByUsername = """
@@ -239,6 +244,46 @@ class MasterDataStoreRxImpl(private val sqlClient: SqlClient, private val gson: 
             }.onErrorReturn {
                 logger.error("Query failed. SQL: $query", gson.toJson(userRequestDB), it);
                 return@onErrorReturn ArrayList<User>()
+            }
+            .toObservable()
+    }
+
+    override fun getRoles(roleRequestDB: RoleRequestDB): Observable<ArrayList<Role>> {
+
+        var query: String? = null
+        var tuples: Tuple? = null
+        if(StringUtils.isBlank(roleRequestDB.searchText) || roleRequestDB.searchType == SearchType.ALL){
+            query = getRoleQueryByAll
+            tuples = Tuple.tuple().addInteger(roleRequestDB.limit).addInteger(roleRequestDB.offset)
+        }else if (roleRequestDB.searchType == SearchType.USERNAME && StringUtils.isNotBlank(roleRequestDB.searchText)){
+            query = getRoleQueryByAll
+            tuples = Tuple.tuple().addString("%${roleRequestDB.searchText}%").addInteger(roleRequestDB.limit).addInteger(roleRequestDB.offset)
+        } else {
+            logger.info("not found correct filter will return empty. check check request parameters")
+            return Observable.just(ArrayList<Role>())
+        }
+
+        return sqlClient.preparedQuery(query)
+            .execute(tuples)
+            .map { rows ->
+                val roles = ArrayList<Role>()
+                for (row in rows) {
+                    roles.add(
+                        Role(
+                            id = row.getString("id"),
+                            name = row.getString("name"),
+                            description = row.getString("description"),
+                            authorization = row.getJsonObject("authorizations"),
+                            isActive = row.getBoolean("is_active"),
+                            createdAt = offsetDateTimeJakarta(row.getOffsetDateTime("created_at")),
+                            updatedAt = offsetDateTimeJakarta(row.getOffsetDateTime("updated_at"))
+                        )
+                    )
+                }
+                return@map roles
+            }.onErrorReturn {
+                logger.error("Query failed. SQL: $query", gson.toJson(roleRequestDB), it);
+                return@onErrorReturn ArrayList<Role>()
             }
             .toObservable()
     }

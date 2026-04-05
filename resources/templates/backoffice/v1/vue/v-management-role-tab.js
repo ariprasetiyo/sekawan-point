@@ -59,28 +59,26 @@ export default {
                   >
                      <thead>
                         <tr>
-                           <th>User Id</th>
-                           <th>Username</th>
-                           <th>Phone Number</th>
-                           <th>Email</th>
-                           <th>Role Id</th>
+                           <th>Id</th>
+                           <th>Name</th>
+                           <th>Desc</th>
+                           <th>Authorization</th>
                            <th>Is Active</th>
                            <th>Created</th>
                            <th>Updated</th>
-                           <th>action</th>
+                           <th>Action</th>
                         </tr>
                      </thead>
                      <tfoot>
                         <tr>
-                           <th>User Id</th>
-                           <th>Username</th>
-                           <th>Phone Number</th>
-                           <th>Email</th>
-                           <th>Role Id</th>
+                           <th>Id</th>
+                           <th>Name</th>
+                           <th>Desc</th>
+                           <th>Authorization</th>
                            <th>Is Active</th>
                            <th>Created</th>
                            <th>Updated</th>
-                           <th>action</th>
+                           <th>Action</th>
                         </tr>
                      </tfoot>
                      <tbody>
@@ -274,7 +272,7 @@ export default {
         flatpickr("#calendarInput", {
             dateFormat: "Y-m-d"
         });
-        this.listOfUser = await this.loadListOfUser();
+        // this.listOfUser = await this.loadListOfUser();
         const vm = this; // 🔥 simpan Vue instance
         this.$nextTick(() => {
             //            $('#dataTable').DataTable();
@@ -317,7 +315,7 @@ export default {
 
                     const requestJson = {
                         requestId: clientInfo.uuid,
-                        type: "users",
+                        type: "role",
                         body: {
                             page: page,
                             size: size,
@@ -327,7 +325,7 @@ export default {
                     };
 
                     const res = await fetchPOSTFull(
-                        "/api/v2/registration/user/list",
+                        "/api/v1/utilities/role/list",
                         clientInfo,
                         JSON.stringify(requestJson)
                     );
@@ -345,11 +343,10 @@ export default {
                 },
 
                 columns: [
-                    { data: "userId" },
-                    { data: "username" },
-                    { data: "phoneNumber" },
-                    { data: "email" },
-                    { data: "roleId" },
+                    { data: "id" },
+                    { data: "name" },
+                    { data: "description" },
+                    { data: "authorization" },
                     { data: "isActive" },
                     { data: "createdAt" },
                     { data: "updatedAt" },
@@ -560,27 +557,7 @@ export default {
             this.showDropdown = false;
         },
         async loadListOfUser() {
-
-            var clientInfo = getClientInfo()
-            const requestJson = {
-                requestId: clientInfo.uuid,
-                type: "users",
-                body: {}
-            };
-
-            // Deserialize here
-            const dataJson = await fetchPOSTFull("/api/v1/registration/user/list", clientInfo, JSON.stringify(requestJson));
-            return dataJson.body.list.map(item => ({
-                userId: item.userId,
-                username: item.username,
-                passwordHash: item.passwordHash,
-                email: item.email,
-                roleId: item.roleId,
-                isActive: item.isActive,
-                phoneNumber: item.phoneNumber,
-                createdAt: item.createdAt,
-                updatedAt: item.updatedAt
-            }));
+            alert("disini");
         },
         async loadUsers() {
 

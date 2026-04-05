@@ -4,8 +4,14 @@ import com.google.gson.annotations.SerializedName
 
 enum class SearchType (val id : String, val alias: String?){
 
+    @SerializedName("id")
+    ID( "id", "id"),
+    @SerializedName("desc")
+    DESC( "desc", "description"),
     @SerializedName("name")
     NAME( "name", "name"),
+    @SerializedName("authorization")
+    AUTHORIZATION( "authorization", "authorization"),
     @SerializedName("username")
     USERNAME( "username", "username"),
     @SerializedName("phone_number")

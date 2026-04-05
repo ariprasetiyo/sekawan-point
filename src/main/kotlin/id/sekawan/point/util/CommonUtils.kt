@@ -30,3 +30,7 @@ fun getTotalRecords(page: Int, size : Int, recordsSizeFromDb : Int): Int {
     }
     return totalRecords
 }
+
+fun getOffset(page : Int, size: Int) : Int{
+    return ( page - 1 ) *  size
+}

@@ -357,6 +357,7 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
             "/api/v1/registration/role",
             "/api/v1/registration/user",
             "/api/v2/registration/user",
+            "/api/v1/utilities/role/list",
             "/internal",
             "/test/vertx/"
         )
@@ -385,7 +386,7 @@ class MainVerticle(val vertxRxJava3: io.vertx.rxjava3.core.Vertx) : AbstractVert
 //        //TODO change to handle feature management roles
 //        post("/api/v1/utilities/role/save").handler(RegistrationUserHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, myHash, ArrayList()))
 //        post("/api/v1/utilities/role/delete").handler(RegistrationUserDeleteHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
-//        post("/api/v1/utilities/role/list").handler(RegistrationUserListHandlerOld(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
+        post("/api/v1/utilities/role/list").handler(RoleListHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
 //        post("/api/v1/utilities/role/detail").handler(RegistrationUserDetailHandler(masterDatastoreRx, gson, vertxScheduler, ioScheduler, ArrayList()))
 //
 //        //TODO change to handle feature management menu

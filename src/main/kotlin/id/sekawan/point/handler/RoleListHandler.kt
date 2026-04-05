@@ -17,7 +17,7 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
 import io.vertx.ext.web.RoutingContext
 
-class RegistrationUserListHandler(
+class RoleListHandler(
     private val masterDataStoreRx: MasterDataStoreRx,
     private val gson: Gson,
     private val vertxScheduler: Scheduler,
@@ -32,17 +32,17 @@ class RegistrationUserListHandler(
         val requestId = ctx.request().getHeader(HEADER_REQUEST_ID)
         Observable.just(ctx.body().asString())
             .observeOn(ioScheduler)
-            .map { gson.fromJson(it!!, GenericRequest::class.java) }
+            .map { gson.fromJson(it!!, UserRequest::class.java) }
             .concatMap { request ->
                 if (isValidRequest(request)) {
 
                     val limit =  request.body.size
-                    val offset = getOffset(request.body.page ,  request.body.size)
+                    val offset =  getOffset(request.body.page ,  request.body.size)
                     val searchText = request.body.searchText
                     val searchType = request.body.searchType
-                    val reqToDB = UserRequestDB(offset,limit , searchText, searchType)
+                    val reqToDB = RoleRequestDB(offset,limit , searchText, searchType)
 
-                    return@concatMap masterDataStoreRx.getUsers(reqToDB)
+                    return@concatMap masterDataStoreRx.getRoles(reqToDB)
                         .map {
                             val totalRecords = getTotalRecords(request.body.page, limit, it.size )
                             buildResponse(requestId, ResponseStatus.GENERAL_SUCCESS, totalRecords, it)
@@ -69,8 +69,8 @@ class RegistrationUserListHandler(
             })
     }
 
-    private fun isValidRequest(request: GenericRequest): Boolean {
-        return (request.type == RequestType.TYPE_USERS
+    private fun isValidRequest(request: UserRequest): Boolean {
+        return (request.type == RequestType.TYPE_ROLE
                 && request.body != null
                 && request.body.page >= 0
                 && request.body.size >= 0
@@ -79,15 +79,15 @@ class RegistrationUserListHandler(
                 )
     }
 
-    private fun buildResponse(requestId: String, status: ResponseStatus, totalRecords : Int, roles: List<User>): DefaultResponseT<UsersResponseBody> {
+    private fun buildResponse(requestId: String, status: ResponseStatus, totalRecords : Int, roles: List<Role>): DefaultResponseT<RolesResponseBody> {
 
-        val response = DefaultResponseT<UsersResponseBody>()
+        val response = DefaultResponseT<RolesResponseBody>()
         response.requestId = requestId
-        response.type = RequestType.TYPE_USERS
+        response.type = RequestType.TYPE_ROLE
         response.status = status.code
         response.statusMessage = status.message
         response.totalRecords = totalRecords
-        response.body = UsersResponseBody(roles)
+        response.body = RolesResponseBody(roles)
 
         return response
     }

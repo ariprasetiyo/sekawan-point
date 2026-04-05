@@ -284,7 +284,8 @@ export default {
             showDropdown: false,
             selectedItem: null,
             filterList: null,
-            items: []
+            items: [],
+            vmInternal : null,
             //dropdown search text end
         };
     },
@@ -293,8 +294,9 @@ export default {
         flatpickr("#calendarInput", {
             dateFormat: "Y-m-d"
         });
-        this.listOfUser = await this.loadListOfUser();
+        // this.listOfUser = await this.loadListOfUser();
         const vm = this; // 🔥 simpan Vue instance
+        this.vmInternal = vm
         this.$nextTick(() => {
             //            $('#dataTable').DataTable();
 
@@ -306,7 +308,7 @@ export default {
                 table.draw();
             });
 
-            vm.table  = $('#dataTable').DataTable({
+            this.vmInternal.table  = $('#dataTable').DataTable({
                 initComplete: function() {
                     const api = this.api();
                     // $('#dataTable_filter').appendTo('#datatable-default-search');
@@ -579,27 +581,27 @@ export default {
             this.showDropdown = false;
         },
         async loadListOfUser() {
-
-            var clientInfo = getClientInfo()
-            const requestJson = {
-                requestId: clientInfo.uuid,
-                type: "users",
-                body: {}
-            };
-
-            // Deserialize here
-            const dataJson = await fetchPOSTFull("/api/v1/registration/user/list", clientInfo, JSON.stringify(requestJson));
-            return dataJson.body.list.map(item => ({
-                userId: item.userId,
-                username: item.username,
-                passwordHash: item.passwordHash,
-                email: item.email,
-                roleId: item.roleId,
-                isActive: item.isActive,
-                phoneNumber: item.phoneNumber,
-                createdAt: item.createdAt,
-                updatedAt: item.updatedAt
-            }));
+           this.vmInternal.table.ajax.reload(null, true);
+            // var clientInfo = getClientInfo()
+            // const requestJson = {
+            //     requestId: clientInfo.uuid,
+            //     type: "users",
+            //     body: {}
+            // };
+            //
+            // // Deserialize here
+            // const dataJson = await fetchPOSTFull("/api/v1/registration/user/list", clientInfo, JSON.stringify(requestJson));
+            // return dataJson.body.list.map(item => ({
+            //     userId: item.userId,
+            //     username: item.username,
+            //     passwordHash: item.passwordHash,
+            //     email: item.email,
+            //     roleId: item.roleId,
+            //     isActive: item.isActive,
+            //     phoneNumber: item.phoneNumber,
+            //     createdAt: item.createdAt,
+            //     updatedAt: item.updatedAt
+            // }));
         },
         async loadUsers() {
 
